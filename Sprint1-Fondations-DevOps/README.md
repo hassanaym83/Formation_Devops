@@ -4,15 +4,15 @@
 
 ### Semaines du Sprint 1
 
-| Semaine       | Titre                                                   | Durée | Navigation                                                                                                                                                                                  |
-| ------------- | ------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Semaine 1** | [Système & Automation](./Semaine-1-Systeme-Automation/) | 10h   | [Séances](./Semaine-1-Systeme-Automation/#séances-de-la-semaine) \| [Labs](./Semaine-1-Systeme-Automation/#labs-pratiques) \| [Projets](./Semaine-1-Systeme-Automation/#projet-intégrateur) |
-| **Semaine 2** | [Python DevOps](./Semaine-2-Python-DevOps/)             | 10h   | [Séances](./Semaine-2-Python-DevOps/#séances-de-la-semaine) \| [Labs](./Semaine-2-Python-DevOps/#labs-pratiques) \| [Projets](./Semaine-2-Python-DevOps/#projet-intégrateur)                |
-| **Semaine 3** | [Version Control](./Semaine-3-Version-Control/)         | 10h   | [Séances](./Semaine-3-Version-Control/#séances-de-la-semaine) \| [Labs](./Semaine-3-Version-Control/#labs-pratiques) \| [Projets](./Semaine-3-Version-Control/#projet-intégrateur)          |
+| Semaine       | Titre                                                                       | Durée | Navigation                                                                                                                                                                                                                |
+| ------------- | --------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Semaine 1** | [Système & Automation](./Semaine-1-Systeme-Automation/)                     | 10h   | [Séances](./Semaine-1-Systeme-Automation/#séances-de-la-semaine) \| [Labs](./Semaine-1-Systeme-Automation/#labs-pratiques) \| [Projets](./Semaine-1-Systeme-Automation/#projet-intégrateur)                               |
+| **Semaine 2** | [Scripting Bash & Python DevOps](./Semaine-2-Scripting-Bash-Python-DevOps/) | 12h   | [Séances](./Semaine-2-Scripting-Bash-Python-DevOps/#séances-de-la-semaine) \| [Labs](./Semaine-2-Scripting-Bash-Python-DevOps/#labs-pratiques) \| [Projets](./Semaine-2-Scripting-Bash-Python-DevOps/#projet-intégrateur) |
+| **Semaine 3** | [Version Control](./Semaine-3-Version-Control/)                             | 10h   | [Séances](./Semaine-3-Version-Control/#séances-de-la-semaine) \| [Labs](./Semaine-3-Version-Control/#labs-pratiques) \| [Projets](./Semaine-3-Version-Control/#projet-intégrateur)                                        |
 
 ### Navigation Rapide
 
-- **Progression** : [Semaine 1](./Semaine-1-Systeme-Automation/) → [Semaine 2](./Semaine-2-Python-DevOps/) → [Semaine 3](./Semaine-3-Version-Control/)
+- **Progression** : [Semaine 1](./Semaine-1-Systeme-Automation/) → [Semaine 2](./Semaine-2-Scripting-Bash-Python-DevOps/) → [Semaine 3](./Semaine-3-Version-Control/)
 - **Structure** : [Retour Programme Principal](../README.md) | [Sprint 0 - Introduction DevOps](../Sprint0-SAS-Introduction-DevOps/) | [Sprint 2 - Containerisation CI/CD](../Sprint2-Containerisation-CICD/)
 - **Évaluation** : [Livrables Finaux](#livrables-finaux) | [Contraintes Pédagogiques](#contraintes-pédagogiques)
 

@@ -1,120 +1,138 @@
-# Semaine 1 - Système et Automation
+# Semaine 1 - Système et Automation (12h)
 
 ## Menu de Navigation
 
 ### Séances de la Semaine
 
-| Séance       | Titre                                                                                 | Durée | Focus                            | Navigation                                                                                                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------- | ----- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Séance 1** | [Linux Fondamentaux](./Seance-1-Linux-Fondamentaux/)                                  | 2h    | Système de fichiers, permissions | [Cours](./Seance-1-Linux-Fondamentaux/cours/) \| [Labs](./Seance-1-Linux-Fondamentaux/labs/) \| [Quiz](./Seance-1-Linux-Fondamentaux/quiz/)                                              |
-| **Séance 2** | [Gestion Processus et Services](./Seance-2-Gestion-Processus-Services/)               | 2h    | Processus, systemd, monitoring   | [Cours](./Seance-2-Gestion-Processus-Services/cours/) \| [Labs](./Seance-2-Gestion-Processus-Services/labs/) \| [Quiz](./Seance-2-Gestion-Processus-Services/quiz/)                      |
-| **Séance 3** | [Réseaux et Sécurité](./Seance-3-Reseaux-Securite/)                                   | 2h    | Configuration réseau, SSH        | [Cours](./Seance-3-Reseaux-Securite/cours/) \| [Labs](./Seance-3-Reseaux-Securite/labs/) \| [Quiz](./Seance-3-Reseaux-Securite/quiz/)                                                    |
-| **Séance 4** | [Services Avancés et Automatisation](./Seance-4-Services-Avances-Automatisation/)     | 2h    | Apache/Nginx, automation         | [Cours](./Seance-4-Services-Avances-Automatisation/cours/) \| [Labs](./Seance-4-Services-Avances-Automatisation/labs/) \| [Quiz](./Seance-4-Services-Avances-Automatisation/quiz/)       |
-| **Séance 5** | [Bash Scripting et Automation Avancée](./Seance-5-Bash-Scripting-Automation-Avancee/) | 2h    | Bash avancé, monitoring          | [Cours](./Seance-5-Bash-Scripting-Automation-Avancee/cours/) \| [Labs](./Seance-5-Bash-Scripting-Automation-Avancee/labs/) \| [Quiz](./Seance-5-Bash-Scripting-Automation-Avancee/quiz/) |
+| Séance       | Titre                                                                             | Durée | Focus                            | Navigation                                                                                                                                                                         |
+| ------------ | --------------------------------------------------------------------------------- | ----- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Séance 1** | [Linux Fondamentaux](./Seance-1-Linux-Fondamentaux/)                              | 2h    | Système de fichiers, permissions | [Cours](./Seance-1-Linux-Fondamentaux/cours/) \| [Labs](./Seance-1-Linux-Fondamentaux/labs/) \| [Quiz](./Seance-1-Linux-Fondamentaux/quiz/)                                        |
+| **Séance 2** | [Gestion Processus et Services](./Seance-2-Gestion-Processus-Services/)           | 2h    | Processus, systemd, monitoring   | [Cours](./Seance-2-Gestion-Processus-Services/cours/) \| [Labs](./Seance-2-Gestion-Processus-Services/labs/) \| [Quiz](./Seance-2-Gestion-Processus-Services/quiz/)                |
+| **Séance 3** | [Réseaux - Fondations](./Seance-3-Reseaux-Fondations/)                            | 2h    | OSI, TCP/IP, adressage, DNS      | [Cours](./Seance-3-Reseaux-Fondations/cours/) \| [Labs](./Seance-3-Reseaux-Fondations/labs/) \| [Quiz](./Seance-3-Reseaux-Fondations/quiz/)                                        |
+| **Séance 4** | [Réseaux - Architecture](./Seance-4-Reseaux-Architecture/)                        | 2h    | Routage, VLAN, segmentation      | [Cours](./Seance-4-Reseaux-Architecture/cours/) \| [Labs](./Seance-4-Reseaux-Architecture/labs/) \| [Quiz](./Seance-4-Reseaux-Architecture/quiz/)                                  |
+| **Séance 5** | [Réseaux - Sécurité](./Seance-5-Reseaux-Securite/)                                | 2h    | Pare-feu, SSH, diagnostics       | [Cours](./Seance-5-Reseaux-Securite/cours/) \| [Labs](./Seance-5-Reseaux-Securite/labs/) \| [Quiz](./Seance-5-Reseaux-Securite/quiz/)                                              |
+| **Séance 6** | [Services Avancés et Automatisation](./Seance-6-Services-Avances-Automatisation/) | 2h    | Apache/Nginx, automation         | [Cours](./Seance-6-Services-Avances-Automatisation/cours/) \| [Labs](./Seance-6-Services-Avances-Automatisation/labs/) \| [Quiz](./Seance-6-Services-Avances-Automatisation/quiz/) |
 
 ### Navigation Rapide
 
-- **Progression** : [Séance 1](./Seance-1-Linux-Fondamentaux/) → [Séance 2](./Seance-2-Gestion-Processus-Services/) → [Séance 3](./Seance-3-Reseaux-Securite/) → [Séance 4](./Seance-4-Services-Avances-Automatisation/) → [Séance 5](./Seance-5-Bash-Scripting-Automation-Avancee/)
-- **Structure** : [Sprint 1 - Accueil](../README.md) | [Semaine 2 - Python DevOps](../Semaine-2-Python-DevOps/) | [Semaine 3 - Version Control](../Semaine-3-Version-Control/)
-- **Objectifs** : [Progression Pédagogique](#progression-pédagogique) | [Objectifs d'Apprentissage](#objectifs-dapprentissage)
+- **Progression** : [Séance 1](./Seance-1-Linux-Fondamentaux/) → [Séance 2](./Seance-2-Gestion-Processus-Services/) → [Séance 3](./Seance-3-Reseaux-Fondations/) → [Séance 4](./Seance-4-Reseaux-Architecture/) → [Séance 5](./Seance-5-Reseaux-Securite/) → [Séance 6](./Seance-6-Services-Avances-Automatisation/)
+- **Structure** : [Sprint 1 - Accueil](../README.md) | [Semaine 2 - Scripting Bash & Python DevOps](../Semaine-2-Scripting-Bash-Python-DevOps/) | [Semaine 3 - Version Control](../Semaine-3-Version-Control/)
+- **Ressources** : [Programme Détaillé](#programme-détaillé) | [Compétences Développées](#compétences-développées)
 
 ---
 
-## Vue d'ensemble
+## Objectif de la Semaine
 
-**Objectif :** Maîtriser les fondamentaux des systèmes Linux et l'automation pour DevOps
-**Durée :** 5 séances (10 heures)
-**Niveau :** Débutant à intermédiaire
-**Approche :** Infrastructure-First pour une base solide
+Maîtriser les fondamentaux des systèmes Linux et l'automation pour DevOps, avec un focus particulier sur les réseaux. Cette semaine pose les bases techniques essentielles pour l'administration système et l'infrastructure DevOps.
 
-## Structure de la semaine
+## Programme Détaillé
 
-### Séance 1 - Linux Fondamentaux
+### Séance 1 - Linux Fondamentaux (2h)
 
-**Durée :** 2h
-**Focus :** Système de fichiers, commandes de base, permissions
+**Objectif** : Maîtriser l'environnement Linux et les commandes essentielles pour l'administration système
 
-- Navigation et exploration du système
-- Gestion des fichiers et dossiers
-- Système de permissions Unix
-- Variables d'environnement
+- **Théorie (45min)** : Navigation système, arborescence Linux, commandes de base, permissions Unix
+- **Pratique (75min)** : 4 LABs progressifs + Quiz 15 questions
+- **Livrables** : Scripts de navigation et gestion de fichiers + Configuration d'environnement
 
-### Séance 2 - Gestion Processus et Services
+### Séance 2 - Gestion Processus et Services (2h)
 
-**Durée :** 2h
-**Focus :** Processus, services système, monitoring
+**Objectif** : Administrer les processus et services système avec systemd pour l'exploitation DevOps
 
-- Gestion des processus Linux
-- Services système (systemd)
-- Monitoring des ressources
-- Logs système
+- **Théorie (45min)** : Processus Linux, systemd, services, monitoring ressources, logs système
+- **Pratique (75min)** : 4 LABs progressifs + Quiz 15 questions
+- **Livrables** : Scripts de monitoring système + Configuration services personnalisés
 
-### Séance 3 - Réseaux et Sécurité
+### Séance 3 - Réseaux - Fondations (2h)
 
-**Durée :** 2h
-**Focus :** Configuration réseau, pare-feu, SSH
+**Objectif** : Comprendre les fondamentaux réseau et configurer la connectivité de base sous Linux
 
-- Configuration réseau de base
-- Pare-feu (iptables/ufw)
-- Connexions SSH sécurisées
-- Diagnostics réseau
+- **Théorie (45min)** : Modèle OSI/TCP-IP, adressage IPv4/IPv6, DNS, NetworkManager
+- **Pratique (75min)** : 3 LABs progressifs + Quiz 15 questions
+- **Livrables** : Configuration réseau complète + Scripts de diagnostic connectivité
 
-### Séance 4 - Services Avancés et Automatisation
+### Séance 4 - Réseaux - Architecture (2h)
 
-**Durée :** 2h
-**Focus :** Configuration services, scripts automation
+**Objectif** : Concevoir et implémenter des architectures réseau pour environnements DevOps
 
-- Serveur web (Apache/Nginx)
-- Base de données (MySQL/PostgreSQL)
-- Scripts d'automation
-- Tâches programmées (cron)
+- **Théorie (45min)** : Routage avancé, VLAN, segmentation réseau, calculs de sous-réseaux
+- **Pratique (75min)** : 4 LABs progressifs + Quiz 15 questions
+- **Livrables** : Architecture réseau multi-environnements + Documentation technique
 
-### Séance 5 - Bash Scripting et Automation Avancée
+### Séance 5 - Réseaux - Sécurité (2h)
 
-**Durée :** 2h
-**Focus :** Scripting Bash avancé, automation déploiements, monitoring
+**Objectif** : Sécuriser les communications et infrastructures réseau DevOps
 
-- Architecture modulaire et gestion d'erreurs
-- Automation de déploiements Blue-Green
-- Monitoring intelligent avec alerting
-- Intégration APIs et workflows
+- **Théorie (45min)** : Pare-feu (iptables/ufw), SSH avancé, VPN, audit sécurité réseau
+- **Pratique (75min)** : 4 LABs progressifs + Quiz 15 questions
+- **Livrables** : Configuration sécurisée complète + Procédures d'audit
 
-## Progression pédagogique
+### Séance 6 - Services Avancés et Automatisation (2h)
 
-- **Session 1** : Bases système Linux (navigation, fichiers)
-- **Session 2** : Gestion processus et services (systemd, monitoring)
-- **Session 3** : Réseau et sécurité (SSH, pare-feu, diagnostics)
-- **Session 4** : Services et automation (web, BDD, scripts)
-- **Session 5** : Bash scripting avancé (déploiement, monitoring, APIs)
+**Objectif** : Déployer et automatiser les services web et base de données pour production
 
-## Objectifs d'apprentissage
+- **Théorie (45min)** : Apache/Nginx, MySQL/PostgreSQL, automation, tâches programmées (cron)
+- **Pratique (75min)** : 4 LABs progressifs + Quiz 15 questions
+- **Livrables** : Stack LAMP/LEMP complète + Scripts d'automation déploiement
 
-- Maîtriser l'environnement Linux pour DevOps
-- Automatiser les tâches système courantes
-- Configurer et sécuriser les services
-- Développer des scripts Bash avancés
-- Implémenter automation et monitoring
+### Séance 7 - Bash Scripting et Automation Avancée (2h)
+
+**Objectif** : Développer des solutions d'automation complètes avec monitoring et intégration APIs
+
+- **Théorie (45min)** : Scripting Bash avancé, déploiement Blue-Green, monitoring, APIs
+- **Pratique (75min)** : 4 LABs progressifs + Quiz 15 questions
+- **Livrables** : Framework d'automation complet + Monitoring avec alerting
+
+## Compétences Développées
+
+### Compétences Techniques
+
+- **Administration Linux** : Maîtrise complète de l'environnement Linux pour DevOps
+- **Réseaux** : Configuration, sécurisation et troubleshooting réseau avancé
+- **Automation** : Développement de scripts Bash avancés et automation complète
+- **Services** : Déploiement et gestion de services web et base de données
+- **Monitoring** : Surveillance système et alerting intelligent
+
+### Compétences Opérationnelles
+
+- **Troubleshooting** : Diagnostic et résolution de problèmes système/réseau
+- **Sécurité** : Sécurisation des infrastructures et communications
+- **Documentation** : Création de documentation technique et procédures
+- **Intégration** : APIs et intégration avec l'écosystème DevOps
+
+## Outils et Technologies
+
+**Système** : Linux (Ubuntu/CentOS), systemd, cron, logs  
+**Réseau** : NetworkManager, iptables/ufw, SSH, DNS, VLAN  
+**Services** : Apache/Nginx, MySQL/PostgreSQL  
+**Automation** : Bash scripting, APIs REST  
+**Monitoring** : Outils système natifs, alerting personnalisé
 
 ## Navigation Semaine 1
 
-### Accès Direct aux Séances
+## Prérequis
 
-| Navigation Séquentielle                                                           | Focus Technique            | Compétences Clés              |
-| --------------------------------------------------------------------------------- | -------------------------- | ----------------------------- |
-| [Séance 1 - Linux Fondamentaux](./Seance-1-Linux-Fondamentaux/)                   | CLI, fichiers, permissions | Navigation système, sécurité  |
-| [Séance 2 - Processus et Services](./Seance-2-Gestion-Processus-Services/)        | systemd, monitoring        | Gestion services, diagnostics |
-| [Séance 3 - Réseaux et Sécurité](./Seance-3-Reseaux-Securite/)                    | Configuration, SSH         | Réseau, sécurisation          |
-| [Séance 4 - Services Avancés](./Seance-4-Services-Avances-Automatisation/)        | Apache/Nginx, BDD          | Services web, automation      |
-| [Séance 5 - Bash Scripting Avancé](./Seance-5-Bash-Scripting-Automation-Avancee/) | Scripts, déploiement       | Automation complète           |
+- Connaissances de base en informatique
+- Familiarité avec les concepts de réseau (optionnel)
+- Machine virtuelle Linux ou accès à un environnement Linux
 
-### Navigation Générale
+## Évaluation
 
-- **Retour** : [Sprint 1 - Accueil](../README.md)
-- **Suivant** : [Semaine 2 - Python DevOps](../Semaine-2-Python-DevOps/)
-- **Début** : [Menu de Navigation](#menu-de-navigation)
+- **Contrôle continu** : Quiz à chaque séance (15 questions)
+- **Pratique** : 26 LABs progressifs sur l'ensemble de la semaine
+- **Livrables** : Projets techniques et documentation à chaque séance
+- **Évaluation finale** : Projet d'intégration combinant toutes les compétences
+
+## Liens avec l'Écosystème DevOps
+
+Cette semaine pose les fondations pour :
+
+- **Semaine 2** : Python DevOps (scripting et automation avancée)
+- **Semaine 3** : Version Control (Git et workflows)
+- **Sprint 2** : Containerisation et CI/CD
+- **Sprint 3** : Kubernetes et orchestration
 
 ---
 
 **Sprint 1 - Semaine 1 - Système et Automation**
 _Formation DevOps - Simplon Maghreb | Approche Infrastructure-First_
-

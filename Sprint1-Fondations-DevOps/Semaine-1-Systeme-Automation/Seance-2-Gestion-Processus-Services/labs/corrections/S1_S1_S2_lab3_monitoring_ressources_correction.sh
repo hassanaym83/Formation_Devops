@@ -67,11 +67,11 @@ PERCENT_USED=$((USED_MEM * 100 / TOTAL_MEM))
 echo "Utilisation mémoire : ${PERCENT_USED}%"
 
 if [ $PERCENT_USED -gt 80 ]; then
-    echo "⚠️  ALERTE : Mémoire critique (>80%)"
+ echo " ALERTE : Mémoire critique (>80%)"
 elif [ $PERCENT_USED -gt 60 ]; then
-    echo "⚠️  ATTENTION : Mémoire élevée (>60%)"
+ echo " ATTENTION : Mémoire élevée (>60%)"
 else
-    echo "✅ Mémoire normale"
+ echo " Mémoire normale"
 fi
 
 echo "Mission : Surveiller consommation mémoire"
@@ -94,15 +94,15 @@ df -i
 echo
 echo "Activité I/O (si iostat disponible) :"
 if command -v iostat >/dev/null 2>&1; then
-    iostat -x 1 1
+ iostat -x 1 1
 else
-    echo "iostat non installé - utilisation de /proc/diskstats :"
-    cat /proc/diskstats | head -5
+ echo "iostat non installé - utilisation de /proc/diskstats :"
+ cat /proc/diskstats | head -5
 fi
 
 echo
 echo "Analyse espace disque :"
-df -h | awk 'NR>1 {gsub(/%/, "", $5); if($5 > 80) print "⚠️  ALERTE: " $6 " plein à " $5 "%"; else if($5 > 60) print "⚠️  ATTENTION: " $6 " à " $5 "%"; else print "✅ " $6 " OK (" $5 "%)"}'
+df -h | awk 'NR>1 {gsub(/%/, "", $5); if($5 > 80) print " ALERTE: " $6 " plein à " $5 "%"; else if($5 > 60) print " ATTENTION: " $6 " à " $5 "%"; else print " " $6 " OK (" $5 "%)"}'
 
 echo "Mission : Contrôler l'espace disque disponible"
 echo "Analyse : Surveiller les partitions critiques (/,/var,/tmp)"
@@ -122,10 +122,10 @@ echo
 echo "Processus zombies (si existants) :"
 ZOMBIES=$(ps aux | awk '$8 ~ /^Z/ {print $2, $11}')
 if [ -z "$ZOMBIES" ]; then
-    echo "✅ Aucun processus zombie"
+ echo " Aucun processus zombie"
 else
-    echo "⚠️  Processus zombies détectés :"
-    echo "$ZOMBIES"
+ echo " Processus zombies détectés :"
+ echo "$ZOMBIES"
 fi
 
 echo
@@ -185,20 +185,20 @@ DISK_USED=$(df / | awk 'NR==2{print $5}' | sed 's/%//')
 # Vérifications et alertes
 echo "=== RAPPORT MONITORING ===" >> $LOG_FILE
 echo "CPU Load: ${CPU_LOAD:-0}%" >> $LOG_FILE
-echo "Mémoire: ${MEM_USED}%" >> $LOG_FILE  
+echo "Mémoire: ${MEM_USED}%" >> $LOG_FILE 
 echo "Disque /: ${DISK_USED}%" >> $LOG_FILE
 
 # Alertes
 if [ "${CPU_LOAD:-0}" -gt $CPU_THRESHOLD ]; then
-    echo "⚠️  ALERTE CPU: ${CPU_LOAD}% > $CPU_THRESHOLD%" >> $LOG_FILE
+ echo " ALERTE CPU: ${CPU_LOAD}% > $CPU_THRESHOLD%" >> $LOG_FILE
 fi
 
 if [ "$MEM_USED" -gt $MEM_THRESHOLD ]; then
-    echo "⚠️  ALERTE MÉMOIRE: ${MEM_USED}% > $MEM_THRESHOLD%" >> $LOG_FILE
+ echo " ALERTE MÉMOIRE: ${MEM_USED}% > $MEM_THRESHOLD%" >> $LOG_FILE
 fi
 
 if [ "$DISK_USED" -gt $DISK_THRESHOLD ]; then
-    echo "⚠️  ALERTE DISQUE: ${DISK_USED}% > $DISK_THRESHOLD%" >> $LOG_FILE
+ echo " ALERTE DISQUE: ${DISK_USED}% > $DISK_THRESHOLD%" >> $LOG_FILE
 fi
 
 echo "=========================" >> $LOG_FILE
@@ -241,32 +241,32 @@ cat << 'EOF' > dashboard.sh
 #!/bin/bash
 clear
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    DASHBOARD SYSTÈME                         ║"
+echo "║ DASHBOARD SYSTÈME ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo
 
-echo "🖥️  CPU & LOAD:"
-echo "   $(uptime)"
+echo " CPU & LOAD:"
+echo " $(uptime)"
 echo
 
-echo "💾 MÉMOIRE:"
-echo "   $(free -h | grep Mem)"
+echo " MÉMOIRE:"
+echo " $(free -h | grep Mem)"
 echo
 
-echo "💿 DISQUE:"
+echo " DISQUE:"
 df -h | awk 'NR==1 || $5+0 > 50'
 echo
 
-echo "🔄 TOP PROCESSUS CPU:"
+echo "TOP PROCESSUS CPU:"
 ps aux --sort=-%cpu | head -6
 echo
 
-echo "🔍 TOP PROCESSUS MÉMOIRE:"
+echo " TOP PROCESSUS MÉMOIRE:"
 ps aux --sort=-%mem | head -6
 echo
 
-echo "🌐 RÉSEAU:"
-echo "   Connexions actives: $(netstat -tun 2>/dev/null | grep ESTABLISHED | wc -l || ss -tun | grep ESTAB | wc -l)"
+echo "RÉSEAU:"
+echo " Connexions actives: $(netstat -tun 2>/dev/null | grep ESTABLISHED | wc -l || ss -tun | grep ESTAB | wc -l)"
 echo
 EOF
 

@@ -284,36 +284,36 @@ echo
 echo "7. Rapport d'audit de sécurité détaillé:"
 
 echo
-echo "📊 Analyse par type de fichier:"
+echo " Analyse par type de fichier:"
 
 # Compteur de sécurité
 secure_files=0
 total_files=0
 
 # Analyse des fichiers publics
-echo "📁 Fichiers web publics:"
+echo " Fichiers web publics:"
 find "$PUBLIC_DIR" -type f | while read file; do
  perm=$(stat -c "%a" "$file")
  if [ "$perm" = "644" ]; then
- echo "  ✓ $(basename "$file") ($perm)"
+ echo " ✓ $(basename "$file") ($perm)"
  else
- echo "  ⚠ $(basename "$file") ($perm) - Révision recommandée"
+ echo " ⚠ $(basename "$file") ($perm) - Révision recommandée"
  fi
 done
 
 # Analyse des secrets
-echo "🔒 Fichiers secrets:"
+echo "Fichiers secrets:"
 find "$SECRETS_DIR" -type f | while read file; do
  perm=$(stat -c "%a" "$file")
  if [ "$perm" = "600" ]; then
- echo "  ✓ $(basename "$file") ($perm) - Sécurisé"
+ echo " ✓ $(basename "$file") ($perm) - Sécurisé"
  else
- echo "  ❌ $(basename "$file") ($perm) - RISQUE DE SÉCURITÉ"
+ echo " $(basename "$file") ($perm) - RISQUE DE SÉCURITÉ"
  fi
 done
 
 echo
-echo "🔍 Vérifications avancées:"
+echo " Vérifications avancées:"
 
 # Vérification des fichiers avec permissions trop permissives
 echo "⚠ Fichiers avec permissions potentiellement dangereuses:"
@@ -323,7 +323,7 @@ find "$WEB_ROOT" -type f \( -perm -002 -o -perm -020 \) 2>/dev/null | while read
 done
 
 # Vérification des fichiers exécutables
-echo "🔧 Fichiers exécutables détectés:"
+echo " Fichiers exécutables détectés:"
 find "$WEB_ROOT" -type f -executable | while read file; do
  perm=$(stat -c "%a" "$file")
  if [[ "$file" == *.sh ]]; then
@@ -334,22 +334,22 @@ find "$WEB_ROOT" -type f -executable | while read file; do
 done
 
 echo
-echo "📋 Recommandations de sécurité:"
-echo "  1. Vérifier régulièrement les permissions avec ce script"
-echo "  2. Utiliser des groupes appropriés pour les accès partagés"
-echo "  3. Implémenter une surveillance des modifications de permissions"
-echo "  4. Configurer SELinux/AppArmor pour une sécurité renforcée"
-echo "  5. Auditer les accès aux fichiers sensibles"
+echo " Recommandations de sécurité:"
+echo " 1. Vérifier régulièrement les permissions avec ce script"
+echo " 2. Utiliser des groupes appropriés pour les accès partagés"
+echo " 3. Implémenter une surveillance des modifications de permissions"
+echo " 4. Configurer SELinux/AppArmor pour une sécurité renforcée"
+echo " 5. Auditer les accès aux fichiers sensibles"
 
 echo
-echo "💻 Commandes de maintenance:"
-echo "  # Restaurer les permissions par défaut:"
-echo "  find $PUBLIC_DIR -type f -exec chmod 644 {} \\;"
-echo "  find $SECRETS_DIR -type f -exec chmod 600 {} \\;"
-echo "  find $LOGS_DIR -type f -exec chmod 660 {} \\;"
+echo " Commandes de maintenance:"
+echo " # Restaurer les permissions par défaut:"
+echo " find $PUBLIC_DIR -type f -exec chmod 644 {} \\;"
+echo " find $SECRETS_DIR -type f -exec chmod 600 {} \\;"
+echo " find $LOGS_DIR -type f -exec chmod 660 {} \\;"
 echo
-echo "  # Vérification rapide des permissions critiques:"
-echo "  find $SECRETS_DIR -type f ! -perm 600 -ls"
+echo " # Vérification rapide des permissions critiques:"
+echo " find $SECRETS_DIR -type f ! -perm 600 -ls"
 
 echo
 echo "=== AUDIT SÉCURITAIRE TERMINÉ ==="

@@ -30,27 +30,27 @@ echo "========================================="
 echo "Collecte d'informations de base :"
 
 echo "1. Informations système :"
-echo "   Hostname : $(hostname)"
-echo "   Uptime   : $(uptime)"
-echo "   Kernel   : $(uname -r)"
-echo "   Charge   : $(cat /proc/loadavg)"
+echo " Hostname : $(hostname)"
+echo " Uptime : $(uptime)"
+echo " Kernel : $(uname -r)"
+echo " Charge : $(cat /proc/loadavg)"
 
 echo
 echo "2. État général des ressources :"
-echo "   CPU Cores: $(nproc)"
-echo "   RAM Total: $(free -h | awk 'NR==2{print $2}')"
-echo "   RAM Libre: $(free -h | awk 'NR==2{print $7}')"
-echo "   Disque / : $(df -h / | awk 'NR==2{print $4}') libre"
+echo " CPU Cores: $(nproc)"
+echo " RAM Total: $(free -h | awk 'NR==2{print $2}')"
+echo " RAM Libre: $(free -h | awk 'NR==2{print $7}')"
+echo " Disque / : $(df -h / | awk 'NR==2{print $4}') libre"
 
 echo
 echo "3. Services critiques :"
 CRITICAL_SERVICES=("ssh" "sshd" "systemd" "NetworkManager" "dbus")
 for service in "${CRITICAL_SERVICES[@]}"; do
-    if systemctl is-active "$service" >/dev/null 2>&1; then
-        echo "   ✅ $service : ACTIF"
-    else
-        echo "   ❌ $service : INACTIF ou inexistant"
-    fi
+ if systemctl is-active "$service" >/dev/null 2>&1; then
+ echo " $service : ACTIF"
+ else
+ echo " $service : INACTIF ou inexistant"
+ fi
 done
 
 echo
@@ -75,26 +75,26 @@ ps -eLf | awk '{print $4}' | sort | uniq -c | sort -nr | head -10
 
 echo
 echo "4. Recherche de processus suspects :"
-echo "   Processus sans TTY (daemons malveillants potentiels) :"
+echo " Processus sans TTY (daemons malveillants potentiels) :"
 ps aux | awk '$7 == "?" && $1 != "root" {print $1, $2, $11}' | head -5
 
 echo
-echo "   Processus avec noms suspects :"
+echo " Processus avec noms suspects :"
 ps aux | grep -E "(tmp|dev|shm)" | grep -v grep
 
 echo
-echo "   Processus zombies :"
+echo " Processus zombies :"
 ZOMBIES=$(ps aux | awk '$8 ~ /^Z/ {print $2, $11}')
 if [ -z "$ZOMBIES" ]; then
-    echo "   ✅ Aucun processus zombie détecté"
+ echo " Aucun processus zombie détecté"
 else
-    echo "   ⚠️  Processus zombies :"
-    echo "$ZOMBIES"
+ echo " Processus zombies :"
+ echo "$ZOMBIES"
 fi
 
 echo
 echo "5. Analyse des connexions processus :"
-echo "   Processus avec plus de connexions réseau :"
+echo " Processus avec plus de connexions réseau :"
 lsof -i 2>/dev/null | awk '{print $2}' | sort | uniq -c | sort -nr | head -5
 
 echo "Mission : Identifier les processus anormaux"
@@ -115,13 +115,13 @@ ss -tun | grep ESTAB | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -n
 
 echo
 echo "3. Ports en écoute suspects :"
-echo "   Ports non standard en écoute :"
+echo " Ports non standard en écoute :"
 netstat -tuln 2>/dev/null | awk '$4 ~ /:/ {split($4,a,":"); if(a[2] > 1024 && a[2] != 8080 && a[2] != 3000) print $0}' || \
 ss -tuln | awk '$4 ~ /:/ {split($4,a,":"); if(a[2] > 1024 && a[2] != 8080 && a[2] != 3000) print $0}'
 
 echo
 echo "4. Analyse trafic :"
-echo "   Statistiques interfaces réseau :"
+echo " Statistiques interfaces réseau :"
 cat /proc/net/dev | awk 'NR>2 {print $1, "RX:", $2, "TX:", $10}' | head -5
 
 echo "Mission : Détecter activités réseau suspectes"
@@ -138,10 +138,10 @@ find /var/log -type f -mmin -60 2>/dev/null | head -5
 
 echo
 echo "2. Fichiers avec permissions suspectes :"
-echo "   Fichiers SUID suspects :"
+echo " Fichiers SUID suspects :"
 find /tmp /home -type f -perm -4000 2>/dev/null | head -5
 
-echo "   Fichiers world-writable :"
+echo " Fichiers world-writable :"
 find /tmp -type f -perm -002 2>/dev/null | head -5
 
 echo
@@ -150,7 +150,7 @@ find / -type f -size +100M -mtime -1 2>/dev/null | head -5
 
 echo
 echo "4. Fichiers ouverts par processus suspects :"
-echo "   Fichiers ouverts en écriture :"
+echo " Fichiers ouverts en écriture :"
 lsof +L1 2>/dev/null | head -5
 
 echo "Mission : Identifier fichiers et accès suspects"
@@ -171,12 +171,12 @@ journalctl _SYSTEMD_UNIT=sshd.service --since "2 hours ago" --no-pager | grep -i
 
 echo
 echo "3. Timeline des événements critiques :"
-echo "   Démarrages de services (dernière heure) :"
+echo " Démarrages de services (dernière heure) :"
 journalctl --since "1 hour ago" --no-pager | grep -i "started\|stopped" | tail -10
 
 echo
 echo "4. Analyse des patterns :"
-echo "   Activité par heure :"
+echo " Activité par heure :"
 journalctl --since "6 hours ago" --no-pager | awk '{print $1" "$2" "$3}' | sort | uniq -c | tail -10
 
 echo "Mission : Construire chronologie des événements"
@@ -191,69 +191,69 @@ echo "========================================="
 REPORT_FILE="/tmp/forensic_report_$(date +%Y%m%d_%H%M%S).txt"
 cat << EOF > "$REPORT_FILE"
 ╔══════════════════════════════════════════════════════════════╗
-║                    RAPPORT D'INVESTIGATION                   ║
-║                     ANALYSE FORENSIQUE                       ║
+║ RAPPORT D'INVESTIGATION ║
+║ ANALYSE FORENSIQUE ║
 ╚══════════════════════════════════════════════════════════════╝
 
 Date d'investigation : $(date)
-Système analysé      : $(hostname)
-Investigateur        : DevOps Team
-Durée d'analyse      : 45 minutes
+Système analysé : $(hostname)
+Investigateur : DevOps Team
+Durée d'analyse : 45 minutes
 
 ═══════════════════════════════════════════════════════════════
 RÉSUMÉ EXÉCUTIF
 ═══════════════════════════════════════════════════════════════
 
 État système : $(if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -lt 2 ]; then echo "NORMAL"; else echo "SOUS CHARGE"; fi)
-Sécurité     : $(if [ $(ps aux | awk '$8 ~ /^Z/' | wc -l) -eq 0 ]; then echo "OK"; else echo "ATTENTION - Processus zombies"; fi)
-Performance  : $(if [ $(free | awk 'NR==2{printf "%.0f", $3*100/$2}') -lt 80 ]; then echo "ACCEPTABLE"; else echo "DÉGRADÉE"; fi)
+Sécurité : $(if [ $(ps aux | awk '$8 ~ /^Z/' | wc -l) -eq 0 ]; then echo "OK"; else echo "ATTENTION - Processus zombies"; fi)
+Performance : $(if [ $(free | awk 'NR==2{printf "%.0f", $3*100/$2}') -lt 80 ]; then echo "ACCEPTABLE"; else echo "DÉGRADÉE"; fi)
 
 ═══════════════════════════════════════════════════════════════
 INDICATEURS TECHNIQUES
 ═══════════════════════════════════════════════════════════════
 
-CPU Load    : $(cat /proc/loadavg | cut -d' ' -f1-3)
-Mémoire     : $(free -h | awk 'NR==2{print $3"/"$2}') utilisée
-Processus   : $(ps aux | wc -l) total
-Connexions  : $(netstat -tun 2>/dev/null | grep ESTABLISHED | wc -l || echo "N/A") établies
+CPU Load : $(cat /proc/loadavg | cut -d' ' -f1-3)
+Mémoire : $(free -h | awk 'NR==2{print $3"/"$2}') utilisée
+Processus : $(ps aux | wc -l) total
+Connexions : $(netstat -tun 2>/dev/null | grep ESTABLISHED | wc -l || echo "N/A") établies
 
-Top 3 CPU  : $(ps aux --sort=-%cpu | awk 'NR<=4 && NR>1 {print $11}' | tr '\n' ' ')
-Top 3 RAM  : $(ps aux --sort=-%mem | awk 'NR<=4 && NR>1 {print $11}' | tr '\n' ' ')
+Top 3 CPU : $(ps aux --sort=-%cpu | awk 'NR<=4 && NR>1 {print $11}' | tr '\n' ' ')
+Top 3 RAM : $(ps aux --sort=-%mem | awk 'NR<=4 && NR>1 {print $11}' | tr '\n' ' ')
 
 ═══════════════════════════════════════════════════════════════
 RÉSULTATS D'INVESTIGATION
 ═══════════════════════════════════════════════════════════════
 
 1. PROCESSUS SUSPECTS :
-   $(if [ $(ps aux | awk '$1 != "root" && $7 == "?"' | wc -l) -gt 0 ]; then echo "⚠️  Processus sans TTY détectés"; else echo "✅ Aucun processus suspect"; fi)
+ $(if [ $(ps aux | awk '$1 != "root" && $7 == "?"' | wc -l) -gt 0 ]; then echo " Processus sans TTY détectés"; else echo " Aucun processus suspect"; fi)
 
 2. ACTIVITÉ RÉSEAU :
-   $(if [ $(netstat -tuln 2>/dev/null | awk '$4 ~ /:/ {split($4,a,":"); if(a[2] > 10000) print $0}' | wc -l || echo 0) -gt 0 ]; then echo "⚠️  Ports non standard en écoute"; else echo "✅ Activité réseau normale"; fi)
+ $(if [ $(netstat -tuln 2>/dev/null | awk '$4 ~ /:/ {split($4,a,":"); if(a[2] > 10000) print $0}' | wc -l || echo 0) -gt 0 ]; then echo " Ports non standard en écoute"; else echo " Activité réseau normale"; fi)
 
 3. FICHIERS SYSTÈME :
-   $(if [ $(find /tmp -type f -perm -4000 2>/dev/null | wc -l) -gt 0 ]; then echo "⚠️  Fichiers SUID suspects trouvés"; else echo "✅ Permissions fichiers normales"; fi)
+ $(if [ $(find /tmp -type f -perm -4000 2>/dev/null | wc -l) -gt 0 ]; then echo " Fichiers SUID suspects trouvés"; else echo " Permissions fichiers normales"; fi)
 
 4. LOGS SYSTÈME :
-   $(if [ $(journalctl -p err --since "1 hour ago" --no-pager | wc -l) -gt 5 ]; then echo "⚠️  Erreurs système fréquentes"; else echo "✅ Logs système propres"; fi)
+ $(if [ $(journalctl -p err --since "1 hour ago" --no-pager | wc -l) -gt 5 ]; then echo " Erreurs système fréquentes"; else echo " Logs système propres"; fi)
 
 ═══════════════════════════════════════════════════════════════
 RECOMMANDATIONS
 ═══════════════════════════════════════════════════════════════
 
 1. IMMÉDIAT :
-   • Surveiller les processus à forte consommation
-   • Vérifier les connexions réseau non autorisées
-   • Contrôler l'espace disque
+ • Surveiller les processus à forte consommation
+ • Vérifier les connexions réseau non autorisées
+ • Contrôler l'espace disque
 
 2. À COURT TERME :
-   • Implémenter monitoring automatisé
-   • Configurer alertes sur seuils critiques
-   • Documenter baseline de performance
+ • Implémenter monitoring automatisé
+ • Configurer alertes sur seuils critiques
+ • Documenter baseline de performance
 
 3. À LONG TERME :
-   • Audit sécurité complet
-   • Plan de monitoring proactif
-   • Procédures d'incident
+ • Audit sécurité complet
+ • Plan de monitoring proactif
+ • Procédures d'incident
 
 ═══════════════════════════════════════════════════════════════
 CONCLUSION
@@ -281,36 +281,36 @@ cat << 'EOF' > forensic_toolkit.sh
 #!/bin/bash
 # Toolkit d'investigation forensique automatisé
 
-echo "🔍 INVESTIGATION FORENSIQUE AUTOMATISÉE"
+echo " INVESTIGATION FORENSIQUE AUTOMATISÉE"
 echo "========================================"
 
 # Détection d'anomalies
 detect_anomalies() {
-    echo "🚨 Détection d'anomalies :"
-    
-    # Processus suspects
-    SUSPECT_PROCS=$(ps aux | awk '$7 == "?" && $1 != "root"' | wc -l)
-    echo "   Processus sans TTY non-root : $SUSPECT_PROCS"
-    
-    # Charge système
-    LOAD=$(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1)
-    echo "   Load average : $LOAD (seuil alerte: 2)"
-    
-    # Mémoire
-    MEM_USED=$(free | awk 'NR==2{printf "%.0f", $3*100/$2}')
-    echo "   Utilisation mémoire : ${MEM_USED}% (seuil alerte: 80%)"
-    
-    # Connexions réseau
-    CONNECTIONS=$(netstat -tun 2>/dev/null | grep ESTABLISHED | wc -l || echo "0")
-    echo "   Connexions actives : $CONNECTIONS"
+ echo "Détection d'anomalies :"
+ 
+ # Processus suspects
+ SUSPECT_PROCS=$(ps aux | awk '$7 == "?" && $1 != "root"' | wc -l)
+ echo " Processus sans TTY non-root : $SUSPECT_PROCS"
+ 
+ # Charge système
+ LOAD=$(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1)
+ echo " Load average : $LOAD (seuil alerte: 2)"
+ 
+ # Mémoire
+ MEM_USED=$(free | awk 'NR==2{printf "%.0f", $3*100/$2}')
+ echo " Utilisation mémoire : ${MEM_USED}% (seuil alerte: 80%)"
+ 
+ # Connexions réseau
+ CONNECTIONS=$(netstat -tun 2>/dev/null | grep ESTABLISHED | wc -l || echo "0")
+ echo " Connexions actives : $CONNECTIONS"
 }
 
 # Analyse rapide
 quick_scan() {
-    echo "⚡ Scan rapide :"
-    echo "   Zombies : $(ps aux | awk '$8 ~ /^Z/' | wc -l)"
-    echo "   Erreurs récentes : $(journalctl -p err --since '1h ago' --no-pager | wc -l)"
-    echo "   Fichiers /tmp récents : $(find /tmp -type f -mmin -30 2>/dev/null | wc -l)"
+ echo " Scan rapide :"
+ echo " Zombies : $(ps aux | awk '$8 ~ /^Z/' | wc -l)"
+ echo " Erreurs récentes : $(journalctl -p err --since '1h ago' --no-pager | wc -l)"
+ echo " Fichiers /tmp récents : $(find /tmp -type f -mmin -30 2>/dev/null | wc -l)"
 }
 
 detect_anomalies
@@ -333,33 +333,33 @@ ps aux --sort=-%cpu | awk 'NR==2{print $11 " (CPU: " $3 "%, MEM: " $4 "%)"}'
 echo "2. Service suspect identifié :"
 SUSPECT_COUNT=$(ps aux | awk '$7 == "?" && $1 != "root"' | wc -l)
 if [ "$SUSPECT_COUNT" -gt 0 ]; then
-    echo "   ⚠️  $SUSPECT_COUNT processus sans TTY non-root détectés"
+ echo " $SUSPECT_COUNT processus sans TTY non-root détectés"
 else
-    echo "   ✅ Aucun service suspect évident"
+ echo " Aucun service suspect évident"
 fi
 
 echo "3. Problème de performance :"
 PERF_ISSUE="AUCUN"
 if [ $(cat /proc/loadavg | cut -d'.' -f1) -gt 2 ]; then
-    PERF_ISSUE="CHARGE CPU ÉLEVÉE"
+ PERF_ISSUE="CHARGE CPU ÉLEVÉE"
 elif [ $(free | awk 'NR==2{printf "%.0f", $3*100/$2}') -gt 80 ]; then
-    PERF_ISSUE="MÉMOIRE SATURÉE"
+ PERF_ISSUE="MÉMOIRE SATURÉE"
 elif [ $(df / | awk 'NR==2{print $5}' | sed 's/%//') -gt 90 ]; then
-    PERF_ISSUE="DISQUE PLEIN"
+ PERF_ISSUE="DISQUE PLEIN"
 fi
-echo "   Problème détecté : $PERF_ISSUE"
+echo " Problème détecté : $PERF_ISSUE"
 
 echo "4. Action corrective :"
 if [ "$PERF_ISSUE" != "AUCUN" ]; then
-    echo "   🔧 Action : Redémarrer services gourmands + monitoring"
+ echo " Action : Redémarrer services gourmands + monitoring"
 else
-    echo "   ✅ Action : Surveillance préventive continue"
+ echo " Action : Surveillance préventive continue"
 fi
 
 echo "5. Plan de surveillance :"
-echo "   📊 Monitoring CPU/MEM/DISK toutes les 5min"
-echo "   🔔 Alertes sur seuils : CPU>80%, MEM>80%, DISK>85%"
-echo "   📝 Rapport hebdomadaire automatisé"
+echo " Monitoring CPU/MEM/DISK toutes les 5min"
+echo " Alertes sur seuils : CPU>80%, MEM>80%, DISK>85%"
+echo " Rapport hebdomadaire automatisé"
 
 echo
 echo "=== FIN CORRECTION LAB 4 CHALLENGE ==="

@@ -7,7 +7,6 @@ Seuil de validation : 11/15 (72%)
 Durée maximale : 15 minutes
 
 Formateur: Hassan ESSADIK | Sprint 1 - Semaine 2 - Séance 4
-Framework Hassan : Quiz conforme sans icônes interdites
 """
 
 def run_quiz():
@@ -309,8 +308,6 @@ COMMENTAIRES FORMATEUR:
 {f"Excellente maîtrise des concepts. Prêt pour la suite." if percentage >= 85 else
  f"Bonne compréhension générale. Quelques révisions recommandées." if passed else
  f"Révision nécessaire avant de continuer."}
-
-Framework Hassan - Validation conforme
 """
     return report
 
@@ -319,7 +316,6 @@ if __name__ == "__main__":
     print("Quiz Fonctions et Modules Python DevOps")
     print("Formateur: Hassan ESSADIK")
     print("Sprint 1 - Semaine 2 - Séance 4")
-    print("Framework Hassan - Version conforme")
     
     print("\nCe quiz couvre tous les concepts de la séance:")
     print(" • Définition et appel de fonctions")

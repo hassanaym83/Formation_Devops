@@ -1,0 +1,20 @@
+
+RAPPORT DE QUIZ - SÉANCE 4
+=====================================================
+Étudiant: [À compléter]
+Formateur: Hassan ESSADIK
+Date: 2025-09-24 19:46:40
+Séance: Sprint 1 - Semaine 2 - Séance 4
+
+RÉSULTATS:
+- Score: 15/15 (100.0%)
+- Statut: RÉUSSIE
+- Seuil requis: 11/15 (72%)
+
+VALIDATION: ✅ RÉUSSIE
+
+PROCHAINE ÉTAPE:
+Séance 5 - Gestion d'erreurs et fichiers
+
+COMMENTAIRES FORMATEUR:
+Excellente maîtrise des concepts. Prêt pour la suite.

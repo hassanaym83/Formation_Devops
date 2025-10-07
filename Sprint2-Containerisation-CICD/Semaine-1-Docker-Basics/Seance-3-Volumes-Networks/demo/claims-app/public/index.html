@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Gestion des Réclamations - Demo Docker Volumes [v2.0]</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .demo-explanation {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      .demo-explanation h2 {
+        margin-bottom: 15px;
+        font-size: 1.5em;
+      }
+
+      .demo-explanation ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .demo-explanation li {
+        margin: 8px 0;
+        padding-left: 25px;
+        position: relative;
+      }
+
+      .demo-explanation li:before {
+        content: '•';
+        position: absolute;
+        left: 0;
+      }
+
+      .section {
+        margin-bottom: 40px;
+      }
+
+      .section h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        margin-right: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+      }
+
+      .btn-warning {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+      }
+
+      /* Nouvelles classes pour l'interface simplifiée */
+      .section-description {
+        color: #7f8c8d;
+        font-style: italic;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+      }
+
+      .count-badge {
+        background: #3498db;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+        min-width: 40px;
+        text-align: center;
+      }
+
+      .claims-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        border: 2px solid #dee2e6;
+        min-height: 150px;
+      }
+
+      .claims-container.loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #7f8c8d;
+        font-style: italic;
+      }
+
+      .path-info {
+        background: #e9ecef;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+        color: #495057;
+        margin-bottom: 15px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 30px;
+      }
+
+      .claims-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        border: 2px solid #dee2e6;
+      }
+
+      .claims-section h3 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+      }
+
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-validated {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .claim-item {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #3498db;
+      }
+
+      .claim-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .claim-title {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .claim-date {
+        font-size: 0.9em;
+        color: #7f8c8d;
+      }
+
+      .claim-priority {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        font-weight: 600;
+      }
+
+      .priority-haute {
+        background: #fee;
+        color: #c53030;
+      }
+
+      .priority-moyenne {
+        background: #fffbf0;
+        color: #b7791f;
+      }
+
+      .priority-basse {
+        background: #f0fff4;
+        color: #22543d;
+      }
+
+      .priority-urgente {
+        background: #fed7d7;
+        color: #9b2c2c;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .claim-actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .claim-actions button {
+        padding: 8px 16px;
+        font-size: 0.9em;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 2.5em;
+        font-weight: 700;
+        margin-bottom: 5px;
+      }
+
+      .stat-label {
+        font-size: 1em;
+        opacity: 0.9;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #7f8c8d;
+      }
+
+      .message {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .path-info {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+        margin-top: 10px;
+        color: #495057;
+      }
+
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .content {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Gestion des Réclamations</h1>
+        <p>Démonstration pratique des volumes Docker</p>
+      </div>
+
+      <div class="content">
+        <div class="demo-explanation">
+          <h2>Objectif de cette démonstration</h2>
+          <ul>
+            <li>
+              Les réclamations soumises sont stockées dans
+              <strong>/tmp</strong> (données temporaires)
+            </li>
+            <li>
+              Après validation, elles sont transférées vers
+              <strong>/persist</strong> (volume permanent)
+            </li>
+            <li>Redémarrer le conteneur efface /tmp mais préserve /persist</li>
+            <li>
+              Observer la différence entre données temporaires et persistantes
+            </li>
+          </ul>
+        </div>
+
+        <div class="stats" id="stats">
+          <div class="stat-card">
+            <div class="stat-number" id="pendingCount">-</div>
+            <div class="stat-label">En attente (/tmp)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="validatedCount">-</div>
+            <div class="stat-label">Validées (/persist)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="totalCount">-</div>
+            <div class="stat-label">Total général</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Nouvelle Réclamation</h2>
+          <p class="section-description">
+            Saisissez une nouvelle réclamation qui sera stockée temporairement.
+          </p>
+
+          <form id="claimForm" method="POST" action="/api/claims">
+            <div class="form-group">
+              <label for="reclamateur">Nom du réclamateur :</label>
+              <input type="text" id="reclamateur" name="reclamateur" required />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email :</label>
+              <input type="email" id="email" name="email" required />
+            </div>
+
+            <div class="form-group">
+              <label for="sujet">Sujet de la réclamation :</label>
+              <input type="text" id="sujet" name="sujet" required />
+            </div>
+
+            <div class="form-group">
+              <label for="priorite">Priorité :</label>
+              <select id="priorite" name="priorite">
+                <option value="basse">Basse</option>
+                <option value="moyenne" selected>Moyenne</option>
+                <option value="haute">Haute</option>
+                <option value="urgente">Urgente</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description détaillée :</label>
+              <textarea
+                id="description"
+                name="description"
+                placeholder="Décrivez votre réclamation en détail..."
+                required
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Soumettre la réclamation
+            </button>
+          </form>
+        </div>
+
+        <div id="message"></div>
+      </div>
+    </div>
+
+    <script>
+      // Variables globales
+      let pendingClaimsData = [];
+
+      // Fonction utilitaire pour les requêtes API
+      async function apiCall(url, options = {}) {
+        try {
+          console.log(`API Call: ${url}`, options);
+          const response = await fetch(url, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...options.headers
+            },
+            ...options
+          });
+
+          console.log(`Response status: ${response.status} for ${url}`);
+
+          const data = await response.json();
+          console.log(`Response data for ${url}:`, data);
+
+          if (!response.ok) {
+            throw new Error(data.message || 'Erreur API');
+          }
+
+          return data;
+        } catch (error) {
+          console.error('Erreur API pour', url, ':', error);
+          throw error;
+        }
+      }
+
+      // Fonction pour afficher un message
+      function showMessage(text, type = 'success') {
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+        setTimeout(() => {
+          messageDiv.innerHTML = '';
+        }, 5000);
+      }
+
+      // Formater la date
+      function formatDate(isoString) {
+        const date = new Date(isoString);
+        return date.toLocaleDateString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      // Créer l'affichage d'une réclamation
+      function createClaimElement(claim) {
+        const priorityClass = `priority-${claim.priorite}`;
+
+        return `
+                <div class="claim-item">
+                    <div class="claim-header">
+                        <div class="claim-title">${claim.sujet}</div>
+                        <div class="claim-priority ${priorityClass}">${
+          claim.priorite
+        }</div>
+                    </div>
+                    <div><strong>De:</strong> ${claim.reclamateur} (${
+          claim.email
+        })</div>
+                    <div><strong>Description:</strong> ${
+                      claim.description
+                    }</div>
+                    <div class="claim-date">
+                        Soumise le ${formatDate(claim.date_soumission)}
+                    </div>
+                    <div class="claim-actions">
+                        <button class="btn btn-success" onclick="validateClaim('${
+                          claim.filename
+                        }')">
+                            Valider
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteClaim('${
+                          claim.filename
+                        }', true)">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            `;
+      }
+
+      // Charger les réclamations en attente
+      async function loadPendingClaims() {
+        try {
+          console.log('Chargement des réclamations en attente...');
+          const response = await apiCall('/api/claims/pending');
+          pendingClaimsData = response.data;
+
+          const container = document.getElementById('pendingClaims');
+          const countBadge = document.getElementById('pendingCount');
+
+          countBadge.textContent = pendingClaimsData.length;
+
+          if (pendingClaimsData.length === 0) {
+            container.innerHTML =
+              '<div style="text-align: center; color: #7f8c8d; padding: 40px;"><h4>Aucune réclamation en attente</h4><p>Toutes les réclamations ont été traitées!</p></div>';
+          } else {
+            container.innerHTML = pendingClaimsData
+              .map((claim) => createClaimElement(claim))
+              .join('');
+          }
+          container.classList.remove('loading');
+        } catch (error) {
+          console.error('Erreur chargement réclamations en attente:', error);
+          document.getElementById(
+            'pendingClaims'
+          ).innerHTML = `<div class="message error">Erreur de chargement: ${error.message}</div>`;
+        }
+      }
+
+      // Fonction de rafraîchissement pour les réclamations en attente
+      async function refreshPendingClaims() {
+        await loadPendingClaims();
+        showMessage('Réclamations en attente actualisées', 'success');
+      }
+
+      // Test de connexion API
+      async function testApiConnection() {
+        try {
+          console.log('Test de connexion API...');
+          showMessage("Test de l'API en cours...", 'success');
+
+          // Test de l'endpoint health
+          const healthResponse = await apiCall('/api/health');
+          console.log('Health API OK:', healthResponse);
+
+          // Test de l'endpoint pending
+          const pendingResponse = await apiCall('/api/claims/pending');
+          console.log('Pending API OK:', pendingResponse);
+
+          showMessage(
+            `API fonctionne! ${pendingResponse.data.length} réclamations trouvées`,
+            'success'
+          );
+
+          // Forcer l'affichage
+          await loadPendingClaims();
+        } catch (error) {
+          console.error('Test API échoué:', error);
+          showMessage(`Test API échoué: ${error.message}`, 'error');
+        }
+      }
+
+      // Mettre à jour les statistiques
+      // Mettre à jour les statistiques en récupérant les vraies données du serveur
+      async function updateStats() {
+        try {
+          console.log('Récupération des statistiques...');
+          const response = await apiCall('/api/health');
+          console.log('Statistiques reçues:', response.statistics);
+
+          document.getElementById('pendingCount').textContent =
+            response.statistics.claims_pending || 0;
+          document.getElementById('validatedCount').textContent =
+            response.statistics.claims_validated || 0;
+          document.getElementById('totalCount').textContent =
+            response.statistics.total_claims || 0;
+
+          console.log("Statistiques mises à jour dans l'interface");
+        } catch (error) {
+          console.error('Erreur récupération statistiques:', error);
+          // Fallback vers les données locales si disponibles
+          document.getElementById('pendingCount').textContent =
+            pendingClaimsData.length || 0;
+          document.getElementById('validatedCount').textContent = '?';
+          document.getElementById('totalCount').textContent = '?';
+        }
+      } // Actualiser toutes les données
+      // Actualiser toutes les données
+      async function refreshData() {
+        showMessage('Actualisation des données...', 'success');
+        await Promise.all([loadPendingClaims(), updateStats()]);
+        showMessage('Données actualisées', 'success');
+      }
+
+      // Valider une réclamation
+      async function validateClaim(filename) {
+        if (
+          !confirm(
+            `Confirmer la validation de "${filename}" ?\n\nCette action déplacera la réclamation vers le stockage permanent.`
+          )
+        ) {
+          return;
+        }
+
+        try {
+          showMessage(`Validation de ${filename}...`, 'success');
+
+          const response = await apiCall(`/api/claims/${filename}/validate`, {
+            method: 'POST',
+            body: JSON.stringify({
+              comment: 'Validée via interface web simplifiée'
+            })
+          });
+
+          showMessage(`${response.message}`, 'success');
+
+          // Actualiser les données après validation
+          await refreshData();
+        } catch (error) {
+          console.error('Erreur validation:', error);
+          showMessage(`Erreur validation: ${error.message}`, 'error');
+        }
+      }
+
+      // Supprimer une réclamation
+      // Supprimer une réclamation
+      async function deleteClaim(filename, isPending = true) {
+        const type = isPending ? 'temporaire' : 'validée';
+        if (
+          !confirm(
+            `Êtes-vous sûr de vouloir supprimer la réclamation ${type} "${filename}" ?`
+          )
+        ) {
+          return;
+        }
+
+        try {
+          showMessage(`Suppression de ${filename}...`, 'success');
+
+          const queryParam = isPending ? '' : '?type=validated';
+          const response = await apiCall(
+            `/api/claims/${filename}${queryParam}`,
+            {
+              method: 'DELETE'
+            }
+          );
+
+          showMessage(`${response.message}`, 'success');
+          await refreshData();
+        } catch (error) {
+          showMessage(`Erreur suppression: ${error.message}`, 'error');
+        }
+      }
+
+      // Archiver une réclamation validée
+      // Nettoyer les anciennes réclamations
+      async function cleanupOldClaims() {
+        if (
+          !confirm('Supprimer les réclamations temporaires de plus de 24h ?')
+        ) {
+          return;
+        }
+
+        try {
+          showMessage('Nettoyage en cours...', 'success');
+
+          const response = await apiCall('/api/claims/cleanup', {
+            method: 'POST'
+          });
+
+          showMessage(`${response.message}`, 'success');
+          await refreshData();
+        } catch (error) {
+          showMessage(`Erreur nettoyage: ${error.message}`, 'error');
+        }
+      }
+
+      // Vérification de santé
+      // Initialisation
+      document.addEventListener('DOMContentLoaded', async () => {
+        console.log('Application de gestion des réclamations chargée');
+
+        // Attacher l'event listener pour la soumission du formulaire
+        console.log('Attaching event listener to claimForm');
+        const claimForm = document.getElementById('claimForm');
+        console.log('claimForm element:', claimForm);
+
+        if (claimForm) {
+          // Supprimer tout event listener existant
+          claimForm.onsubmit = null;
+
+          claimForm.addEventListener(
+            'submit',
+            async (e) => {
+              console.log('Form submit event triggered - PREVENTING DEFAULT');
+              e.preventDefault();
+              e.stopPropagation();
+
+              console.log('Collecting form data...');
+              const formData = new FormData(e.target);
+              const claimData = Object.fromEntries(formData.entries());
+              console.log('Form data collected:', claimData);
+
+              try {
+                showMessage('Soumission en cours...', 'success');
+                console.log('Calling API...');
+
+                const response = await apiCall('/api/claims', {
+                  method: 'POST',
+                  body: JSON.stringify(claimData)
+                });
+
+                console.log('API response:', response);
+                showMessage(`${response.message}`, 'success');
+                e.target.reset();
+                await refreshData();
+              } catch (error) {
+                console.error('Form submission error:', error);
+                showMessage(`Erreur: ${error.message}`, 'error');
+              }
+
+              return false; // Extra protection against default submission
+            },
+            true
+          ); // Use capture phase
+
+          console.log('Event listener attached successfully');
+        } else {
+          console.error('claimForm element not found!');
+        }
+
+        console.log('Chargement initial des données...');
+        try {
+          // Charger les statistiques immédiatement
+          await updateStats();
+          await refreshData();
+          console.log('Chargement initial terminé');
+        } catch (error) {
+          console.error('Erreur lors du chargement initial:', error);
+          showMessage(`Erreur chargement: ${error.message}`, 'error');
+        }
+      });
+    </script>
+  </body>
+</html>

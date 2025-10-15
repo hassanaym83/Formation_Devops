@@ -74,15 +74,15 @@ C4Context
     Person(dev, "Développeur", "Pousse le code vers GitLab")
 
     System_Boundary(gitlab, "GitLab Platform") {
-        Container(repo, "Repository", "Git", "Code source + .gitlab-ci.yml")
-        Container(ci, "CI/CD Engine", "GitLab CI", "Orchestrateur de pipelines")
-        Container(registry, "Container Registry", "Docker", "Images Docker")
+        System(repo, "Repository", "Code source + .gitlab-ci.yml")
+        System(ci, "CI/CD Engine", "Orchestrateur de pipelines")
+        System(registry, "Container Registry", "Images Docker")
     }
 
     System_Boundary(runners, "GitLab Runners") {
-        Container(runner1, "Runner Docker", "Docker", "Exécution en containers")
-        Container(runner2, "Runner Shell", "Shell", "Exécution directe")
-        Container(runner3, "Runner K8s", "Kubernetes", "Exécution pods")
+        System(runner1, "Runner Docker", "Exécution en containers")
+        System(runner2, "Runner Shell", "Exécution directe")
+        System(runner3, "Runner K8s", "Exécution pods")
     }
 
     System_Ext(deploy, "Environnements", "Staging/Production")
@@ -105,7 +105,7 @@ La **GitLab Instance** est le cerveau de l'écosystème CI/CD. Elle peut être :
 - **GitLab.com (SaaS)** : Service hébergé par GitLab Inc.
 
   - Avantages : Maintenance automatique, mise à jour continue
-  - Limites : 2000 minutes CI/CD gratuites par mois
+  - Limites : 400 minutes CI/CD gratuites par mois
   - URL : `https://gitlab.com`
 
 - **GitLab Self-hosted** : Instance privée sur vos serveurs
@@ -220,33 +220,46 @@ sudo gitlab-runner register \
 Les **Executors** définissent **comment** les jobs sont exécutés :
 
 ```mermaid
-graph LR
-    subgraph "Docker Executor"
-        A[Image Docker] --> A1[Container isolé]
-        A1 --> A2[Environment reproductible]
-        A2 --> A3[Cleanup automatique]
-    end
-
-    subgraph "Shell Executor"
+graph TD
+    subgraph S ["Shell Executor"]
         B[Système hôte] --> B1[Accès direct OS]
         B1 --> B2[Performances natives]
         B2 --> B3[Persistence entre jobs]
     end
 
-    subgraph "Kubernetes Executor"
+    subgraph D ["Docker Executor"]
+        A[Image Docker] --> A1[Container isolé]
+        A1 --> A2[Environment reproductible]
+        A2 --> A3[Cleanup automatique]
+    end
+
+    subgraph K ["Kubernetes Executor"]
         C[Pod K8s] --> C1[Isolation maximale]
         C1 --> C2[Auto-scaling]
         C2 --> C3[Resource limits]
     end
 
-    style A fill:#e1f5fe
-    style B fill:#f1f8e9
-    style C fill:#fce4ec
+    %% Positionnement horizontal
+    S ~~~ D
+    D ~~~ K
+
+    style S fill:#f1f8e9
+    style D fill:#e1f5fe
+    style K fill:#fce4ec
 ```
 
 **Exemple comparatif des executors** :
 
 ```yaml
+# Shell Executor
+job_shell:
+  tags:
+    - shell-runner
+  script:
+    - source ~/.nvm/nvm.sh
+    - nvm use 18
+    - npm ci && npm test
+
 # Docker Executor (Recommandé)
 job_docker:
   image: node:18-alpine
@@ -257,15 +270,6 @@ job_docker:
     - npm ci
     - npm test
     - npm run build
-
-# Shell Executor
-job_shell:
-  tags:
-    - shell-runner
-  script:
-    - source ~/.nvm/nvm.sh
-    - nvm use 18
-    - npm ci && npm test
 
 # Kubernetes Executor
 job_k8s:
@@ -625,7 +629,7 @@ Créez votre premier pipeline GitLab CI/CD pour une application web simple avec 
   2. Créer fichier `.gitlab-ci.yml` avec stages basiques
   3. Configurer jobs de build et test
   4. Observer l'exécution dans l'interface GitLab
-- **Critères d'évaluation** : Pipeline fonctionnel, syntaxe YAML correcte, jobs exécutés (8 points)
+- **Critères de validation** : Pipeline fonctionnel, syntaxe YAML correcte, jobs exécutés avec succès
 - **Durée estimée** : 20 minutes
 - **Fichier de travail** : `S2_S3_S1_lab1_premier_pipeline`
 
@@ -1145,7 +1149,7 @@ Configurez un pipeline complexe avec stages optimisés, artifacts partagés et c
   2. Configurer artifacts pour partage entre jobs
   3. Optimiser avec cache intelligent
   4. Ajouter rapports de tests et métriques
-- **Critères d'évaluation** : Organisation logique, artifacts fonctionnels, optimisations cache (10 points)
+- **Critères de validation** : Organisation logique, artifacts fonctionnels, optimisations cache
 - **Durée estimée** : 25 minutes
 - **Fichier de travail** : `S2_S3_S1_lab2_jobs_artifacts`
 
@@ -1944,7 +1948,7 @@ Implémentez une stratégie DevSecOps complète avec SAST, DAST, gestion sécuri
   2. Implémenter la gestion sécurisée des secrets et certificats
   3. Analyser les dépendances et vulnérabilités (Dependency Scanning)
   4. Configurer les politiques de sécurité et conformité
-- **Critères d'évaluation** : SAST/DAST configurés, secrets sécurisés, vulnérabilités détectées (18 points)
+- **Critères de validation** : SAST/DAST configurés, secrets sécurisés, vulnérabilités détectées
 - **Durée estimée** : 50 minutes
 - **Fichier de travail** : `S2_S3_lab6_securite_devsecops`
 
@@ -2635,7 +2639,7 @@ Migrez une application Docker Compose vers un pipeline GitLab CI/CD avec build e
   2. Créer pipeline GitLab avec build d'images
   3. Configurer services pour tests d'intégration
   4. Implémenter déploiement automatisé avec Compose
-- **Critères d'évaluation** : Migration réussie, images buildées, déploiement fonctionnel (12 points)
+- **Critères de validation** : Migration réussie, images buildées, déploiement fonctionnel
 - **Durée estimée** : 35 minutes
 - **Fichier de travail** : `S2_S3_S1_lab3_docker_migration`
 
@@ -2651,7 +2655,7 @@ Créez un Dockerfile optimisé et intégrez la construction d'images Docker dans
   2. Intégrer build Docker dans pipeline GitLab CI/CD
   3. Configurer GitLab Container Registry
   4. Implémenter déploiement basé containers avec healthchecks
-- **Critères d'évaluation** : Dockerfile optimisé, images buildées, déploiement containerisé fonctionnel (15 points)
+- **Critères de validation** : Dockerfile optimisé, images buildées, déploiement containerisé fonctionnel
 - **Durée estimée** : 45 minutes
 - **Fichier de travail** : `S2_S3_lab4_integration_docker`
 
@@ -3249,7 +3253,7 @@ Configurez des Review Apps automatiques pour chaque merge request avec workflows
   2. Implémenter cycle de vie des environnements dynamiques
   3. Intégrer notifications et commentaires automatiques
   4. Optimiser coûts et performances des Review Apps
-- **Critères d'évaluation** : Review Apps fonctionnelles, intégration MR, notifications actives (20 points)
+- **Critères de validation** : Review Apps fonctionnelles, intégration MR, notifications actives
 - **Durée estimée** : 55 minutes
 - **Fichier de travail** : `S2_S3_lab9_review_apps_collaboration`
 
@@ -3336,7 +3340,7 @@ Configurez un système de monitoring complet avec Prometheus, Grafana et métriq
   2. Créer métriques applicatives personnalisées
   3. Mettre en place alertes GitLab CI/CD
   4. Analyser performances pipelines et santé applicative
-- **Critères d'évaluation** : Monitoring fonctionnel, métriques custom, alertes actives (16 points)
+- **Critères de validation** : Monitoring fonctionnel, métriques custom, alertes actives
 - **Durée estimée** : 40 minutes
 - **Fichier de travail** : `S2_S3_lab7_monitoring_metriques`
 
@@ -3352,7 +3356,7 @@ Optimisez les performances des pipelines GitLab CI/CD avec cache intelligent, pa
   2. Optimiser parallélisation et ressources jobs
   3. Configurer monitoring performance temps réel
   4. Analyser et réduire temps d'exécution global
-- **Critères d'évaluation** : Performances optimisées, cache intelligent, monitoring actif (22 points)
+- **Critères de validation** : Performances optimisées, cache intelligent, monitoring actif
 - **Durée estimée** : 60 minutes
 - **Fichier de travail** : `S2_S3_lab10_optimisation_performance`
 
@@ -3479,7 +3483,7 @@ Implémentez une stratégie de tests complète avec analyse de qualité de code,
   2. Intégrer analyse qualité code avec SonarQube/ESLint
   3. Implémenter métriques performance et couverture de code
   4. Créer quality gates automatiques
-- **Critères d'évaluation** : Tests complets, qualité code validée, métriques actives (14 points)
+- **Critères de validation** : Tests complets, qualité code validée, métriques actives
 - **Durée estimée** : 35 minutes
 - **Fichier de travail** : `S2_S3_lab5_tests_avances`
 
@@ -3684,7 +3688,7 @@ Configurez des environnements multiples avec stratégies de déploiement avancé
   2. Implémenter stratégies blue-green, canary et rolling deployment
   3. Gérer variables et secrets par environnement
   4. Configurer approbations manuelles et rollback automatique
-- **Critères d'évaluation** : Environnements configurés, stratégies déploiement fonctionnelles (18 points)
+- **Critères de validation** : Environnements configurés, stratégies déploiement fonctionnelles
 - **Durée estimée** : 50 minutes
 - **Fichier de travail** : `S2_S3_lab8_environments_deploiements`
 

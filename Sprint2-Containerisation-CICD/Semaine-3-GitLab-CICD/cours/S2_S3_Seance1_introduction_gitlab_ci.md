@@ -1,17 +1,18 @@
 # Simplon Maghreb - Formation DevOps
 
-# Sprint 2 - Semaine 3 - Séance 1 : Introduction GitLab CI/CD
+# Sprint 2 - Semaine 3 : GitLab CI/CD Complet
 
 ## Objectifs pédagogiques
 
 - Comprendre les concepts fondamentaux de l'intégration et du déploiement continus
-- Maîtriser la création et configuration des premiers pipelines GitLab CI/CD
-- Intégrer les acquis Docker Compose dans des workflows automatisés
-- Configurer les GitLab Runners et comprendre l'exécution des jobs
+- Maîtriser la création et configuration des pipelines GitLab CI/CD avancés
+- Intégrer Docker dans des workflows automatisés sécurisés
+- Implémenter une stratégie de testing complète avec quality gates
+- Configurer des stratégies de déploiement modernes et professionnelles
 
 ## Objectifs techniques
 
-GitLab CI/CD, pipelines YAML, GitLab Runners, jobs et stages, artifacts, Docker intégration, variables d'environnement, triggers, scheduling
+GitLab CI/CD, pipelines YAML, GitLab Runners, jobs et stages, artifacts, Docker intégration, variables d'environnement, triggers, scheduling, pipelines parallèles, cache avancé, testing automatisé, sécurité DevSecOps, déploiements Blue-Green et Canary
 
 ## Table des matières
 
@@ -20,10 +21,13 @@ GitLab CI/CD, pipelines YAML, GitLab Runners, jobs et stages, artifacts, Docker 
 3. [Jobs, stages et artifacts](#3-jobs-stages-et-artifacts)
 4. [GitLab Runners et exécuteurs](#4-gitlab-runners-et-exécuteurs)
 5. [Variables et secrets](#5-variables-et-secrets)
-6. [Intégration Docker et rappels Compose](#6-intégration-docker-et-rappels-compose)
+6. [Intégration Docker complète et sécurisée](#6-intégration-docker-complète-et-sécurisée)
 7. [Triggers et automatisation](#7-triggers-et-automatisation)
-8. [Récapitulatif et prochaines étapes](#8-récapitulatif-et-prochaines-étapes)
-9. [Ressources complémentaires](#9-ressources-complémentaires)
+8. [Pipelines avancés et optimisations](#8-pipelines-avancés-et-optimisations)
+9. [Testing et Quality Assurance](#9-testing-et-quality-assurance)
+10. [Stratégies de déploiement](#10-stratégies-de-déploiement)
+11. [Récapitulatif et prochaines étapes](#11-récapitulatif-et-prochaines-étapes)
+12. [Ressources complémentaires](#12-ressources-complémentaires)
 
 ---
 
@@ -394,8 +398,7 @@ deploy_staging:
 **Fichier de configuration basique** :
 
 ```yaml
-# Fichier .gitlab-ci.yml à la racine du projet
-# Définit les stages (étapes) du pipeline
+# Fichier .gitlab-ci.yml - Configuration de base
 stages:
   - build
   - test
@@ -405,7 +408,11 @@ stages:
 variables:
   NODE_VERSION: '18'
   APP_NAME: 'mon-app'
+```
 
+**Job de build** :
+
+```yaml
 # Job de build
 build_job:
   stage: build
@@ -419,13 +426,16 @@ build_job:
     paths:
       - dist/
     expire_in: 1 hour
+```
 
+**Job de test** :
+
+```yaml
 # Job de test
 test_job:
   stage: test
   image: node:${NODE_VERSION}-alpine
   script:
-    - echo "Exécution des tests"
     - npm ci
     - npm test
   coverage: '/Coverage: \d+\.\d+%/'
@@ -983,6 +993,74 @@ build_assets:
     - npm ci --cache .npm
     - npm run build
 ```
+
+#### **Stratégies de cache avancées**
+
+**Cache global pour optimisation globale** :
+
+```yaml
+# Cache global simple
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .npm/
+  policy: pull-push
+```
+
+**Cache conditionnel par environnement** :
+
+```yaml
+# Cache pour production
+.cache_production:
+  cache:
+    key: prod-${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+    policy: pull-push
+  only:
+    - main
+
+# Utilisation du cache avec héritage
+build_job:
+  extends: .cache_production
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run build
+```
+
+````
+
+**Cache multi-niveaux pour projets complexes** :
+
+```yaml
+# Cache distribué et hiérarchique
+variables:
+  CACHE_FALLBACK_KEY: 'global-cache'
+
+# Template cache intelligent
+.smart_cache:
+  cache:
+    - key:
+        files:
+          - package-lock.json
+        prefix: ${CI_JOB_NAME}
+      paths:
+        - node_modules/
+      policy: pull-push
+    - key: ${CACHE_FALLBACK_KEY}
+      paths:
+        - node_modules/
+      policy: pull
+      when: on_failure
+
+# Application template
+build_optimized:
+  extends: .smart_cache
+  script:
+    - npm ci --prefer-offline
+    - npm run build
+````
 
 ### 3.2 Artifacts et cache
 
@@ -1852,7 +1930,27 @@ config_deployment:
     - kubectl create configmap app-config --from-file="$APP_CONFIG_FILE"
 ```
 
-## 6. Intégration Docker et rappels Compose
+### 5.6 Application pratique
+
+📝 **LAB 6** - Sécurité DevSecOps : `S2_S3_lab6_securite_devsecops`
+
+**Énoncé du LAB 6** :
+Implémentez une stratégie DevSecOps complète avec SAST, DAST, gestion sécurisée des secrets et analyse des vulnérabilités.
+
+- **Objectif** : Sécuriser le pipeline CI/CD avec analyse de sécurité statique et dynamique
+- **Contexte** : Application React nécessitant validation sécuritaire avant déploiement production
+- **Instructions** :
+  1. Configurer l'analyse de sécurité statique (SAST) et dynamique (DAST)
+  2. Implémenter la gestion sécurisée des secrets et certificats
+  3. Analyser les dépendances et vulnérabilités (Dependency Scanning)
+  4. Configurer les politiques de sécurité et conformité
+- **Critères d'évaluation** : SAST/DAST configurés, secrets sécurisés, vulnérabilités détectées (18 points)
+- **Durée estimée** : 50 minutes
+- **Fichier de travail** : `S2_S3_lab6_securite_devsecops`
+
+---
+
+## 6. Intégration Docker complète et sécurisée
 
 ### 6.1 Théorie de l'intégration Docker dans CI/CD
 
@@ -2044,12 +2142,28 @@ flowchart TD
     style G fill:#f3e5f5
 ```
 
-### 6.3 Build et gestion d'images Docker
+### 6.3 Build et gestion d'images Docker sécurisées
 
-#### **Architecture de build multi-stage**
+#### **Configuration GitLab Container Registry**
+
+```yaml
+variables:
+  DOCKER_REGISTRY: $CI_REGISTRY
+  DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: '/certs'
+  DOCKER_BUILDKIT: 1
+
+.docker_auth: &docker_auth
+  before_script:
+    - echo "Connexion au registry GitLab"
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+```
+
+#### **Architecture de build multi-stage sécurisée**
 
 ```dockerfile
-# Dockerfile optimisé pour CI/CD
+# Dockerfile optimisé pour CI/CD avec sécurité
 # Stage 1: Base de développement
 FROM node:18-alpine AS development
 WORKDIR /app
@@ -2061,17 +2175,20 @@ COPY . .
 FROM development AS builder
 ENV NODE_ENV=production
 RUN npm run build
-RUN npm prune --production
+RUN npm prune --production && npm cache clean --force
 
-# Stage 3: Image finale optimisée
+# Stage 3: Image finale optimisée et sécurisée
 FROM node:18-alpine AS production
+# Création utilisateur non-root
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
+
 WORKDIR /app
 COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
+# Configuration sécurité
 USER nextjs
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -2080,7 +2197,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 CMD ["npm", "start"]
 ```
 
-#### **Pipeline de build Docker avancé**
+#### **Pipeline de build Docker multi-architecture avec sécurité**
 
 ```yaml
 # Configuration registry et cache
@@ -2091,8 +2208,8 @@ variables:
   BUILDKIT_PROGRESS: plain
   DOCKER_BUILDKIT: 1
 
-# Build avec cache intelligent
-build_docker_advanced:
+# Build multi-architecture sécurisé
+build_docker_secure:
   stage: build
   image: docker:20.10.16
   services:
@@ -2100,13 +2217,12 @@ build_docker_advanced:
   before_script:
     # Connexion au registry GitLab
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-
     # Configuration BuildKit pour cache avancé
     - export DOCKER_CLI_EXPERIMENTAL=enabled
     - docker buildx create --use --driver docker-container
 
   script:
-    # Build multi-plateforme avec cache
+    # Build multi-plateforme avec cache et sécurité
     - |
       docker buildx build \
         --platform linux/amd64,linux/arm64 \
@@ -2119,15 +2235,55 @@ build_docker_advanced:
         --push \
         .
 
-    # Test de sécurité de l'image
-    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-      aquasec/trivy:latest image --exit-code 1 --severity HIGH,CRITICAL \
-      $IMAGE_NAME:$CI_COMMIT_SHA
-
+# Scan de sécurité avec Trivy
+security_scan:
+  stage: security
+  image: aquasec/trivy:latest
+  needs: [build_docker_secure]
+  script:
+    # Scan de vulnérabilités
+    - trivy image --format json --output trivy-report.json $IMAGE_NAME:$CI_COMMIT_SHA
+    # Scan critique avec arrêt pipeline si vulnérabilités critiques
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL $IMAGE_NAME:$CI_COMMIT_SHA
   artifacts:
     reports:
-      # Rapport de scan sécurité
       container_scanning: trivy-report.json
+    expire_in: 1 week
+  allow_failure: false
+```
+
+#### **Build multi-architecture avancé avec BuildKit**
+
+```yaml
+build_multiarch_advanced:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_BUILDKIT: 1
+    BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+  before_script:
+    - docker buildx create --use --driver docker-container
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    # Build multi-plateforme avec attestations de sécurité
+    - |
+      docker buildx build \
+        --platform linux/amd64,linux/arm64,linux/arm/v7 \
+        --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:cache \
+        --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:cache,mode=max \
+        --metadata-file metadata.json \
+        --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA \
+        --tag $CI_REGISTRY_IMAGE:latest \
+        --push .
+
+    # Génération SBOM (Software Bill of Materials)
+    - docker buildx imagetools inspect $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --format "{{json .}}" > image-manifest.json
+  artifacts:
+    paths:
+      - metadata.json
+      - image-manifest.json
     expire_in: 1 week
 ```
 
@@ -2245,7 +2401,80 @@ test_full_stack:
     expire_in: 1 week
 ```
 
-### 6.5 Déploiement avec Docker Compose
+### 6.5 Déploiement avec Docker Compose et optimisations
+
+#### **Optimisation des images Docker**
+
+**Stratégies d'optimisation multi-stage** :
+
+```dockerfile
+# Dockerfile optimisé avec réduction drastique de taille
+FROM node:18-alpine AS base
+RUN apk add --no-cache curl netcat-openbsd
+WORKDIR /app
+
+# Stage dependencies
+FROM base AS deps
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Stage builder
+FROM base AS builder
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Stage finale ultra-optimisée
+FROM node:18-alpine AS runtime
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 && \
+    apk add --no-cache curl && \
+    rm -rf /var/cache/apk/*
+
+WORKDIR /app
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+COPY --chown=nextjs:nodejs package.json ./
+
+USER nextjs
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+CMD ["node", "dist/index.js"]
+```
+
+**Pipeline d'optimisation automatisée** :
+
+```yaml
+# Analyse et optimisation d'images
+optimize_images:
+  stage: optimize
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  script:
+    # Analyse taille avant optimisation
+    - docker images $IMAGE_NAME:$CI_COMMIT_SHA --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+
+    # Optimisation avec dive (analyse layers)
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+      wagoodman/dive:latest $IMAGE_NAME:$CI_COMMIT_SHA --json > dive-analysis.json
+
+    # Optimisation avec docker-slim
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+      dslim/docker-slim build --target $IMAGE_NAME:$CI_COMMIT_SHA \
+      --tag $IMAGE_NAME:$CI_COMMIT_SHA-slim
+
+    # Comparaison tailles
+    - echo "=== Comparaison des tailles ==="
+    - docker images $IMAGE_NAME --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+  artifacts:
+    paths:
+      - dive-analysis.json
+    expire_in: 1 week
+```
 
 #### **Stratégie de déploiement hybride**
 
@@ -2339,7 +2568,60 @@ deploy_with_compose:
     - develop
 ```
 
-### 6.3 Application pratique
+#### **Monitoring et observabilité des conteneurs**
+
+```yaml
+# Déploiement avec monitoring intégré
+deploy_with_monitoring:
+  stage: deploy
+  extends: deploy_with_compose
+  before_script:
+    - !reference [deploy_with_compose, before_script]
+    # Ajout services monitoring
+    - |
+      cat >> docker-compose.prod.yml << EOF
+        
+        # Service monitoring
+        prometheus:
+          image: prom/prometheus:latest
+          ports:
+            - '9090:9090'
+          volumes:
+            - ./prometheus.yml:/etc/prometheus/prometheus.yml
+            - prometheus_data:/prometheus
+          restart: unless-stopped
+            
+        grafana:
+          image: grafana/grafana:latest
+          ports:
+            - '3001:3000'
+          environment:
+            - GF_SECURITY_ADMIN_PASSWORD=\${GRAFANA_PASSWORD}
+          volumes:
+            - grafana_data:/var/lib/grafana
+          restart: unless-stopped
+
+      volumes:
+        prometheus_data:
+        grafana_data:
+      EOF
+
+    # Configuration Prometheus
+    - |
+      cat > prometheus.yml << EOF
+      global:
+        scrape_interval: 15s
+      scrape_configs:
+        - job_name: 'web-app'
+          static_configs:
+            - targets: ['web:3000']
+        - job_name: 'postgres'
+          static_configs:
+            - targets: ['db:5432']
+      EOF
+```
+
+### 6.6 Application pratique
 
 📝 **LAB 3** - Intégration Docker et migration Compose : `S2_S3_S1_lab3_docker_migration`
 
@@ -2356,6 +2638,22 @@ Migrez une application Docker Compose vers un pipeline GitLab CI/CD avec build e
 - **Critères d'évaluation** : Migration réussie, images buildées, déploiement fonctionnel (12 points)
 - **Durée estimée** : 35 minutes
 - **Fichier de travail** : `S2_S3_S1_lab3_docker_migration`
+
+📝 **LAB 4** - Intégration Docker complète : `S2_S3_lab4_integration_docker`
+
+**Énoncé du LAB 4** :
+Créez un Dockerfile optimisé et intégrez la construction d'images Docker dans le pipeline GitLab CI/CD avec déploiement containerisé.
+
+- **Objectif** : Containeriser l'application React avec Dockerfile multi-stage et pipeline Docker
+- **Contexte** : Application React avec déploiement via containers Docker optimisés
+- **Instructions** :
+  1. Créer Dockerfile multi-stage optimisé pour production
+  2. Intégrer build Docker dans pipeline GitLab CI/CD
+  3. Configurer GitLab Container Registry
+  4. Implémenter déploiement basé containers avec healthchecks
+- **Critères d'évaluation** : Dockerfile optimisé, images buildées, déploiement containerisé fonctionnel (15 points)
+- **Durée estimée** : 45 minutes
+- **Fichier de travail** : `S2_S3_lab4_integration_docker`
 
 ---
 
@@ -2937,105 +3235,650 @@ notification_pipeline:
     - when: always
 ```
 
-## 8. Récapitulatif et prochaines étapes
+### 7.6 Application pratique
 
-### 8.1 Concepts maîtrisés
+📝 **LAB 9** - Review Apps et Collaboration : `S2_S3_lab9_review_apps_collaboration`
 
-- Architecture et principes CI/CD avec GitLab
-- Création et configuration de pipelines YAML
-- Jobs, stages, artifacts et optimisations cache
-- GitLab Runners et différents exécuteurs
-- Variables d'environnement et gestion des secrets
-- Intégration Docker et migration depuis Compose
-- Triggers et automatisation des déploiements
+**Énoncé du LAB 9** :
+Configurez des Review Apps automatiques pour chaque merge request avec workflows collaboratifs avancés.
 
-### 8.2 Transition Semaine 2 → Semaine 3
-
-```mermaid
-journey
-    title Evolution DevOps: Docker Compose vers GitLab CI/CD
-    section Semaine 2 - Docker Compose
-      Orchestration locale    : 3: Développeur
-      Déploiement manuel      : 2: Développeur
-      Tests ponctuels         : 2: Développeur
-      Configuration statique  : 3: Développeur
-    section Transition
-      Analyse besoins         : 4: DevOps
-      Migration progressive   : 3: DevOps
-      Formation équipe        : 4: DevOps
-    section Semaine 3 - GitLab CI/CD
-      Automatisation complète : 5: Pipeline
-      Tests continus          : 5: Pipeline
-      Déploiement automatisé  : 5: Pipeline
-      Monitoring intégré      : 4: Pipeline
-```
-
-```mermaid
-graph LR
-    subgraph "Semaine 2: Docker Compose"
-        A[docker-compose.yml] --> B[Orchestration Manuelle]
-        B --> C[docker-compose up]
-        C --> D[Tests Locaux]
-    end
-
-    subgraph "Migration"
-        E[Analyse Infrastructure]
-        F[Conversion Workflows]
-    end
-
-    subgraph "Semaine 3: GitLab CI/CD"
-        G[.gitlab-ci.yml] --> H[Pipeline Automatisé]
-        H --> I[Tests + Build + Deploy]
-        I --> J[Déploiement Continu]
-    end
-
-    A --> E
-    E --> F
-    F --> G
-
-    style A fill:#ffecb3
-    style G fill:#c8e6c9
-    style H fill:#e1f5fe
-```
-
-**Évolution des compétences** :
-
-- De l'orchestration manuelle → automatisation CI/CD
-- De docker-compose.yml → .gitlab-ci.yml
-- De déploiements ponctuels → pipelines continus
-
-### 8.3 Prochaines étapes
-
-La **Séance 2** approfondira les **Pipelines Avancés** avec :
-
-- Matrices de tests et parallélisation
-- Cache distribué et optimisations
-- Déploiements conditionnels et environments
-- Review apps et monitoring
-
-## 9. Ressources complémentaires
-
-### 9.1 Documentation officielle
-
-- [GitLab CI/CD Documentation](https://docs.gitlab.com/ee/ci/)
-- [GitLab CI/CD YAML Reference](https://docs.gitlab.com/ee/ci/yaml/)
-- [GitLab Runners Documentation](https://docs.gitlab.com/runner/)
-
-### 9.2 Outils et intégrations
-
-- Docker Hub et GitLab Container Registry
-- Kubernetes pour déploiements avancés
-- Prometheus/Grafana pour monitoring
-- SonarQube pour qualité de code
-
-### 9.3 Bonnes pratiques
-
-- Pipeline as Code avec versioning
-- Environments séparés (dev/staging/prod)
-- Secrets management sécurisé
-- Monitoring et observabilité
-- Documentation des pipelines
+- **Objectif** : Créer des environnements éphémères automatiques pour validation collaborative
+- **Contexte** : Équipe développement nécessitant validation visuelle des fonctionnalités via Review Apps
+- **Instructions** :
+  1. Configurer Review Apps automatiques par merge request
+  2. Implémenter cycle de vie des environnements dynamiques
+  3. Intégrer notifications et commentaires automatiques
+  4. Optimiser coûts et performances des Review Apps
+- **Critères d'évaluation** : Review Apps fonctionnelles, intégration MR, notifications actives (20 points)
+- **Durée estimée** : 55 minutes
+- **Fichier de travail** : `S2_S3_lab9_review_apps_collaboration`
 
 ---
 
-_Formateur : Hassan ESSADIK | Sprint 2 - Semaine 3 - Séance 1_
+## 8. Pipelines avancés et optimisations
+
+### 8.1 Pipelines parallèles et matrices
+
+#### **Exécution parallèle des jobs**
+
+GitLab CI/CD permet d'exécuter plusieurs jobs en parallèle pour accélérer les pipelines et optimiser les ressources.
+
+```yaml
+# Parallélisation simple
+stages:
+  - test
+  - build
+
+# Jobs parallèles dans le même stage
+unit_tests_frontend:
+  stage: test
+  script:
+    - cd frontend && npm test
+
+unit_tests_backend:
+  stage: test
+  script:
+    - cd backend && npm test
+
+unit_tests_api:
+  stage: test
+  script:
+    - cd api && mvn test
+```
+
+#### **Matrices de tests**
+
+```yaml
+# Tests sur plusieurs versions
+test_matrix:
+  stage: test
+  image: node:$NODE_VERSION
+  parallel:
+    matrix:
+      - NODE_VERSION: ['14', '16', '18', '20']
+  script:
+    - npm ci
+    - npm test
+  artifacts:
+    reports:
+      junit: test-results-$NODE_VERSION.xml
+```
+
+### 8.2 Monitoring et observabilité
+
+#### **Métriques pipeline**
+
+```yaml
+collect_metrics:
+  stage: .post
+  script:
+    - echo "Pipeline metrics collection"
+    - echo "duration=$CI_PIPELINE_DURATION" > metrics.txt
+    - echo "jobs_count=$CI_PIPELINE_JOB_COUNT" >> metrics.txt
+  artifacts:
+    reports:
+      metrics: metrics.txt
+  rules:
+    - when: always
+```
+
+### 8.3 Application pratique
+
+📝 **LAB 7** - Monitoring et Métriques : `S2_S3_lab7_monitoring_metriques`
+
+**Énoncé du LAB 7** :
+Configurez un système de monitoring complet avec Prometheus, Grafana et métriques applicatives personnalisées.
+
+- **Objectif** : Implémenter monitoring complet avec alertes et tableaux de bord
+- **Contexte** : Application production nécessitant observabilité complète et alertes proactives
+- **Instructions** :
+  1. Configurer stack monitoring Prometheus + Grafana
+  2. Créer métriques applicatives personnalisées
+  3. Mettre en place alertes GitLab CI/CD
+  4. Analyser performances pipelines et santé applicative
+- **Critères d'évaluation** : Monitoring fonctionnel, métriques custom, alertes actives (16 points)
+- **Durée estimée** : 40 minutes
+- **Fichier de travail** : `S2_S3_lab7_monitoring_metriques`
+
+📝 **LAB 10** - Optimisation et Performance : `S2_S3_lab10_optimisation_performance`
+
+**Énoncé du LAB 10** :
+Optimisez les performances des pipelines GitLab CI/CD avec cache intelligent, parallélisation et monitoring temps réel.
+
+- **Objectif** : Optimiser performances pipelines et coûts d'infrastructure
+- **Contexte** : Pipeline complexe nécessitant optimisation performances et ressources
+- **Instructions** :
+  1. Implémenter cache intelligent multi-niveaux
+  2. Optimiser parallélisation et ressources jobs
+  3. Configurer monitoring performance temps réel
+  4. Analyser et réduire temps d'exécution global
+- **Critères d'évaluation** : Performances optimisées, cache intelligent, monitoring actif (22 points)
+- **Durée estimée** : 60 minutes
+- **Fichier de travail** : `S2_S3_lab10_optimisation_performance`
+
+---
+
+## 9. Testing et Quality Assurance
+
+### 10.1 Stratégie de testing pyramidale
+
+#### **Architecture testing complète**
+
+```yaml
+stages:
+  - validate
+  - test-unit
+  - test-integration
+  - test-e2e
+  - quality-gates
+
+# Tests unitaires rapides
+unit_tests:
+  stage: test-unit
+  script:
+    - npm run test:unit
+  coverage: '/Coverage: \d+\.\d+%/'
+  artifacts:
+    reports:
+      junit: reports/unit-tests.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura.xml
+```
+
+### 10.2 Quality Gates avec SonarQube
+
+#### **Integration SonarQube**
+
+```yaml
+sonarqube_analysis:
+  stage: quality-gates
+  image: sonarsource/sonar-scanner-cli:latest
+  script:
+    - sonar-scanner
+      -Dsonar.projectKey=$CI_PROJECT_NAME
+      -Dsonar.sources=.
+      -Dsonar.host.url=$SONAR_HOST_URL
+      -Dsonar.login=$SONAR_TOKEN
+  only:
+    - main
+    - merge_requests
+```
+
+### 10.3 Security Testing automatisé
+
+#### **SAST/DAST Integration**
+
+```yaml
+# SAST - Static Application Security Testing
+sast:
+  stage: security
+  include:
+    - template: Security/SAST.gitlab-ci.yml
+
+# DAST - Dynamic Application Security Testing
+dast:
+  stage: security
+  include:
+    - template: Security/DAST.gitlab-ci.yml
+  variables:
+    DAST_WEBSITE: https://staging.example.com
+```
+
+### 10.4 Tests End-to-End et performance
+
+#### **Tests E2E avec Cypress**
+
+```yaml
+e2e_tests:
+  stage: test-e2e
+  image: cypress/included:10.0.0
+  services:
+    - name: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      alias: app
+  script:
+    - cypress run --config baseUrl=http://app:3000
+  artifacts:
+    when: always
+    paths:
+      - cypress/videos/
+      - cypress/screenshots/
+    expire_in: 1 week
+```
+
+### 10.5 Reporting et métriques qualité
+
+#### **Dashboard qualité automatisé**
+
+```yaml
+quality_report:
+  stage: .post
+  image: python:3.9
+  script:
+    - pip install jinja2
+    - python generate_quality_report.py
+  artifacts:
+    paths:
+      - quality-report.html
+    expose_as: 'Quality Report'
+  rules:
+    - when: always
+```
+
+### 9.4 Application pratique
+
+📝 **LAB 5** - Tests Avancés et Qualité de Code : `S2_S3_lab5_tests_avances`
+
+**Énoncé du LAB 5** :
+Implémentez une stratégie de tests complète avec analyse de qualité de code, tests E2E et métriques de performance.
+
+- **Objectif** : Créer pipeline de tests complet avec qualité de code automatisée
+- **Contexte** : Application React nécessitant validation qualité complète avant déploiement
+- **Instructions** :
+  1. Configurer tests unitaires, intégration et E2E avec Cypress
+  2. Intégrer analyse qualité code avec SonarQube/ESLint
+  3. Implémenter métriques performance et couverture de code
+  4. Créer quality gates automatiques
+- **Critères d'évaluation** : Tests complets, qualité code validée, métriques actives (14 points)
+- **Durée estimée** : 35 minutes
+- **Fichier de travail** : `S2_S3_lab5_tests_avances`
+
+---
+
+## 10. Stratégies de déploiement
+
+### 10.1 Stratégies fundamentales
+
+#### **Types de déploiement**
+
+**Blue-Green Deployment** : Deux environnements identiques, switch instantané
+**Canary Deployment** : Déploiement progressif sur un sous-ensemble d'utilisateurs
+**Rolling Updates** : Mise à jour progressive des instances sans arrêt
+**Recreate** : Arrêt complet puis redémarrage avec nouvelle version
+
+### 10.2 Review Apps et environnements dynamiques
+
+#### **Review Apps pour Merge Requests**
+
+Les **Review Apps** permettent de créer automatiquement des environnements de test temporaires pour chaque merge request :
+
+```yaml
+# Review app pour merge requests
+review:
+  stage: deploy
+  script:
+    - deploy_review_app.sh
+  environment:
+    name: review/$CI_MERGE_REQUEST_IID
+    url: https://$CI_MERGE_REQUEST_IID.review.example.com
+    on_stop: stop_review
+  only:
+    - merge_requests
+
+stop_review:
+  stage: deploy
+  script:
+    - cleanup_review_app.sh
+  environment:
+    name: review/$CI_MERGE_REQUEST_IID
+    action: stop
+  when: manual
+  only:
+    - merge_requests
+```
+
+#### **Déploiements conditionnels avancés**
+
+```yaml
+# Déploiement staging automatique
+deploy_staging:
+  stage: deploy
+  script:
+    - echo "Déploiement vers staging"
+    - deploy_to_staging.sh
+  environment:
+    name: staging
+    url: https://staging.example.com
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_MERGE_REQUEST_IID
+
+# Déploiement production manuel avec conditions
+deploy_production:
+  stage: deploy
+  script:
+    - echo "Déploiement vers production"
+    - deploy_to_production.sh
+  environment:
+    name: production
+    url: https://example.com
+  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: never
+```
+
+### 10.3 Blue-Green Deployment avec GitLab
+
+#### **Configuration Blue-Green**
+
+```yaml
+variables:
+  BLUE_ENV: 'blue'
+  GREEN_ENV: 'green'
+  CURRENT_ENV: 'blue' # Variable d'environnement
+
+deploy_green:
+  stage: deploy
+  script:
+    - echo "Déploiement vers environnement GREEN"
+    - kubectl apply -f k8s/green/
+    - kubectl rollout status deployment/app-green
+    - run_health_checks.sh green
+  environment:
+    name: green
+    url: https://green.example.com
+  only:
+    - main
+
+switch_traffic:
+  stage: deploy
+  script:
+    - echo "Basculement du trafic vers GREEN"
+    - kubectl patch service app-service -p '{"spec":{"selector":{"version":"green"}}}'
+  environment:
+    name: production
+    url: https://example.com
+  when: manual
+  only:
+    - main
+```
+
+### 10.4 Canary Deployment
+
+#### **Déploiement progressif**
+
+```yaml
+deploy_canary:
+  stage: deploy
+  script:
+    - echo "Déploiement Canary 10%"
+    - kubectl apply -f k8s/canary/
+    - kubectl patch deployment app-canary --patch '{"spec":{"replicas":1}}'
+  environment:
+    name: canary
+    url: https://canary.example.com
+  only:
+    - main
+
+promote_canary:
+  stage: deploy
+  script:
+    - echo "Promotion Canary vers 100%"
+    - kubectl scale deployment app-canary --replicas=10
+    - kubectl scale deployment app-stable --replicas=0
+  environment:
+    name: production
+  when: manual
+  only:
+    - main
+```
+
+### 10.5 Feature Flags et déploiement conditionnel
+
+#### **Integration feature flags**
+
+```yaml
+feature_deployment:
+  stage: deploy
+  script:
+    - echo "Déploiement avec feature flags"
+    - deploy_with_flags.sh
+  environment:
+    name: production
+  variables:
+    FEATURE_NEW_UI: 'false'
+    FEATURE_API_V2: 'true'
+  only:
+    - main
+```
+
+### 11.5 Rollback automatique
+
+#### **Auto-rollback configuration**
+
+```yaml
+health_check:
+  stage: verify
+  script:
+    - health_check.sh
+  retry:
+    max: 3
+    when: script_failure
+
+auto_rollback:
+  stage: rollback
+  script:
+    - echo "Rollback automatique détecté"
+    - kubectl rollout undo deployment/app
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "pipeline"
+      when: on_failure
+  environment:
+    name: production
+    action: rollback
+```
+
+### 10.3 Application pratique
+
+📝 **LAB 8** - Environments et Déploiements : `S2_S3_lab8_environments_deploiements`
+
+**Énoncé du LAB 8** :
+Configurez des environnements multiples avec stratégies de déploiement avancées et politiques de rollback.
+
+- **Objectif** : Implémenter gestion complète environnements et déploiements stratégiques
+- **Contexte** : Application production nécessitant environnements sécurisés et déploiements fiables
+- **Instructions** :
+  1. Configurer environnements dev, staging, production avec protections
+  2. Implémenter stratégies blue-green, canary et rolling deployment
+  3. Gérer variables et secrets par environnement
+  4. Configurer approbations manuelles et rollback automatique
+- **Critères d'évaluation** : Environnements configurés, stratégies déploiement fonctionnelles (18 points)
+- **Durée estimée** : 50 minutes
+- **Fichier de travail** : `S2_S3_lab8_environments_deploiements`
+
+---
+
+## 11. Récapitulatif et prochaines étapes
+
+### 12.1 Concepts maîtrisés dans cette semaine complète
+
+- **Fondamentaux CI/CD** : Architecture et principes avec GitLab
+- **Pipelines de base** : Création et configuration YAML, jobs et stages
+- **Optimisations avancées** : Cache, artifacts, parallélisation et matrices
+- **Intégration Docker** : Registries sécurisés, multi-architecture, scan de vulnérabilités
+- **Testing complet** : Stratégie pyramidale, quality gates, SAST/DAST
+- **Déploiements modernes** : Blue-Green, Canary, feature flags, rollback automatique
+- **Sécurité DevSecOps** : Variables secrets, scanning, compliance
+
+### 12.2 Evolution complète de la semaine
+
+```mermaid
+journey
+    title Progression GitLab CI/CD - Semaine 3 Complète
+    section Jour 1: Fondamentaux
+      Premiers pipelines        : 3: Dev
+      Configuration de base     : 4: Dev
+      Docker integration        : 4: Dev
+    section Jour 2: Optimisations
+      Pipelines parallèles      : 4: Pipeline
+      Cache avancé              : 4: Pipeline
+      Environments              : 5: Pipeline
+    section Jour 3: Docker
+      Multi-architecture        : 5: Container
+      Sécurité containers       : 5: Container
+      Registry management       : 5: Container
+    section Jour 4: Quality
+      Testing automatisé        : 5: Testing
+      Quality gates             : 5: Testing
+      Security scanning         : 5: Testing
+    section Jour 5: Déploiement
+      Stratégies avancées       : 5: Deploy
+      Production readiness      : 5: Deploy
+      Monitoring déploiements   : 5: Deploy
+```
+
+### 12.3 Transition vers Sprint 3 - Kubernetes
+
+La prochaine étape naturelle est l'orchestration avec **Kubernetes** (Sprint 3) :
+
+**Concepts acquis qui faciliteront Kubernetes** :
+
+- Containers Docker maîtrisés
+- Pipelines CI/CD automatisés
+- Strategies de déploiement avancées
+- Monitoring et observabilité
+
+**Progression logique** :
+
+- **Sprint 2** : Containers + CI/CD GitLab
+- **Sprint 3** : Orchestration Kubernetes + GitLab CI/CD
+- **Sprint 4** : Cloud Azure + Infrastructure as Code
+
+### 12.4 Certification et compétences
+
+**Certifications accessibles après cette semaine** :
+
+- GitLab Certified CI/CD Specialist
+- Docker Certified Associate (DCA)
+- Kubernetes Application Developer (CKAD) - avec Sprint 3
+
+**Compétences professionnelles acquises** :
+
+- DevOps Engineer niveau intermédiaire
+- CI/CD Pipeline Specialist
+- Container Security Specialist
+- Quality Assurance Automation
+
+## 12. Ressources complémentaires
+
+### 13.1 Documentation officielle complète
+
+**GitLab CI/CD - Références essentielles** :
+
+- [GitLab CI/CD Documentation](https://docs.gitlab.com/ee/ci/) - Guide complet officiel
+- [GitLab CI/CD YAML Reference](https://docs.gitlab.com/ee/ci/yaml/) - Référence syntaxe complète
+- [GitLab Runners Documentation](https://docs.gitlab.com/runner/) - Installation et configuration
+- [GitLab Container Registry](https://docs.gitlab.com/ee/user/packages/container_registry/) - Registry Docker intégré
+- [GitLab Security](https://docs.gitlab.com/ee/user/application_security/) - Sécurité DevSecOps
+
+**Docker et Containers** :
+
+- [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/) - Bonnes pratiques
+- [Docker Multi-stage Builds](https://docs.docker.com/develop/building/multistage-build/) - Optimisation images
+- [Docker Security](https://docs.docker.com/engine/security/) - Sécurisation containers
+- [Trivy Security Scanner](https://aquasecurity.github.io/trivy/) - Scan vulnérabilités
+
+### 13.2 Outils et intégrations professionnelles
+
+**Registries et Storage** :
+
+- Docker Hub et GitLab Container Registry
+- AWS ECR, Azure Container Registry, GCP Container Registry
+- Harbor Registry pour entreprises
+- Nexus Repository Manager
+
+**Testing et Quality** :
+
+- SonarQube pour qualité de code
+- OWASP ZAP pour security testing
+- Cypress et Selenium pour tests E2E
+- Jest, Mocha, JUnit pour tests unitaires
+
+**Monitoring et Observabilité** :
+
+- Prometheus + Grafana pour métriques
+- ELK Stack (Elasticsearch, Logstash, Kibana) pour logs
+- Jaeger pour distributed tracing
+- GitLab CI/CD Analytics intégré
+
+**Déploiement et Orchestration** :
+
+- Kubernetes pour orchestration avancée
+- Helm pour package management Kubernetes
+- ArgoCD pour GitOps
+- Terraform pour Infrastructure as Code
+
+### 13.3 Bonnes pratiques consolidées
+
+**Pipeline Design** :
+
+- Pipeline as Code avec versioning Git
+- Stages logiques et parallélisation optimale
+- Fail-fast principle avec tests rapides en premier
+- Artifacts management et rétention appropriée
+
+**Sécurité DevSecOps** :
+
+- Scan de vulnérabilités obligatoire
+- Secrets management avec variables GitLab
+- Least privilege principle pour runners
+- Image signing et verification
+
+**Performance et Monitoring** :
+
+- Cache intelligent multi-niveaux
+- Resource limits pour runners
+- Monitoring des métriques DORA
+- Alerting proactif sur échecs
+
+**Gouvernance et Compliance** :
+
+- Environments protégés pour production
+- Approval processes pour déploiements critiques
+- Audit trail complet des déploiements
+- Documentation automatisée des changements
+
+### 13.4 Ressources d'apprentissage continu
+
+**Certifications recommandées** :
+
+- GitLab Certified CI/CD Specialist
+- Docker Certified Associate (DCA)
+- Certified Kubernetes Application Developer (CKAD)
+- AWS/Azure DevOps certifications
+
+**Communautés et events** :
+
+- GitLab Community Forum
+- DevOps Institute Local Chapters
+- Cloud Native Computing Foundation (CNCF)
+- Docker Community Events
+
+**Veille technologique** :
+
+- GitLab Blog - Nouvelles fonctionnalités
+- CNCF Landscape - Écosystème cloud-native
+- DevOps.com - Actualités et best practices
+- The New Stack - Technologies émergentes
+
+### 13.5 Labs et projets pratiques
+
+**Projets fil rouge recommandés** :
+
+- Application web complète avec pipeline CI/CD full
+- Architecture microservices avec déploiements independants
+- Infrastructure as Code avec Terraform + GitLab
+- Monitoring stack complet avec alerting
+
+**Labs avancés en autonomie** :
+
+- Multi-cloud deployment strategy
+- Zero-downtime deployment avec blue-green
+- Security scanning automation complet
+- Performance testing integration
+
+---
+
+_Formateur : Hassan ESSADIK | Sprint 2 - Semaine 3 : GitLab CI/CD Complet_

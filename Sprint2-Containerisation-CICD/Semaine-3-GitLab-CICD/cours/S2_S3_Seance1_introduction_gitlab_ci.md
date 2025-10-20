@@ -847,7 +847,7 @@ sequenceDiagram
     Storage->>User: Fournit artifacts
 ```
 
-#### **Configuration académique des artifacts**
+#### **Configuration des artifacts**
 
 **Structure recommandée** :
 
@@ -1159,31 +1159,54 @@ Configurez un pipeline complexe avec stages optimisés, artifacts partagés et c
 
 ### 4.1 Concepts fondamentaux des Runners
 
-#### **Définition académique**
+#### **Définition**
 
 Un **GitLab Runner** est un agent logiciel autonome responsable de l'exécution des jobs définis dans les pipelines CI/CD. Il fonctionne selon une architecture distribuée client-serveur.
+
+#### **Structure du GitLab CI/CD Engine**
+
+Le GitLab CI/CD Engine est composé de plusieurs composants spécialisés qui travaillent ensemble :
+
+```
+GitLab CI/CD Engine
+├── Coordinator (orchestrateur central)
+├── API Gateway
+├── Pipeline Parser
+├── Job Scheduler
+├── Artifact Manager
+└── Monitoring System
+```
+
+**Rôles des composants** :
+
+- **Coordinator** : Orchestrateur central qui distribue les jobs aux runners et gère la file d'attente
+- **API Gateway** : Interface REST pour toutes les communications HTTP/JSON
+- **Pipeline Parser** : Analyse et valide les fichiers `.gitlab-ci.yml`
+- **Job Scheduler** : Planifie l'exécution des jobs selon les dépendances
+- **Artifact Manager** : Gère le stockage et la distribution des artifacts
+- **Monitoring System** : Surveillance et métriques en temps réel
 
 **Architecture conceptuelle** :
 
 ```mermaid
-C4Container
+C4Component
     title Architecture GitLab Runner - Vue détaillée
 
     Container_Boundary(gitlab, "GitLab Instance") {
-        Container(coordinator, "Coordinator", "Go", "Orchestrateur central des jobs")
-        Container(api, "API", "Ruby on Rails", "Interface de communication")
+        Component(coordinator, "Coordinator", "Orchestrateur central", "Distribue les jobs<br/>aux runners disponibles<br/>Gère la file d'attente")
+        Component(api, "API Gateway", "Interface REST", "Point d'entrée unique<br/>Authentification<br/>Communication HTTP/JSON")
     }
 
     Container_Boundary(runner_system, "Runner System") {
-        Container(runner_manager, "Runner Manager", "Go", "Gestionnaire principal")
-        Container(executor, "Executor", "Multiple", "Environnement d'exécution")
-        Container(cache_manager, "Cache Manager", "Go", "Gestion cache local")
+        Component(runner_manager, "Runner Manager", "Gestionnaire principal", "Récupère les jobs<br/>Lance les executors<br/>Collecte les résultats")
+        Component(executor, "Executor Engine", "Moteur d'exécution", "Prépare l'environnement<br/>Exécute les scripts<br/>Capture les outputs")
+        Component(cache_manager, "Cache Manager", "Gestionnaire cache", "Stockage temporaire<br/>Optimise les builds<br/>Partage des dépendances")
     }
 
     Container_Boundary(execution_env, "Execution Environment") {
-        Container(container, "Docker Container", "Docker", "Environnement isolé")
-        Container(shell, "Shell Environment", "OS", "Système hôte")
-        Container(k8s_pod, "Kubernetes Pod", "K8s", "Pod éphémère")
+        Component(container, "Docker Runtime", "Environnement containerisé", "Isolation complète<br/>Images reproductibles<br/>Cleanup automatique")
+        Component(shell, "Shell Executor", "Exécution directe", "Accès système natif<br/>Performances maximales<br/>Persistence locale")
+        Component(k8s_pod, "Kubernetes Pod", "Orchestration K8s", "Auto-scaling<br/>Resource limits<br/>Pods éphémères")
     }
 
     Rel(coordinator, runner_manager, "Polling jobs", "HTTP/JSON")
@@ -1264,7 +1287,7 @@ graph TB
 
 #### **Docker Executor (Recommandé)**
 
-**Avantages académiques** :
+**Avantages ** :
 
 - **Isolation hermétique** : Chaque job dans container séparé
 - **Reproductibilité** : Même environnement sur tous runners
@@ -1288,7 +1311,7 @@ sequenceDiagram
     Docker->>Docker: Cleanup resources
 ```
 
-**Configuration académique** :
+**Configuration ** :
 
 ```toml
 # /etc/gitlab-runner/config.toml
@@ -1531,7 +1554,7 @@ sudo gitlab-runner run \
 
 ### 5.1 Théorie des variables dans CI/CD
 
-#### **Définition académique**
+#### **Définition**
 
 Les **variables d'environnement** dans GitLab CI/CD sont des paires clé-valeur qui permettent de configurer dynamiquement le comportement des jobs sans modifier le code. Elles constituent un mécanisme d'**injection de configuration** essentiel pour la **portabilité** et la **sécurité** des pipelines.
 
@@ -1571,7 +1594,7 @@ graph TB
 
 #### **Hiérarchie de priorité**
 
-GitLab CI/CD applique une **hiérarchie de résolution** des variables :
+GitLab CI/CD applique une **hiérarchie de résolution** des variables basée sur le principe **"le plus spécifique l'emporte"**. Quand plusieurs variables portent le même nom, GitLab utilise celle du niveau le plus haut dans la hiérarchie.
 
 ```mermaid
 flowchart TD
@@ -1588,51 +1611,362 @@ flowchart TD
     style D fill:#f3e5f5
 ```
 
+**Description détaillée de chaque niveau** :
+
+1. **Job Variables** (Priorité maximale) :
+
+   - Définies directement dans un job spécifique
+   - Écrasent toutes les autres variables du même nom
+   - Scope : Job unique
+
+2. **Pipeline Variables** :
+
+   - Définies au niveau du pipeline dans `.gitlab-ci.yml`
+   - Appliquées à tous les jobs du pipeline
+   - Scope : Pipeline entier
+
+3. **Project Variables** :
+
+   - Configurées dans Settings → CI/CD → Variables du projet
+   - Disponibles pour tous les pipelines du projet
+   - Scope : Projet
+
+4. **Group Variables** :
+
+   - Définies au niveau du groupe GitLab
+   - Héritées par tous les projets du groupe
+   - Scope : Tous les projets du groupe
+
+5. **Instance Variables** :
+
+   - Configurées au niveau de l'instance GitLab
+   - Disponibles pour tous les projets de l'instance
+   - Scope : Instance GitLab complète
+   - **Accès** : Admin Area → Settings → CI/CD → Variables (droits administrateur requis)
+   - ** Important** : Non disponible sur GitLab.com (SaaS) avec compte gratuit - Réservé aux instances self-hosted
+
+6. **Runner Variables** :
+
+   - Définies lors de l'enregistrement du runner
+   - Spécifiques au runner utilisé
+   - Scope : Runner spécifique
+
+7. **Predefined Variables** (Priorité minimale) :
+   - Variables système automatiques de GitLab
+   - Ne peuvent pas être écrasées
+   - Scope : Tous les jobs
+
+**Exemple pratique de résolution** :
+
+Supposons une variable `DATABASE_URL` définie à différents niveaux :
+
+```yaml
+# Instance Variables (niveau 5)
+DATABASE_URL = "postgresql://instance.example.com/db"
+
+# Group Variables (niveau 4)
+DATABASE_URL = "postgresql://group.example.com/db"
+
+# Project Variables (niveau 3)
+DATABASE_URL = "postgresql://project.example.com/db"
+
+# Pipeline Variables (niveau 2)
+variables:
+  DATABASE_URL: "postgresql://pipeline.example.com/db"
+
+# Job Variables (niveau 1 - PRIORITÉ MAXIMALE)
+deploy_job:
+  variables:
+    DATABASE_URL: "postgresql://job.example.com/db"
+  script:
+    - echo $DATABASE_URL  # Affichera: postgresql://job.example.com/db
+```
+
+#### **🔍 Explication du mécanisme de résolution**
+
+**Une seule variable, plusieurs valeurs :**
+
+- GitLab traite `DATABASE_URL` comme **une seule et même variable**
+- Chaque niveau peut **redéfinir** la valeur de cette variable
+- Au moment de l'exécution, GitLab applique la **résolution par priorité**
+
+**Processus de résolution étape par étape :**
+
+```yaml
+# Étape 1: GitLab commence par la priorité la plus basse
+DATABASE_URL = "postgresql://instance.example.com/db"  # Base
+
+# Étape 2: Écrase avec Group si définie
+DATABASE_URL = "postgresql://group.example.com/db"     # Remplace instance
+
+# Étape 3: Écrase avec Project si définie
+DATABASE_URL = "postgresql://project.example.com/db"   # Remplace group
+
+# Étape 4: Écrase avec Pipeline si définie
+DATABASE_URL = "postgresql://pipeline.example.com/db"  # Remplace project
+
+# Étape 5: Écrase avec Job si définie (FINALE)
+DATABASE_URL = "postgresql://job.example.com/db"       # VALEUR FINALE
+
+# Résultat final dans le job:
+echo $DATABASE_URL  # → postgresql://job.example.com/db
+```
+
+**Exemple concret avec héritage partiel :**
+
+```yaml
+# Supposons seulement ces niveaux définis:
+# Group: DATABASE_URL = "postgresql://group.example.com/db"
+# Pipeline: DATABASE_URL = "postgresql://pipeline.example.com/db"
+# (Pas de Project, pas de Job)
+
+deploy_job:
+  script:
+    - echo $DATABASE_URL # Affichera: postgresql://pipeline.example.com/db
+
+other_job:
+  # Pas de variables au niveau job
+  script:
+    - echo $DATABASE_URL # Affichera: postgresql://pipeline.example.com/db
+```
+
+**Cas d'usage stratégiques** :
+
+```yaml
+# Configuration hiérarchique intelligente
+variables:
+  # Pipeline: Configuration par défaut
+  APP_ENV: 'development'
+  LOG_LEVEL: 'info'
+
+# Job staging: Override spécifique
+deploy_staging:
+  variables:
+    APP_ENV: 'staging' # Écrase la valeur pipeline
+    LOG_LEVEL: 'debug' # Écrase la valeur pipeline
+  script:
+    - echo "Env: $APP_ENV" # Affiche: staging
+    - echo "Log: $LOG_LEVEL" # Affiche: debug
+
+# Job production: Override partiel
+deploy_production:
+  variables:
+    APP_ENV: 'production' # Écrase la valeur pipeline
+    # LOG_LEVEL hérite de "info" du pipeline
+  script:
+    - echo "Env: $APP_ENV" # Affiche: production
+    - echo "Log: $LOG_LEVEL" # Affiche: info (hérité)
+```
+
+**Bonnes pratiques hiérarchiques** :
+
+```yaml
+# Niveau Instance: Configurations globales
+# DOCKER_REGISTRY = "registry.company.com"
+# COMPANY_EMAIL = "devops@company.com"
+
+# Niveau Group: Configurations équipe
+# SONAR_HOST = "sonar.team.com"
+# SLACK_WEBHOOK = "https://hooks.slack.com/team"
+
+# Niveau Project: Configurations projet
+# APP_NAME = "my-awesome-app"
+# DEPLOYMENT_REGION = "eu-west-1"
+
+#### **Où définir les variables selon leur niveau**
+
+**1. Variables d'Instance (Instance Variables)**
+- **Accès** : Admin Area → Settings → CI/CD → Variables
+- **Prérequis** : Droits administrateur de l'instance GitLab
+- **Limitation** : **NON disponible sur GitLab.com (SaaS)** - Uniquement sur instances self-hosted
+- **Navigation** (instances self-hosted uniquement) :
+  1. Cliquer sur l'icône Admin (clé à molette) dans la barre de navigation
+  2. Aller dans Settings → CI/CD
+  3. Expand "Variables"
+  4. Add Variable
+- **Usage** : Configurations globales (registries Docker, certificats, etc.)
+
+**2. Variables de Groupe (Group Variables)**  **Alternative recommandée pour GitLab.com**
+- **Accès** : Groupe → Settings → CI/CD → Variables
+- **Prérequis** : Droits maintainer ou owner sur le groupe
+- **Disponible** : GitLab.com (SaaS) et instances self-hosted
+- **Navigation** :
+  1. Aller dans votre groupe GitLab
+  2. Settings → CI/CD
+  3. Expand "Variables"
+  4. Add Variable
+- **Usage** : Configurations partagées entre projets d'une équipe
+
+**3. Variables de Projet (Project Variables)**
+- **Accès** : Projet → Settings → CI/CD → Variables
+- **Prérequis** : Droits maintainer ou owner sur le projet
+- **Navigation** :
+  1. Aller dans votre projet
+  2. Settings → CI/CD
+  3. Expand "Variables"
+  4. Add Variable
+- **Usage** : Configurations spécifiques au projet
+
+```
+
+**Exemple concret d'accès aux variables d'instance** :
+
+```yaml
+# Ces variables sont définies au niveau instance
+instance_job:
+  script:
+    # COMPANY_DOCKER_REGISTRY définie dans Admin Area
+    - docker login $COMPANY_DOCKER_REGISTRY
+
+    # GLOBAL_SONAR_TOKEN définie dans Admin Area
+    - sonar-scanner -Dsonar.login=$GLOBAL_SONAR_TOKEN
+
+    # SSL_CA_CERT_FILE définie comme variable de fichier dans Admin Area
+    - cp $SSL_CA_CERT_FILE /etc/ssl/certs/company-ca.crt
+
+
+# Niveau Pipeline: Configurations build
+
+variables:
+NODE_VERSION: '18'
+BUILD_ENV: 'ci'
+
+# Niveau Job: Configurations spécifiques
+
+test_unit:
+variables:
+TEST_TIMEOUT: '30s' # Spécifique aux tests unitaires
+script: - npm test
+
+test_e2e:
+variables:
+TEST_TIMEOUT: '300s' # Spécifique aux tests E2E
+script: - npm run test:e2e
+
+```
+
+**Vérification de la résolution** :
+
+```yaml
+debug_variables:
+  script:
+    # Affiche toutes les variables d'environnement
+    - env | grep -E "(DATABASE_URL|APP_ENV|LOG_LEVEL)" | sort
+
+    # Vérification spécifique
+    - echo "DATABASE_URL final: $DATABASE_URL"
+    - echo "Source: Job Variables (priorité 1)"
+```
+
 ### 5.2 Variables prédéfinies GitLab
 
 #### **Variables système essentielles**
 
 GitLab fournit automatiquement un ensemble riche de variables contextuelles :
 
+**Nature des variables CI/CD** :
+
+- **Variables d'environnement prédéfinies** : GitLab injecte automatiquement ces variables dans l'environnement d'exécution de chaque job
+- **Disponibilité automatique** : Aucune configuration requise, elles sont présentes dans tous les jobs
+- **Contexte dynamique** : Leurs valeurs changent selon le projet, la branche, le commit, etc.
+- **Accès standard** : Utilisables comme toute variable d'environnement avec `$VARIABLE_NAME`
+
 ```yaml
-# Démonstration variables prédéfinies
+# Démonstration variables prédéfinies (variables d'environnement GitLab CI/CD)
 print_variables:
   script:
     # Informations projet
     - echo "=== PROJET ==="
-    - echo "Projet: $CI_PROJECT_NAME"
-    - echo "Namespace: $CI_PROJECT_NAMESPACE"
-    - echo "URL: $CI_PROJECT_URL"
-    - echo "ID: $CI_PROJECT_ID"
+    - echo "Projet: $CI_PROJECT_NAME" # Nom du projet GitLab
+    - echo "Namespace: $CI_PROJECT_NAMESPACE" # Namespace/groupe du projet
+    - echo "URL: $CI_PROJECT_URL" # URL complète du projet
+    - echo "ID: $CI_PROJECT_ID" # Identifiant unique numérique du projet
 
-    # Informations commit/branche
-    - echo "=== CODE SOURCE ==="
-    - echo "Branche: $CI_COMMIT_REF_NAME"
-    - echo "Commit SHA: $CI_COMMIT_SHA"
-    - echo "Commit court: $CI_COMMIT_SHORT_SHA"
-    - echo "Message: $CI_COMMIT_MESSAGE"
-    - echo "Auteur: $CI_COMMIT_AUTHOR"
+    # Informations référence Git (branche ou tag)
+    - echo "=== RÉFÉRENCE GIT ==="
+    - echo "Ref: $CI_COMMIT_REF_NAME" # Nom de la branche (ex: main, develop) ou du tag (ex: v1.0.0)
+
+    # Informations commit spécifique
+    - echo "=== COMMIT ==="
+    - echo "Commit SHA: $CI_COMMIT_SHA" # Hash SHA complet du commit spécifique (40 caractères)
+    - echo "Commit court: $CI_COMMIT_SHORT_SHA" # Hash SHA court du commit spécifique (8 caractères)
+    - echo "Message: $CI_COMMIT_MESSAGE" # Message du commit spécifique
+    - echo "Auteur: $CI_COMMIT_AUTHOR" # Nom et email de l'auteur du commit spécifique
 
     # Informations pipeline
     - echo "=== PIPELINE ==="
-    - echo "Pipeline ID: $CI_PIPELINE_ID"
-    - echo "Source: $CI_PIPELINE_SOURCE"
-    - echo "URL: $CI_PIPELINE_URL"
+    - echo "Pipeline ID: $CI_PIPELINE_ID" # Identifiant unique du pipeline
+    - echo "Source: $CI_PIPELINE_SOURCE" # Source du déclenchement (push, merge_request, schedule, etc.)
+    - echo "URL: $CI_PIPELINE_URL" # URL directe vers le pipeline dans GitLab
 
     # Informations job
     - echo "=== JOB ==="
-    - echo "Job: $CI_JOB_NAME"
-    - echo "Stage: $CI_JOB_STAGE"
-    - echo "ID: $CI_JOB_ID"
-    - echo "URL: $CI_JOB_URL"
-    - echo "Started: $CI_JOB_STARTED_AT"
+    - echo "Job: $CI_JOB_NAME" # Nom du job en cours d'exécution
+    - echo "Stage: $CI_JOB_STAGE" # Nom du stage auquel appartient le job
+    - echo "ID: $CI_JOB_ID" # Identifiant unique du job
+    - echo "URL: $CI_JOB_URL" # URL directe vers le job dans GitLab
+    - echo "Started: $CI_JOB_STARTED_AT" # Timestamp de début d'exécution du job
 
     # Informations runner
     - echo "=== RUNNER ==="
-    - echo "Runner: $CI_RUNNER_DESCRIPTION"
-    - echo "Tags: $CI_RUNNER_TAGS"
-    - echo "Executor: $CI_RUNNER_EXECUTOR"
+    - echo "Runner: $CI_RUNNER_DESCRIPTION" # Description/nom du runner utilisé
+    - echo "Tags: $CI_RUNNER_TAGS" # Tags assignés au runner (séparés par virgules)
+    - echo "Executor: $CI_RUNNER_EXECUTOR" # Type d'executor (docker, shell, kubernetes, etc.)
 ```
+
+### **Distinction importante : Référence Git vs Commit**
+
+Il est crucial de comprendre que GitLab CI/CD fait la distinction entre :
+
+#### **1. La référence Git** (`$CI_COMMIT_REF_NAME`)
+
+- **Branche** : `main`, `develop`, `feature/auth` → Pointe vers le dernier commit de cette branche
+- **Tag** : `v1.0.0`, `release-2023` → Pointe vers un commit spécifique taggé
+- **Merge Request** : `merge-requests/123/head` → Pointe vers le commit de la MR
+
+#### **2. Le commit spécifique** (toutes les autres variables `$CI_COMMIT_*`)
+
+- `$CI_COMMIT_SHA` : L'identifiant unique du commit exact qui déclenche le pipeline
+- `$CI_COMMIT_MESSAGE` : Le message de ce commit spécifique
+- `$CI_COMMIT_AUTHOR` : L'auteur de ce commit spécifique
+
+**Exemples concrets** :
+
+```bash
+# Si pipeline déclenché sur branche "main"
+$CI_COMMIT_REF_NAME = "main"           # Nom de la branche
+$CI_COMMIT_SHA = "abc123..."           # SHA du dernier commit de main
+
+# Si pipeline déclenché sur tag "v1.0.0"
+$CI_COMMIT_REF_NAME = "v1.0.0"         # Nom du tag
+$CI_COMMIT_SHA = "def456..."           # SHA du commit taggé v1.0.0
+```
+
+**Explication technique** :
+
+Ces variables sont des **variables d'environnement système** injectées automatiquement par GitLab CI/CD dans l'environnement d'exécution de chaque job. Voici comment cela fonctionne :
+
+1. **Injection automatique** : GitLab lit le contexte du pipeline (projet, commit, branche, etc.) et crée ces variables
+2. **Disponibilité immédiate** : Elles sont présentes dès le démarrage du job, sans aucune configuration
+3. **Portée globale** : Accessibles dans tous les scripts, commandes et sous-processus du job
+4. **Valeurs dynamiques** : Leurs contenus changent automatiquement selon le contexte d'exécution
+
+**Exemples d'utilisation** :
+
+```bash
+# Dans un script bash
+echo "Pipeline $CI_PIPELINE_ID du projet $CI_PROJECT_NAME"
+export IMAGE_TAG="$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA"
+
+# Dans des commandes Docker
+docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+```
+
+**Différence avec les variables personnalisées** :
+
+- **Variables prédéfinies** : Créées automatiquement par GitLab (comme `$CI_PROJECT_NAME`)
+- **Variables personnalisées** : Définies manuellement dans le projet GitLab ou dans le fichier `.gitlab-ci.yml`
 
 #### **Variables conditionelles avancées**
 
@@ -1657,7 +1991,89 @@ dynamic_variables:
 
 ### 5.3 Gestion sécurisée des secrets
 
+#### **Qu'est-ce qu'un secret en CI/CD ?**
+
+Un **secret** est une information sensible qui ne doit jamais être exposée publiquement dans le code source, les logs ou les interfaces. En CI/CD, les secrets incluent :
+
+- **Clés API** : Tokens d'accès aux services externes (AWS, Azure, APIs tierces)
+- **Mots de passe** : Credentials de bases de données, services, comptes système
+- **Certificats** : Clés privées SSL/TLS, certificats de signature de code
+- **Tokens d'authentification** : JWT, OAuth tokens, personal access tokens
+- **Chaînes de configuration sensibles** : URLs avec credentials, configurations privées
+
+**Pourquoi sécuriser les secrets ?**
+
+```mermaid
+graph LR
+    subgraph "Risques sans sécurisation"
+        A[Code Source] --> A1[Secrets visibles]
+        B[Logs CI/CD] --> B1[Credentials exposés]
+        C[Historique Git] --> C1[Tokens compromis]
+        D[Accès non autorisé] --> D1[Sécurité compromise]
+    end
+
+    subgraph "Solutions GitLab"
+        E[Variables masquées] --> E1[Logs protégés]
+        F[Chiffrement] --> F1[Stockage sécurisé]
+        G[Contrôle d'accès] --> G1[Branches protégées]
+        H[Injection sécurisée] --> H1[Mémoire temporaire]
+    end
+
+    style A1 fill:#ffebee
+    style B1 fill:#ffebee
+    style C1 fill:#ffebee
+    style D1 fill:#ffebee
+    style E1 fill:#e8f5e8
+    style F1 fill:#e8f5e8
+    style G1 fill:#e8f5e8
+    style H1 fill:#e8f5e8
+```
+
+#### **Types de secrets et exemples concrets**
+
+**1. Clés API et tokens d'accès** :
+
+```bash
+# DANGEREUX - Ne jamais faire ça
+script:
+  - curl -H "Authorization: Bearer sk-1234567890abcdef" https://api.openai.com/v1/models
+
+# SÉCURISÉ - Utiliser une variable GitLab
+script:
+  - curl -H "Authorization: Bearer $OPENAI_API_KEY" https://api.openai.com/v1/models
+```
+
+**2. Credentials de base de données** :
+
+```yaml
+# DANGEREUX - Hardcodé dans le code
+variables:
+  DATABASE_URL: "postgresql://admin:password123@db.example.com:5432/myapp"
+
+# SÉCURISÉ - Variable masquée
+variables:
+  DATABASE_HOST: "db.example.com"
+  DATABASE_NAME: "myapp"
+  # DATABASE_PASSWORD défini comme variable masquée dans GitLab UI
+script:
+  - export DATABASE_URL="postgresql://$DB_USER:$DATABASE_PASSWORD@$DATABASE_HOST:5432/$DATABASE_NAME"
+```
+
+**3. Certificats et clés privées** :
+
+```yaml
+# SÉCURISÉ - Utilisation de variables de fichier
+deploy_ssl:
+  script:
+    # SSL_CERT et SSL_KEY sont des variables de fichier dans GitLab
+    - cp $SSL_CERT /etc/ssl/certs/app.crt
+    - cp $SSL_KEY /etc/ssl/private/app.key
+    - chmod 600 /etc/ssl/private/app.key
+```
+
 #### **Architecture de sécurité GitLab**
+
+GitLab implémente une architecture de sécurité robuste pour protéger les secrets à chaque étape :
 
 ```mermaid
 sequenceDiagram
@@ -1683,9 +2099,17 @@ sequenceDiagram
     Runner->>GitLab: Results (no secrets)
 ```
 
-#### **Types de variables sécurisées**
+**Étapes de sécurisation** :
 
-**Configuration interface GitLab** :
+1. **Stockage chiffré** : Secrets chiffrés avec AES-256 dans la base GitLab
+2. **Transmission sécurisée** : Envoi chiffré vers les runners
+3. **Injection temporaire** : Variables disponibles uniquement en mémoire du job
+4. **Masquage des logs** : Remplacement automatique par `***` dans les sorties
+5. **Nettoyage automatique** : Suppression de la mémoire à la fin du job
+
+#### **Types de variables sécurisées dans GitLab**
+
+GitLab propose plusieurs niveaux de sécurisation selon vos besoins :
 
 ```mermaid
 graph TB
@@ -1712,42 +2136,338 @@ graph TB
     style L fill:#ffebee
 ```
 
-#### **Bonnes pratiques secrets**
+**Explication détaillée des options de sécurité** :
+
+**1. Variables Publiques (Public)** :
+
+- **Définition** : Variables visibles dans les logs et accessibles dans tous les contextes
+- **Usage** : Configurations non-sensibles (versions, noms d'applications, URLs publiques)
+- **Exemple** :
+
+```yaml
+variables:
+  APP_NAME: 'my-awesome-app' # Visible partout
+  NODE_VERSION: '18' # Pas sensible
+  PUBLIC_API_URL: 'https://api.example.com' # URL publique
+```
+
+**2. Variables Masquées (Masked)** :
+
+- **Définition** : Variables automatiquement cachées dans les logs par `***`
+- **Critères** : Minimum 8 caractères, caractères alphanumériques et `_` uniquement
+- **Usage** : Tokens, mots de passe simples, clés API
+- **Exemple** :
+
+```bash
+# Dans GitLab UI: API_TOKEN (masked) = "abc123def456"
+script:
+  - echo "Token: $API_TOKEN"      # Logs montrent: Token: ***
+  - curl -H "Authorization: Bearer $API_TOKEN" api.example.com
+```
+
+**3. Variables Protégées (Protected)** :
+
+- **Définition** : Variables disponibles uniquement sur les branches/tags protégés
+- **Usage** : Secrets de production, déploiements critiques
+- **Configuration** : Combinable avec "Masked" pour sécurité maximale
+- **Exemple** :
+
+```yaml
+# Disponible uniquement sur branche "main" (protégée)
+deploy_production:
+  script:
+    - echo "Deploying with $PROD_SECRET" # Fonctionne seulement sur main
+  only:
+    - main
+```
+
+**4. Variables de Fichier (File Variables)** :
+
+- **Définition** : Contenu stocké comme fichier temporaire, pas comme variable d'environnement
+- **Usage** : Certificats, clés privées, configurations JSON/YAML complexes
+- **Avantages** : Support contenu binaire, pas de limitation de caractères
+- **Exemple** :
+
+```yaml
+ssl_setup:
+  script:
+    # SSL_CERTIFICATE est une variable de fichier
+    - ls -la $SSL_CERTIFICATE # Affiche le chemin du fichier temporaire
+    - cp $SSL_CERTIFICATE /etc/ssl/ # Copie le certificat
+    - openssl x509 -in $SSL_CERTIFICATE -text -noout # Valide le certificat
+```
+
+**5. Variables d'Environnement (Environment Scope)** :
+
+- **Définition** : Variables limitées à des environnements spécifiques
+- **Usage** : Configurations différentes par environnement (dev, staging, prod)
+- **Scope** : `*` (tous), `production`, `staging`, `review/*`
+- **Exemple** :
+
+```yaml
+# Variable DATABASE_URL avec scopes différents:
+# Scope "production" -> DATABASE_URL = "postgresql://prod.db.com/app"
+# Scope "staging"    -> DATABASE_URL = "postgresql://staging.db.com/app"
+# Scope "*"          -> DATABASE_URL = "postgresql://localhost/app"
+
+deploy:
+  script:
+    - echo "Connecting to: $DATABASE_URL" # Valeur dépend de l'environnement
+  environment:
+    name: $CI_COMMIT_REF_NAME
+```
+
+#### **Guide pratique de configuration**
+
+**Étape 1 : Accéder aux variables GitLab**
+
+1. Aller dans votre projet GitLab
+2. **Settings** → **CI/CD** → **Variables** (section)
+3. Cliquer sur **Expand** puis **Add variable**
+
+**Étape 2 : Configurer selon le type de secret**
+
+```yaml
+# Exemples de configuration par type :
+
+# API Token (sensible, logs masqués)
+Key: OPENAI_API_KEY
+Value: sk-1234567890abcdefghijk
+Options: [✓] Masked, [✓] Protected
+
+# Base de données (très sensible, production seulement)
+Key: DATABASE_PASSWORD
+Value: SuperSecretPassword123!
+Options: [✓] Masked, [✓] Protected
+Environment scope: production
+
+# Certificat SSL (fichier binaire)
+Key: SSL_PRIVATE_KEY
+Value: [contenu du fichier .key]
+Type: File
+Options: [✓] Protected
+Environment scope: production
+
+# Configuration publique (pas sensible)
+Key: APP_VERSION
+Value: 1.2.3
+Options: [ ] Masked, [ ] Protected
+Environment scope: *
+```
+
+#### **Exemples concrets d'utilisation sécurisée**
+
+**Cas d'usage 1 : Déploiement avec API externes**
 
 ```yaml
 # Job avec gestion sécurisée des secrets
 secure_deployment:
   stage: deploy
   variables:
-    # Variables publiques
+    # Variables publiques (non sensibles)
     DEPLOY_ENV: 'production'
     APP_NAME: 'mon-application'
+    API_ENDPOINT: 'https://api.example.com' # URL publique
 
   script:
-    # Vérification présence secrets requis
+    # 1. Vérification présence des secrets requis
     - |
-      if [ -z "$API_TOKEN" ]; then
-        echo "ERREUR: API_TOKEN manquant"
+      echo "Vérification des secrets requis..."
+      REQUIRED_SECRETS="API_TOKEN DATABASE_PASSWORD SSL_CERT_PATH"
+
+      for secret in $REQUIRED_SECRETS; do
+        if [ -z "${!secret}" ]; then
+          echo "ERREUR: Secret $secret manquant"
+          exit 1
+        else
+          echo "Secret $secret présent"
+        fi
+      done
+
+    # 2. Utilisation sécurisée des API (éviter echo direct des secrets)
+    - echo "Connexion à l'API externe..."
+    - |
+      # NE JAMAIS FAIRE : echo "Token: $API_TOKEN"
+      # SÉCURISÉ : Utiliser le token sans l'afficher
+      HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+        -H "Authorization: Bearer $API_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"app":"'$APP_NAME'","env":"'$DEPLOY_ENV'"}' \
+        "$API_ENDPOINT/deploy")
+
+      if [ "$HTTP_STATUS" = "200" ]; then
+        echo "Déploiement API réussi"
+      else
+        echo "Échec déploiement API (Status: $HTTP_STATUS)"
         exit 1
       fi
 
-      if [ -z "$DATABASE_PASSWORD" ]; then
-        echo "ERREUR: DATABASE_PASSWORD manquant"
+    # 3. Configuration base de données sécurisée
+    - echo "Configuration base de données..."
+    - |
+      # Construction sécurisée de l'URL de DB
+      export DATABASE_URL="postgresql://$DB_USER:$DATABASE_PASSWORD@$DB_HOST:5432/$DB_NAME"
+
+      # Test de connexion (sans révéler le password)
+      echo "Test connexion DB..."
+      if pg_isready -h $DB_HOST -p 5432 -U $DB_USER; then
+        echo "Base de données accessible"
+      else
+        echo "Base de données inaccessible"
         exit 1
       fi
 
-    # Utilisation sécurisée (éviter echo direct)
-    - echo "Connexion API..."
-    - curl -H "Authorization: Bearer $API_TOKEN" "$API_ENDPOINT/deploy"
+    # 4. Nettoyage sécuritaire des variables sensibles
+    - |
+      echo " Nettoyage des secrets en mémoire..."
+      unset API_TOKEN
+      unset DATABASE_PASSWORD
+      unset DATABASE_URL
+      echo "Variables sensibles nettoyées"
 
-    # Configuration base de données
-    - echo "Configuration database..."
-    - export DATABASE_URL="postgresql://user:$DATABASE_PASSWORD@db:5432/myapp"
+  # 5. Restriction aux branches protégées uniquement
+  only:
+    - main
+    - /^release\/.*$/
+```
 
+**Cas d'usage 2 : Gestion certificats SSL avec variables de fichier**
+
+```yaml
+ssl_deployment:
+  stage: deploy
+  script:
+    - echo "Configuration SSL avec certificats sécurisés..."
+
+    # SSL_CERT et SSL_KEY sont des variables de fichier dans GitLab
+    - |
+      echo "Vérification des fichiers certificats..."
+      ls -la "$SSL_CERT_FILE" "$SSL_KEY_FILE"
+
+      # Validation du certificat
+      echo "Validation du certificat SSL..."
+      if openssl x509 -in "$SSL_CERT_FILE" -text -noout | grep -q "CN=*.example.com"; then
+        echo "Certificat valide pour le domaine"
+      else
+        echo "Certificat invalide"
+        exit 1
+      fi
+
+    # Installation sécurisée des certificats
+    - |
+      echo " Installation des certificats..."
+      cp "$SSL_CERT_FILE" /etc/ssl/certs/app.crt
+      cp "$SSL_KEY_FILE" /etc/ssl/private/app.key
+
+      # Permissions sécurisées
+      chmod 644 /etc/ssl/certs/app.crt
+      chmod 600 /etc/ssl/private/app.key
+      chown root:root /etc/ssl/certs/app.crt
+      chown root:ssl-cert /etc/ssl/private/app.key
+
+    # Configuration serveur web
+    - |
+      echo "Configuration Nginx avec SSL..."
+      cat > /etc/nginx/sites-enabled/app << EOF
+      server {
+          listen 443 ssl;
+          server_name example.com;
+          
+          ssl_certificate /etc/ssl/certs/app.crt;
+          ssl_certificate_key /etc/ssl/private/app.key;
+          ssl_protocols TLSv1.2 TLSv1.3;
+          
+          location / {
+              proxy_pass http://localhost:3000;
+          }
+      }
+      EOF
+
+    # Test de la configuration SSL
+    - |
+      echo "🧪 Test configuration SSL..."
+      nginx -t && echo "Configuration Nginx valide"
+
+  environment:
+    name: production
+    url: https://example.com
+```
+
+**Cas d'usage 3 : Déploiement multi-environnement avec scopes**
+
+```yaml
+# Template réutilisable pour tous les environnements
+.deploy_template: &deploy_template
+  stage: deploy
+  script:
+    - echo "Déploiement vers $DEPLOY_ENV"
+
+    # Les variables changent selon l'environnement grâce aux scopes
+    - |
+      echo "Configuration environnement:"
+      echo "- Environment: $DEPLOY_ENV"
+      echo "- Database Host: $DB_HOST"
+      echo "- API URL: $API_URL"
+      echo "- Replicas: $REPLICA_COUNT"
+      # Note: les secrets ne sont pas affichés (masqués)
+
+    # Déploiement avec configuration spécifique à l'environnement
+    - |
+      kubectl create secret generic app-secrets \
+        --from-literal=db-password="$DATABASE_PASSWORD" \
+        --from-literal=api-key="$API_TOKEN" \
+        --namespace="$DEPLOY_ENV"
+
+      kubectl apply -f k8s/$DEPLOY_ENV/ --namespace="$DEPLOY_ENV"
+
+# Déploiement staging (utilise les variables scope "staging")
+deploy_staging:
+  <<: *deploy_template
+  variables:
+    DEPLOY_ENV: 'staging'
+  environment:
+    name: staging
+    url: https://staging.example.com
+  only:
+    - develop
+
+# Déploiement production (utilise les variables scope "production")
+deploy_production:
+  <<: *deploy_template
+  variables:
+    DEPLOY_ENV: 'production'
+  environment:
+    name: production
+    url: https://example.com
+  when: manual # Déploiement manuel pour la production
+  only:
+    - main
+```
+
+**Tableau récapitulatif des bonnes pratiques** :
+
+| Situation            | Type de Variable    | Options Recommandées                    | Exemple                           |
+| -------------------- | ------------------- | --------------------------------------- | --------------------------------- |
+| **Token API simple** | Variable standard   | Masked + Protected                      | `API_TOKEN = "abc123..."`         |
+| **Mot de passe DB**  | Variable standard   | Masked + Protected                      | `DATABASE_PASSWORD = "secret123"` |
+| **Certificat SSL**   | Variable de fichier | Protected                               | `SSL_CERT_FILE → certificat.pem`  |
+| **Config JSON**      | Variable de fichier | Protected                               | `CONFIG_FILE → config.json`       |
+| **URL publique**     | Variable standard   | Aucune option                           | `API_URL = "https://api.com"`     |
+| **Secret de prod**   | Variable standard   | Masked + Protected + Scope "production" | `PROD_SECRET = "..."`             |
+
+**Exemple complet avec nettoyage** :
+
+```yaml
+secure_deployment:
+  stage: deploy
+  script:
+    - echo "Deploying with secure variables..."
+    - deploy.sh --token="$API_TOKEN" --db-pass="$DATABASE_PASSWORD"
+    
     # Nettoyage variables sensibles
     - unset API_TOKEN
     - unset DATABASE_PASSWORD
-
+    
   # Restriction aux branches protégées
   only:
     - main
@@ -1891,7 +2611,7 @@ graph TB
 
 #### **Utilisation pratique des variables de fichier**
 
-```yaml
+````yaml
 # Configuration avec certificats SSL
 ssl_deployment:
   stage: deploy
@@ -1920,19 +2640,87 @@ ssl_deployment:
   services:
     - nginx:alpine
 
-# Configuration avec fichier JSON complexe
-config_deployment:
+#### **Clarifications importantes sur les variables de fichier**
+
+**Différence fondamentale : Variable normale vs Variable de fichier**
+
+```yaml
+# MAUVAIS - Variable normale avec contenu fichier
+ssl_setup_wrong:
+  variables:
+    SSL_CERT: |
+      -----BEGIN CERTIFICATE-----
+      MIIDXTCCAkWgAwIBAgIJAKL...
+      -----END CERTIFICATE-----
   script:
-    # APP_CONFIG_FILE contient une configuration JSON complexe
-    - echo "Chargement configuration..."
-    - cat "$APP_CONFIG_FILE" | jq '.'
+    # Problème : $SSL_CERT contient le texte, pas un chemin
+    - echo "$SSL_CERT" > temp_cert.pem  # Obligé de recréer le fichier
+    - openssl x509 -in temp_cert.pem -text
+
+# CORRECT - Variable de fichier
+ssl_setup_correct:
+  script:
+    # $SSL_CERT_FILE contient automatiquement le chemin vers un fichier temporaire
+    - openssl x509 -in "$SSL_CERT_FILE" -text  # Utilisation directe
+    - ls -la "$SSL_CERT_FILE"  # Affiche : /tmp/gitlab-ci-file-var-XYZ
+````
+
+**Configuration dans GitLab UI**
+
+1. **Aller dans** : Projet → Settings → CI/CD → Variables
+2. **Créer une variable** avec les options :
+   - **Key** : `SSL_CERT_FILE`
+   - **Value** : [Contenu du certificat/fichier]
+   - **Type** : **File** (Important !)
+   - **Flags** : Protected, Masked selon besoin
+
+**Cas d'usage typiques des variables de fichier**
+
+```yaml
+# 1. Certificats et clés privées
+deploy_with_ssl:
+  script:
+    - cp "$SSL_CERT_FILE" /app/certs/
+    - chmod 600 "$SSL_KEY_FILE"
+
+# 2. Fichiers de configuration complexes
+app_config:
+  script:
+    - cp "$APP_CONFIG_FILE" /app/config/settings.json
+    - cat "$DATABASE_CONFIG_FILE" >> /app/database.yml
+
+# 3. Scripts de déploiement personnalisés
+custom_deploy:
+  script:
+    - chmod +x "$DEPLOY_SCRIPT_FILE"
+    - "$DEPLOY_SCRIPT_FILE" --env production
+
+# 4. Archives et binaires
+binary_deploy:
+  script:
+    - tar -xzf "$APP_BINARY_FILE" -C /opt/
+    - unzip "$ASSETS_FILE" -d /var/www/
+```
+
+**Limitations et bonnes pratiques**
+
+- **Taille maximale** : 100KB par variable de fichier
+- **Sécurité** : Fichiers temporaires supprimés automatiquement après le job
+- **Permissions** : Fichiers créés avec permissions 600 (lecture propriétaire seulement)
+- **Chemin** : Toujours utiliser `"$VARIABLE_NAME"` avec guillemets
+
+# Configuration avec fichier JSON complexe
+
+config_deployment:
+script: # APP_CONFIG_FILE contient une configuration JSON complexe - echo "Chargement configuration..." - cat "$APP_CONFIG_FILE" | jq '.'
 
     # Validation schema
     - jsonschema -i "$APP_CONFIG_FILE" config-schema.json
 
     # Déploiement avec configuration
     - kubectl create configmap app-config --from-file="$APP_CONFIG_FILE"
-```
+
+````
 
 ### 5.6 Application pratique
 
@@ -1978,7 +2766,7 @@ journey
       Tests sur chaque commit    : 5: Pipeline
       Déploiement automatisé     : 5: Pipeline
       Monitoring intégré         : 4: Pipeline
-```
+````
 
 #### **Paradigmes d'intégration Docker**
 
@@ -2665,7 +3453,7 @@ Créez un Dockerfile optimisé et intégrez la construction d'images Docker dans
 
 ### 7.1 Théorie des déclencheurs de pipeline
 
-#### **Définition académique**
+#### **Définition**
 
 Les **triggers** (déclencheurs) constituent le mécanisme fondamental qui détermine **quand** et **comment** les pipelines GitLab CI/CD s'exécutent. Ils implémentent une logique conditionnelle sophistiquée basée sur des **événements** et des **règles métier**.
 
@@ -2873,7 +3661,7 @@ stateDiagram-v2
 
 Les **scheduled pipelines** permettent d'exécuter des tâches de maintenance, monitoring et reporting de façon périodique, indépendamment des événements de code.
 
-**Cas d'usage académiques** :
+**Cas d'usage** :
 
 ```mermaid
 graph TB

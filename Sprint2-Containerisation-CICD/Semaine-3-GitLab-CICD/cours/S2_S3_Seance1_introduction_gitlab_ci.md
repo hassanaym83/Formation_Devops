@@ -68,32 +68,34 @@ graph LR
 ### 1.3 Architecture GitLab CI/CD
 
 ```mermaid
-C4Context
-    title Architecture GitLab CI/CD - Vue d'ensemble
+graph TB
+    subgraph gitlab ["GitLab Platform"]
+        repo[Repository<br/>Code source + .gitlab-ci.yml]
+        ci[CI/CD Engine<br/>Orchestrateur pipelines]
+        registry[Container Registry<br/>Images Docker]
+    end
 
-    Person(dev, "Développeur", "Pousse le code vers GitLab")
+    subgraph runners ["GitLab Runners"]
+        runner1[Runner Docker<br/>Execution containers]
+        runner2[Runner Shell<br/>Execution directe]
+        runner3[Runner K8s<br/>Execution pods]
+    end
 
-    System_Boundary(gitlab, "GitLab Platform") {
-        System(repo, "Repository", "Code source + .gitlab-ci.yml")
-        System(ci, "CI/CD Engine", "Orchestrateur de pipelines")
-        System(registry, "Container Registry", "Images Docker")
-    }
+    dev[Développeur<br/>Pousse le code]
+    deploy[Environnements<br/>Staging/Production]
 
-    System_Boundary(runners, "GitLab Runners") {
-        System(runner1, "Runner Docker", "Exécution en containers")
-        System(runner2, "Runner Shell", "Exécution directe")
-        System(runner3, "Runner K8s", "Exécution pods")
-    }
+    dev --> repo
+    repo --> ci
+    ci --> runner1
+    ci --> runner2
+    ci --> runner3
+    runner1 --> registry
+    runner1 --> deploy
 
-    System_Ext(deploy, "Environnements", "Staging/Production")
-
-    Rel(dev, repo, "git push")
-    Rel(repo, ci, "déclenche pipeline")
-    Rel(ci, runner1, "exécute jobs")
-    Rel(ci, runner2, "exécute jobs")
-    Rel(ci, runner3, "exécute jobs")
-    Rel(runner1, registry, "push images")
-    Rel(runner1, deploy, "déploie")
+    style gitlab fill:#e1f5fe
+    style runners fill:#f3e5f5
+    style dev fill:#e8f5e8
+    style deploy fill:#fff3e0
 ```
 
 **Composants principaux** :
@@ -1189,32 +1191,34 @@ GitLab CI/CD Engine
 **Architecture conceptuelle** :
 
 ```mermaid
-C4Component
-    title Architecture GitLab Runner - Vue détaillée
+graph TB
+    subgraph gitlab ["GitLab Instance"]
+        coordinator[Coordinator<br/>Orchestrateur central]
+        api[API Gateway<br/>Interface REST]
+    end
 
-    Container_Boundary(gitlab, "GitLab Instance") {
-        Component(coordinator, "Coordinator", "Orchestrateur central", "Distribue les jobs<br/>aux runners disponibles<br/>Gère la file d'attente")
-        Component(api, "API Gateway", "Interface REST", "Point d'entrée unique<br/>Authentification<br/>Communication HTTP/JSON")
-    }
+    subgraph runner_system ["Runner System"]
+        runner_manager[Runner Manager<br/>Gestionnaire principal]
+        executor[Executor Engine<br/>Moteur execution]
+        cache_manager[Cache Manager<br/>Gestionnaire cache]
+    end
 
-    Container_Boundary(runner_system, "Runner System") {
-        Component(runner_manager, "Runner Manager", "Gestionnaire principal", "Récupère les jobs<br/>Lance les executors<br/>Collecte les résultats")
-        Component(executor, "Executor Engine", "Moteur d'exécution", "Prépare l'environnement<br/>Exécute les scripts<br/>Capture les outputs")
-        Component(cache_manager, "Cache Manager", "Gestionnaire cache", "Stockage temporaire<br/>Optimise les builds<br/>Partage des dépendances")
-    }
+    subgraph execution_env ["Execution Environment"]
+        container[Docker Runtime<br/>Environnement containerisé]
+        shell[Shell Executor<br/>Execution directe]
+        k8s_pod[Kubernetes Pod<br/>Orchestration K8s]
+    end
 
-    Container_Boundary(execution_env, "Execution Environment") {
-        Component(container, "Docker Runtime", "Environnement containerisé", "Isolation complète<br/>Images reproductibles<br/>Cleanup automatique")
-        Component(shell, "Shell Executor", "Exécution directe", "Accès système natif<br/>Performances maximales<br/>Persistence locale")
-        Component(k8s_pod, "Kubernetes Pod", "Orchestration K8s", "Auto-scaling<br/>Resource limits<br/>Pods éphémères")
-    }
+    coordinator --> runner_manager
+    runner_manager --> executor
+    executor --> container
+    executor --> shell
+    executor --> k8s_pod
+    runner_manager --> cache_manager
 
-    Rel(coordinator, runner_manager, "Polling jobs", "HTTP/JSON")
-    Rel(runner_manager, executor, "Execute job")
-    Rel(executor, container, "Spawn environment")
-    Rel(executor, shell, "Direct execution")
-    Rel(executor, k8s_pod, "Create pod")
-    Rel(runner_manager, cache_manager, "Manage cache")
+    style gitlab fill:#e1f5fe
+    style runner_system fill:#f3e5f5
+    style execution_env fill:#e8f5e8
 ```
 
 #### **Taxonomie des Runners**
@@ -3456,304 +3460,549 @@ Créez un Dockerfile optimisé et intégrez la construction d'images Docker dans
 
 ## 7. Triggers et automatisation
 
-### 7.1 Théorie des déclencheurs de pipeline
+> **Objectif** : Comprendre comment déclencher automatiquement des pipelines selon différents scénarios et besoins métier.
 
-#### **Définition**
+### 7.1 Comprendre les déclencheurs - Les bases
 
-Les **triggers** (déclencheurs) constituent le mécanisme fondamental qui détermine **quand** et **comment** les pipelines GitLab CI/CD s'exécutent. Ils implémentent une logique conditionnelle sophistiquée basée sur des **événements** et des **règles métier**.
+#### **Que sont les "triggers" ?**
 
-**Classification des déclencheurs** :
+Imaginez que vous travaillez sur un site web. Actuellement, vous devez :
+
+1. Faire vos modifications de code
+2. Penser à tester manuellement
+3. Penser à déployer manuellement
+4. Penser à faire les sauvegardes manuellement
+
+**Les triggers (déclencheurs)** permettent d'automatiser ces étapes en définissant **quand** certaines actions doivent se produire automatiquement.
+
+#### **Analogie du monde réel**
 
 ```mermaid
-graph TB
-    subgraph "Types de Triggers"
-        A[Event-Based Triggers] --> A1[Push Events]
-        A --> A2[Merge Request Events]
-        A --> A3[Tag Events]
-        A --> A4[Schedule Events]
-
-        B[Condition-Based Triggers] --> B1[Branch Patterns]
-        B --> B2[File Changes]
-        B --> B3[Variable Conditions]
-        B --> B4[Manual Triggers]
-
-        C[External Triggers] --> C1[API Triggers]
-        C --> C2[Webhook Triggers]
-        C --> C3[Pipeline Triggers]
-        C --> C4[Chat Commands]
+graph LR
+    subgraph "Réveil automatique"
+        A[7h00 du matin] --> B[Réveil sonne]
+        B --> C[Vous vous réveillez]
     end
 
-    subgraph "Trigger Evaluation"
-        D[Event Detection] --> E[Rule Processing]
-        E --> F[Condition Matching]
-        F --> G[Pipeline Execution]
-    end
-
-    style A1 fill:#e8f5e8
-    style B1 fill:#fff3e0
-    style C1 fill:#f3e5f5
-```
-
-#### **Workflow de déclenchement intelligent**
-
-```mermaid
-sequenceDiagram
-    participant Dev as Développeur
-    participant Git as Git Repository
-    participant GitLab as GitLab Engine
-    participant Rules as Rules Engine
-    participant Pipeline as Pipeline Executor
-
-    Dev->>Git: git push feature/auth
-    Git->>GitLab: Webhook push event
-    GitLab->>Rules: Évalue conditions
-
-    Rules->>Rules: Check branch pattern
-    Rules->>Rules: Check file changes
-    Rules->>Rules: Check variables
-    Rules->>Rules: Check schedule
-
-    alt Conditions met
-        Rules->>Pipeline: Create pipeline
-        Pipeline->>Pipeline: Execute jobs
-        Pipeline->>Dev: Notification résultat
-    else Conditions not met
-        Rules->>Dev: Pipeline skipped
-    end
-```
-
-### 7.2 Déclencheurs basés sur les branches
-
-#### **Stratégies Git Flow et CI/CD**
-
-```mermaid
-gitGraph
-    commit id: "Initial"
-
-    branch develop
-    checkout develop
-    commit id: "Feature base"
-
-    branch feature/authentication
-    checkout feature/authentication
-    commit id: "Add login form"
-    commit id: "Add validation"
-    commit id: "Add tests"
-
-    checkout develop
-    merge feature/authentication
-    commit id: "Merge auth feature"
-
-    checkout main
-    merge develop
-    commit id: "Release v1.0.0"
-    commit tag: "v1.0.0"
-
-    branch hotfix/security
-    checkout hotfix/security
-    commit id: "Security patch"
-
-    checkout main
-    merge hotfix/security
-    commit id: "Hotfix v1.0.1"
-    commit tag: "v1.0.1"
-```
-
-#### **Configuration avancée des triggers branch**
-
-```yaml
-# Workflow global avec règles sophistiquées
-workflow:
-  rules:
-    # Exécution sur toutes les branches sauf drafts
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
-    - if: $CI_COMMIT_BRANCH
-    # Exécution sur merge requests
-    - if: $CI_MERGE_REQUEST_IID
-    # Exécution sur tags
-    - if: $CI_COMMIT_TAG
-
-# Job avec règles conditionnelles complexes
-build_feature:
-  stage: build
-  script:
-    - echo "Build feature branch"
-    - npm run build:development
-  rules:
-    # Feature branches uniquement
-    - if: $CI_COMMIT_BRANCH =~ /^feature\//
-      changes:
-        - 'src/**/*'
-        - 'package.json'
-        - 'Dockerfile'
-
-build_staging:
-  stage: build
-  script:
-    - echo "Build staging"
-    - npm run build:staging
-  rules:
-    # Branche develop uniquement
-    - if: $CI_COMMIT_BRANCH == "develop"
-
-build_production:
-  stage: build
-  script:
-    - echo "Build production"
-    - npm run build:production
-  rules:
-    # Branche main OU tags de release
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-
-# Déploiement avec approvals
-deploy_production:
-  stage: deploy
-  script:
-    - echo "Déploiement production"
-    - ./deploy.sh production
-  environment:
-    name: production
-    url: https://monapp.com
-  rules:
-    # Production: uniquement main avec validation manuelle
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
-      allow_failure: false
-    # Ou tags avec déploiement automatique
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      when: on_success
-```
-
-#### **Matrices de déclenchement**
-
-```mermaid
-stateDiagram-v2
-    [*] --> EventDetection
-
-    EventDetection --> BranchAnalysis: git push
-    EventDetection --> MRAnalysis: merge request
-    EventDetection --> TagAnalysis: tag push
-    EventDetection --> ScheduleAnalysis: cron trigger
-
-    BranchAnalysis --> FeaturePipeline: feature/*
-    BranchAnalysis --> DevelopPipeline: develop
-    BranchAnalysis --> MainPipeline: main
-    BranchAnalysis --> HotfixPipeline: hotfix/*
-
-    FeaturePipeline --> BuildTest: build + test only
-    DevelopPipeline --> BuildTestDeploy: + deploy staging
-    MainPipeline --> FullPipeline: + deploy production
-    HotfixPipeline --> FastTrack: emergency deploy
-
-    MRAnalysis --> ReviewPipeline: validation + review
-    TagAnalysis --> ReleasePipeline: release deployment
-    ScheduleAnalysis --> MaintenancePipeline: cleanup + reports
-
-    BuildTest --> [*]
-    BuildTestDeploy --> [*]
-    FullPipeline --> [*]
-    FastTrack --> [*]
-    ReviewPipeline --> [*]
-    ReleasePipeline --> [*]
-    MaintenancePipeline --> [*]
-```
-
-### 7.3 Scheduled pipelines - Automatisation temporelle
-
-#### **Théorie des pipelines programmés**
-
-Les **scheduled pipelines** permettent d'exécuter des tâches de maintenance, monitoring et reporting de façon périodique, indépendamment des événements de code.
-
-**Cas d'usage** :
-
-```mermaid
-graph TB
-    subgraph "Categories Scheduled Pipelines"
-        A[Maintenance] --> A1[Cleanup Docker images]
-        A --> A2[Database backups]
-        A --> A3[Log rotation]
-
-        B[Quality Assurance] --> B1[Nightly builds]
-        B --> B2[Performance tests]
-        B --> B3[Security scans]
-
-        C[Monitoring] --> C1[Health checks]
-        C --> C2[Dependency updates]
-        C --> C3[License compliance]
-
-        D[Reporting] --> D1[Usage statistics]
-        D --> D2[Cost analysis]
-        D --> D3[Compliance reports]
+    subgraph "Pipeline automatique"
+        D[Code poussé] --> E[Tests lancés]
+        E --> F[Application déployée]
     end
 
     style A fill:#e8f5e8
-    style B fill:#fff3e0
-    style C fill:#f3e5f5
-    style D fill:#e3f2fd
+    style D fill:#e8f5e8
 ```
 
-#### **Configuration Cron expressions**
+**Principe** : Comme votre réveil se déclenche à 7h00, un pipeline peut se déclencher quand vous poussez du code.
+
+#### **Premier exemple simple**
+
+Commençons par le cas le plus simple : **déclencher des tests à chaque push de code**.
 
 ```yaml
-# Pipeline de maintenance nocturne
-nightly_maintenance:
-  stage: maintenance
+# Version simple et lisible
+test_mon_code:
+  script:
+    - echo "Je teste mon code automatiquement !"
+    - npm test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"' # Guillemets simples autour de toute la condition
+```
+
+**Ce que fait ce code** :
+
+- Quand quelqu'un pousse du code sur la branche `main`
+- GitLab lance automatiquement les tests
+- Plus besoin d'y penser !
+
+> ** Astuce syntaxe** : Utilisez des guillemets simples `'` autour de toute la condition pour éviter les problèmes d'échappement.
+
+#### **Alternatives pour les conditions**
+
+```yaml
+# Méthode 1 : Guillemets simples (recommandé)
+rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Méthode 2 : Sans guillemets (peut causer des problèmes)
+rules:
+  - if: $CI_COMMIT_BRANCH == "main"
+
+# Méthode 3 : Avec échappement
+rules:
+  - if: "$CI_COMMIT_BRANCH == \"main\""
+```
+
+#### ** Équivalence avec l'ancienne syntaxe `only`**
+
+**Évolution de GitLab CI/CD** :
+
+GitLab a fait évoluer sa syntaxe pour les conditions d'exécution des jobs. La condition moderne avec `rules` remplace l'ancienne syntaxe `only/except`.
+
+**Comparaison directe** :
+
+```yaml
+#  NOUVELLE SYNTAXE (recommandée depuis GitLab 12.3+)
+deploy_job:
+  script:
+    - echo "Déploiement en production"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+#  ANCIENNE SYNTAXE (dépréciée mais encore supportée)
+deploy_job:
+  script:
+    - echo "Déploiement en production"
+  only:
+    - main
+```
+
+**Tableau d'équivalence** :
+
+| Ancienne syntaxe (`only`) | Nouvelle syntaxe (`rules`)                      | Description                               |
+| ------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| `only: - main`            | `rules: - if: '$CI_COMMIT_BRANCH == "main"'`    | Exécuter seulement sur la branche main    |
+| `only: - develop`         | `rules: - if: '$CI_COMMIT_BRANCH == "develop"'` | Exécuter seulement sur la branche develop |
+| `only: - tags`            | `rules: - if: '$CI_COMMIT_TAG'`                 | Exécuter seulement sur les tags           |
+| `only: - merge_requests`  | `rules: - if: '$CI_MERGE_REQUEST_IID'`          | Exécuter seulement sur les merge requests |
+
+#### ** Explication détaillée : "Exécuter uniquement sur les tags"**
+
+**Qu'est-ce qu'un tag Git ?**
+
+Un **tag** est une étiquette que vous pouvez apposer sur un commit spécifique pour marquer une version importante de votre application.
+
+```mermaid
+graph LR
+    subgraph "Timeline des commits"
+        A[Initial commit] --> B[Feature A]
+        B --> C[Feature B]
+        C --> D[Bug fixes]
+        D --> E[New feature]
+        E --> F[More fixes]
+        F --> G[Latest commit]
+    end
+
+    subgraph "Tags appliqués"
+        D -.-> D1[🏷️ v1.0.0]
+        F -.-> F1[🏷️ v1.1.0]
+    end
+
+    style D fill:#e8f5e8
+    style F fill:#e8f5e8
+    style D1 fill:#fff3e0
+    style F1 fill:#fff3e0
+```
+
+**Visualisation alternative - Ligne de temps** :
+
+```
+─────────────────────────────────────────────────────────────
+Commits:  [Initial] → [Feature A] → [Feature B] → [Bug fixes] → [New feature] → [More fixes] → [Latest]
+                                                      ↓                              ↓
+Tags:                                            📌 v1.0.0                     📌 v1.1.0
+─────────────────────────────────────────────────────────────
+```
+
+**Cas d'usage typiques des tags** :
+
+- ** Versions de release** : `v1.0.0`, `v2.1.3`
+- ** Étapes importantes** : `beta-1`, `rc-2`, `stable`
+- ** Releases temporelles** : `2024-10-24`, `release-october`
+
+**Comment créer un tag** :
+
+```bash
+# Créer un tag sur le commit actuel
+git tag v1.0.0
+
+# Créer un tag avec message
+git tag -a v1.0.0 -m "Version 1.0.0 - Première release stable"
+
+# Pousser le tag vers GitLab
+git push origin v1.0.0
+
+# Pousser tous les tags
+git push origin --tags
+```
+
+**Que se passe-t-il avec `rules: - if: '$CI_COMMIT_TAG'` ?**
+
+Cette condition signifie : **"Ce job ne s'exécute QUE quand un tag est poussé"**
+
+```yaml
+# Exemple concret
+deploy_release:
+  script:
+    - echo " Nouvelle version détectée !"
+    - echo "Version: $CI_COMMIT_TAG"
+    - ./deploy-to-production.sh
+  rules:
+    - if: '$CI_COMMIT_TAG' # S'exécute SEULEMENT sur les tags
+```
+
+**Comportement pratique** :
+
+```bash
+#  CES ACTIONS NE DÉCLENCHENT PAS LE JOB :
+git add .
+git commit -m "Fix bug"
+git push origin main           # Push normal → job ne s'exécute PAS
+
+git checkout feature/new-auth
+git push origin feature/new-auth  # Push sur branche → job ne s'exécute PAS
+
+#  SEULE CETTE ACTION DÉCLENCHE LE JOB :
+git tag v1.2.0
+git push origin v1.2.0        # Push du tag → job s'exécute !
+```
+
+**Exemple complet de déploiement par version** :
+
+```yaml
+# Job de déploiement automatique sur tag
+deploy_production:
+  stage: deploy
   image: alpine:latest
   script:
-    - echo "=== MAINTENANCE NOCTURNE ==="
-    - echo "Début: $(date)"
+    - echo "=== DÉPLOIEMENT VERSION $CI_COMMIT_TAG ==="
 
-    # Nettoyage images Docker anciennes
-    - docker system prune -af --filter "until=72h"
+    # Vérification que c'est bien une version (v1.2.3)
+    - |
+      if [[ "$CI_COMMIT_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo " Tag valide pour production: $CI_COMMIT_TAG"
+      else
+        echo " Tag invalide: $CI_COMMIT_TAG"
+        exit 1
+      fi
 
-    # Backup base de données
-    - pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
-    - aws s3 cp backup_$(date +%Y%m%d).sql s3://backups/
+    # Construction avec numéro de version
+    - docker build -t myapp:$CI_COMMIT_TAG .
+    - docker tag myapp:$CI_COMMIT_TAG myapp:latest
 
-    # Rotation des logs
-    - find /var/log -name "*.log" -mtime +7 -delete
+    # Déploiement en production
+    - kubectl set image deployment/myapp myapp=myapp:$CI_COMMIT_TAG
 
-    # Rapport de santé système
-    - ./scripts/health_report.sh
+    # Notification
+    - echo " Version $CI_COMMIT_TAG déployée en production !"
 
-    - echo "Fin: $(date)"
   rules:
-    # Exécution uniquement sur schedule
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      variables:
-        MAINTENANCE_TYPE: 'nightly'
+    - if: '$CI_COMMIT_TAG' # Seulement sur les tags
 
-# Tests de performance hebdomadaires
-weekly_performance:
-  stage: test
-  image: loadtest/artillery:latest
+  environment:
+    name: production
+    url: https://myapp.com
+```
+
+**Variables disponibles avec les tags** :
+
+```yaml
+debug_tag_info:
   script:
-    - echo "=== TESTS PERFORMANCE HEBDOMADAIRES ==="
+    - echo "Tag détecté: $CI_COMMIT_TAG"
+    - echo "SHA du tag: $CI_COMMIT_SHA"
+    - echo "Message du tag: $CI_COMMIT_MESSAGE"
+    - echo "Ref complet: $CI_COMMIT_REF_NAME"
+  rules:
+    - if: '$CI_COMMIT_TAG'
+```
 
-    # Tests de charge
-    - artillery run --target https://monapp.com performance/load-test.yml
+**Workflow typique de release** :
 
-    # Tests de stress
-    - artillery run --target https://monapp.com performance/stress-test.yml
+```mermaid
+flowchart TD
+    A[Développement terminé] --> B[Tests réussis sur main]
+    B --> C[Créer tag v1.0.0]
+    C --> D[Push du tag]
+    D --> E[Pipeline déclenché]
+    E --> F[Job deploy_production s'exécute]
+    F --> G[Application déployée]
 
-    # Analyse résultats
-    - ./scripts/analyze_performance.sh
+    style C fill:#fff3e0
+    style E fill:#e8f5e8
+    style F fill:#e1f5fe
+```
 
-  artifacts:
-    reports:
-      performance: performance-report.json
-    paths:
-      - performance-results/
-    expire_in: 4 weeks
+**Avantages de cette approche** :
+
+- ** Contrôle précis** : Déploiement seulement quand vous le décidez
+- ** Sécurité** : Pas de déploiement accidentel sur chaque commit
+- ** Traçabilité** : Chaque déploiement est lié à une version précise
+- **⏮ Rollback facile** : Possibilité de revenir à une version antérieure
+
+**Pourquoi utiliser `rules` au lieu de `only` ?**
+
+- ** Plus précis** : Conditions booléennes complexes possibles
+- ** Plus flexible** : Combinaison de conditions avec `&&`, `||`
+- ** Plus lisible** : Logic plus explicite
+- ** Moderne** : Syntaxe recommandée par GitLab
+
+**Exemples avancés avec `rules`** :
+
+```yaml
+# Condition complexe (impossible avec only)
+deploy_staging:
+  script:
+    - echo "Déploiement staging"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+
+# Conditions multiples
+deploy_production:
+  script:
+    - echo "Déploiement production"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+```
+
+> **Note importante** : Bien que `only` soit encore supporté, GitLab recommande fortement d'utiliser `rules` pour tous les nouveaux projets. La syntaxe `only/except` pourrait être supprimée dans les futures versions de GitLab.
+
+#### **Conditions complexes avec opérateurs logiques**
+
+**Exemple de condition avancée** :
+
+```yaml
+deploy_staging:
+  script:
+    - echo "Déploiement staging"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+```
+
+**Pourquoi cette double vérification ?**
+
+Sans la deuxième condition (`$CI_PIPELINE_SOURCE == "push"`), le job pourrait s'exécuter dans d'autres situations sur la branche `develop` :
+
+- **Push de code** → Pipeline déclenché → Job s'exécute
+- **Merge Request** vers develop → Pipeline déclenché → Job ne s'exécute PAS
+- **Pipeline programmé** (schedule) → Pipeline déclenché → Job ne s'exécute PAS
+- **Trigger manuel** → Pipeline déclenché → Job ne s'exécute PAS
+
+**Traduction en français** :
+_"Exécute ce job SEULEMENT quand quelqu'un pousse du code sur la branche develop"_
+
+**Autres exemples de conditions complexes** :
+
+```yaml
+# Déploiement production seulement sur main OU tags
+deploy_production:
+  script:
+    - echo "Déploiement production"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_COMMIT_TAG'
+
+# Tests E2E seulement sur MR importantes
+test_e2e_critical:
+  script:
+    - npm run test:e2e
+  rules:
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+
+# Sauvegardes automatiques seulement la nuit
+backup_nightly:
+  script:
+    - ./backup.sh
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $BACKUP_TYPE == "nightly"'
+```
+
+### 7.2 Les différents types de déclencheurs
+
+#### **Les 4 situations courantes**
+
+Maintenant que vous comprenez le principe, voici les 4 situations où on veut déclencher des actions :
+
+```mermaid
+graph TB
+    subgraph "Quand déclencher des actions ?"
+        A[1. Nouveau code<br/>Push sur Git] --> A1[Tester le code]
+        B[2. Demande de fusion<br/>Merge Request] --> B1[Valider les changements]
+        C[3. Nouvelle version<br/>Tag/Release] --> C1[Déployer en production]
+        D[4. Maintenance régulière<br/>Chaque nuit/semaine] --> D1[Sauvegardes, nettoyage]
+    end
+
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+```
+
+#### **Exemple concret pour chaque situation**
+
+**1. Nouveau code (le plus courant)**
+
+```yaml
+tests_automatiques:
+  script:
+    - npm test
+  rules:
+    - if: $CI_COMMIT_BRANCH # Sur toute branche
+```
+
+**2. Demande de fusion**
+
+```yaml
+verification_merge_request:
+  script:
+    - npm test
+    - npm run lint # Vérifier la qualité du code
+  rules:
+    - if: $CI_MERGE_REQUEST_IID # Seulement sur les MR
+```
+
+**3. Nouvelle version**
+
+```yaml
+deploiement_production:
+  script:
+    - echo "Nouvelle version détectée !"
+    - ./deploy.sh
+  rules:
+    - if: $CI_COMMIT_TAG # Seulement sur les tags (versions)
+```
+
+**4. Maintenance régulière**
+
+```yaml
+sauvegarde_quotidienne:
+  script:
+    - echo "Sauvegarde automatique"
+    - ./backup.sh
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" # Seulement sur programmation
+```
+
+### 7.3 Progression : Gérer différentes branches
+
+#### **Pourquoi différencier les branches ?**
+
+Dans un projet réel, toutes les branches n'ont pas le même rôle :
+
+```mermaid
+graph LR
+    subgraph "Organisation des branches"
+        A[feature/login<br/>Développement] --> B[develop<br/>Tests internes]
+        B --> C[main<br/>Production]
+    end
+
+    subgraph "Actions différentes"
+        A --> A1[Tests rapides]
+        B --> B1[Tests complets<br/>+ Déploiement test]
+        C --> C1[Tests complets<br/>+ Déploiement production]
+    end
+
+    style A fill:#fff3e0
+    style B fill:#e1f5fe
+    style C fill:#e8f5e8
+```
+
+#### **Exemple progressif**
+
+**Étape 1 : Branches de développement (feature/)**
+
+```yaml
+tests_developpement:
+  script:
+    - echo "Tests rapides sur branche de développement"
+    - npm test
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^feature\// # Commence par "feature/"
+```
+
+**Étape 2 : Branche d'intégration (develop)**
+
+```yaml
+tests_integration:
+  script:
+    - echo "Tests complets + déploiement test"
+    - npm test
+    - npm run build
+    - ./deploy-test.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+```
+
+**Étape 3 : Branche de production (main)**
+
+```yaml
+deploiement_production:
+  script:
+    - echo "Déploiement en production"
+    - npm run build
+    - ./deploy-production.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual # Demande confirmation manuelle
+```
+
+**Explication de `when: manual`** :
+
+Le paramètre `when: manual` fait que le job **reste en attente** de la confirmation de quelqu'un pour continuer.
+
+**Comportement** :
+
+- Quand du code est poussé sur `main`, le pipeline démarre
+- Le job `deploiement_production` apparaît avec un bouton "Play"
+- **Le job ne s'exécute PAS automatiquement**
+- Une personne doit cliquer manuellement sur "Play" pour lancer le déploiement
+
+**Pourquoi utiliser `when: manual` en production ?**
+
+- **Sécurité** : Éviter les déploiements accidentels
+- **Contrôle** : Validation humaine avant mise en production
+- **Planification** : Déployer au moment choisi (pas forcément immédiatement)
+
+### 7.4 Programmation temporelle - Les tâches automatiques
+
+#### **Concept simple**
+
+Certaines tâches doivent se faire **régulièrement**, pas seulement quand on pousse du code :
+
+- Sauvegardes quotidiennes
+- Vérifications de sécurité hebdomadaires
+- Rapports mensuels
+
+#### **Configuration GitLab (Interface)**
+
+1. Allez dans votre projet GitLab
+2. `CI/CD` → `Schedules`
+3. Cliquez sur `New schedule`
+4. Remplissez :
+   - **Description** : "Sauvegarde quotidienne"
+   - **Interval Pattern** : `0 2 * * *` (tous les jours à 2h du matin)
+   - **Target Branch** : `main`
+
+#### **Code correspondant**
+
+```yaml
+sauvegarde_automatique:
+  script:
+    - echo "Lancement sauvegarde automatique"
+    - ./backup.sh
+    - echo "Sauvegarde terminée"
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
-      variables:
-        SCHEDULE_TYPE: 'performance'
+  only:
+    variables:
+      - $SCHEDULE_TYPE == "backup" # Optionnel : différencier les tâches
+```
 
-# Audit de sécurité mensuel
-monthly_security_audit:
+#### **Horaires courants (Cron)**
+
+```
+0 2 * * *     # Tous les jours à 2h00
+0 2 * * 1     # Tous les lundis à 2h00
+0 2 1 * *     # Le 1er de chaque mois à 2h00
+0 */6 * * *   # Toutes les 6 heures
+```
+
+**Exemple avancé - Audit de sécurité mensuel** :
+
+```yaml
+security_audit_monthly:
   stage: security
   image: aquasec/trivy:latest
   script:
@@ -3777,140 +4026,253 @@ monthly_security_audit:
     paths:
       - security-audit/
     expire_in: 6 months
+
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
-      variables:
-        SCHEDULE_TYPE: 'security'
+
+  only:
+    variables:
+      - $SCHEDULE_TYPE == "security"
 ```
 
-### 7.4 Pipeline triggers - Orchestration inter-projets
+### 7.5 Niveau avancé : Déclencher d'autres projets
 
-#### **Architecture microservices et pipelines**
+#### **Le problème à résoudre**
+
+Imaginez que votre application a plusieurs parties :
+
+- Un **site web** (Frontend)
+- Une **API** (Backend)
+- Un **système de déploiement**
+
+Quand vous modifiez le site web, vous voulez que le système de déploiement se mette à jour automatiquement.
+
+#### **Principe simple**
 
 ```mermaid
-C4Container
-    title Orchestration Pipelines Multi-Projets
+graph LR
+    A[Projet Frontend<br/>Site web] --> B[Déclenchement automatique]
+    B --> C[Projet Déploiement<br/>Mise en production]
 
-    Container_Boundary(frontend, "Frontend Project") {
-        Container(frontend_pipeline, "Frontend Pipeline", "GitLab CI", "Build React app")
-    }
-
-    Container_Boundary(backend, "Backend Project") {
-        Container(api_pipeline, "API Pipeline", "GitLab CI", "Build Node.js API")
-    }
-
-    Container_Boundary(deployment, "Deployment Project") {
-        Container(deploy_pipeline, "Deploy Pipeline", "GitLab CI", "Orchestration K8s")
-        Container(e2e_pipeline, "E2E Pipeline", "GitLab CI", "Tests intégration")
-    }
-
-    Container_Boundary(monitoring, "Monitoring Project") {
-        Container(monitor_pipeline, "Monitor Pipeline", "GitLab CI", "Dashboards & Alerts")
-    }
-
-    Rel(frontend_pipeline, deploy_pipeline, "Trigger deployment")
-    Rel(api_pipeline, deploy_pipeline, "Trigger deployment")
-    Rel(deploy_pipeline, e2e_pipeline, "Trigger E2E tests")
-    Rel(deploy_pipeline, monitor_pipeline, "Update monitoring")
+    style A fill:#e1f5fe
+    style C fill:#e8f5e8
 ```
 
-#### **Configuration triggers avancés**
+#### **Configuration de base**
+
+**Dans le projet Frontend :**
 
 ```yaml
-# Projet Frontend - Déclenche déploiement
-trigger_deployment:
-  stage: trigger
-  image: alpine:latest
+deploiement_automatique:
   script:
-    - echo "Frontend build réussi, déclenchement déploiement"
+    - echo "Site web construit avec succès"
+    - npm run build
   trigger:
-    project: devops/deployment-orchestrator
+    project: mon-equipe/deploiement # Nom du projet à déclencher
     branch: main
-    strategy: depend # Attend le résultat du pipeline déclenché
-    variables:
-      TRIGGER_SOURCE: 'frontend'
-      FRONTEND_VERSION: $CI_COMMIT_SHA
-      DEPLOY_ENV: 'staging'
   rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
     - if: $CI_COMMIT_BRANCH == "main"
-      variables:
-        DEPLOY_ENV: 'production'
+```
 
-# Projet Backend - Trigger conditionnel
-trigger_if_api_changed:
-  stage: trigger
-  variables:
-    API_VERSION: $CI_COMMIT_SHA
-  trigger:
-    project: devops/deployment-orchestrator
-    variables:
-      TRIGGER_SOURCE: 'backend'
-      API_VERSION: $API_VERSION
-      DEPLOY_ENV: $DEPLOY_TARGET
+**Dans le projet Déploiement :**
+
+```yaml
+mise_en_production:
+  script:
+    - echo "Déploiement déclenché automatiquement"
+    - ./deploy.sh
   rules:
-    # Seulement si l'API a changé
+    - if: $CI_PIPELINE_SOURCE == "pipeline" # Déclenché par un autre projet
+```
+
+#### **Passage d'informations entre projets**
+
+Vous pouvez passer des informations du projet déclencheur au projet déclenché :
+
+```yaml
+# Projet Frontend
+deploiement_avec_info:
+  trigger:
+    project: mon-equipe/deploiement
+    variables:
+      VERSION_FRONTEND: $CI_COMMIT_SHA # Version du code
+      ENVIRONNEMENT: 'production' # Où déployer
+      QUI_DEPLOIE: $CI_COMMIT_AUTHOR # Qui a fait la modification
+```
+
+```yaml
+# Projet Déploiement - reçoit les informations
+deploiement_intelligent:
+  script:
+    - echo "Déploiement de la version: $VERSION_FRONTEND"
+    - echo "Sur l'environnement: $ENVIRONNEMENT"
+    - echo "Demandé par: $QUI_DEPLOIE"
+    - ./deploy.sh $ENVIRONNEMENT $VERSION_FRONTEND
+```
+
+### 7.6 Optimisation : Déclencher seulement si nécessaire
+
+#### **Le problème**
+
+Actuellement, les tests se lancent même si vous ne modifiez que la documentation. C'est du gaspillage !
+
+#### **Solution : Déclencher selon les fichiers modifiés**
+
+```yaml
+tests_backend:
+  script:
+    - npm test
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - 'src/**/*' # Fichiers de code source
+        - 'package.json' # Dépendances
+        - '*.js' # Fichiers JavaScript
+```
+
+```yaml
+tests_frontend:
+  script:
+    - npm run test:frontend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - 'frontend/**/*' # Seulement le dossier frontend
+        - 'public/**/*' # Fichiers publics
+```
+
+```yaml
+deploiement_docs:
+  script:
+    - ./deploy-documentation.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - 'docs/**/*' # Seulement la documentation
+        - 'README.md' # Fichier README
+```
+
+### 7.7 Récapitulatif pratique
+
+#### **Ce que vous avez appris**
+
+```mermaid
+graph TB
+    subgraph "Progression de l'apprentissage"
+        A[1. Concept de base<br/>Déclencher automatiquement] --> B[2. Types de déclencheurs<br/>Push, MR, Tags, Planning]
+        B --> C[3. Différencier les branches<br/>feature → develop → main]
+        C --> D[4. Programmation temporelle<br/>Tâches automatiques]
+        D --> E[5. Déclenchement entre projets<br/>Orchestration]
+        E --> F[6. Optimisation<br/>Selon fichiers modifiés]
+    end
+
+    style A fill:#fff3e0
+    style F fill:#e8f5e8
+```
+
+#### **Template de démarrage complet**
+
+Voici un fichier `.gitlab-ci.yml` qui utilise tous les concepts vus :
+
+```yaml
+# Template pour débutants - Triggers et automatisation
+
+stages:
+  - test
+  - build
+  - deploy
+
+# 1. Tests automatiques sur toutes les branches
+tests_rapides:
+  stage: test
+  script:
+    - echo "Tests rapides"
+    - npm test
+  rules:
+    - if: $CI_COMMIT_BRANCH # Sur toute branche
+
+# 2. Tests complets seulement sur develop/main
+tests_complets:
+  stage: test
+  script:
+    - echo "Tests complets avec couverture"
+    - npm run test:coverage
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(main|develop)$/
+
+# 3. Build selon la branche
+build_developpement:
+  stage: build
+  script:
+    - npm run build:dev
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^feature\//
+
+build_production:
+  stage: build
+  script:
+    - npm run build:prod
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# 4. Déploiement automatique vs manuel
+deploy_test:
+  stage: deploy
+  script:
+    - ./deploy-test.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop" # Automatique sur develop
+
+deploy_production:
+  stage: deploy
+  script:
+    - ./deploy-prod.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual # Manuel sur main (sécurité)
+
+# 5. Tâches programmées
+sauvegarde:
+  script:
+    - ./backup.sh
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+# 6. Optimisation par fichiers
+tests_frontend:
+  script:
+    - npm run test:frontend
+  rules:
     - if: $CI_COMMIT_BRANCH =~ /^(main|develop)$/
       changes:
-        - 'api/**/*'
-        - 'src/controllers/**/*'
-        - 'src/models/**/*'
-        - 'package.json'
-
-# Projet Deployment - Orchestrateur principal
-deployment_orchestration:
-  stage: deploy
-  image: kubectl:latest
-  variables:
-    FRONTEND_IMAGE: $CI_REGISTRY/frontend:${FRONTEND_VERSION:-latest}
-    BACKEND_IMAGE: $CI_REGISTRY/backend:${API_VERSION:-latest}
-  script:
-    - echo "=== ORCHESTRATION DÉPLOIEMENT ==="
-    - echo "Source: $TRIGGER_SOURCE"
-    - echo "Frontend: $FRONTEND_VERSION"
-    - echo "Backend: $API_VERSION"
-    - echo "Environment: $DEPLOY_ENV"
-
-    # Mise à jour des manifests K8s
-    - envsubst < k8s/frontend-deployment.yml | kubectl apply -f -
-    - envsubst < k8s/backend-deployment.yml | kubectl apply -f -
-
-    # Attente du déploiement
-    - kubectl rollout status deployment/frontend-app
-    - kubectl rollout status deployment/backend-api
-
-    # Déclenchement tests E2E
-    - |
-      if [ "$DEPLOY_ENV" = "staging" ]; then
-        echo "Déclenchement tests E2E"
-      fi
-  trigger:
-    # Tests E2E post-déploiement
-    project: qa/e2e-tests
-    variables:
-      TEST_ENV: $DEPLOY_ENV
-      FRONTEND_URL: https://$DEPLOY_ENV.monapp.com
-      API_URL: https://api-$DEPLOY_ENV.monapp.com
-  environment:
-    name: $DEPLOY_ENV
-    url: https://$DEPLOY_ENV.monapp.com
+        - 'frontend/**/*'
 ```
 
-### 7.5 Automatisation avancée et intelligence
+#### **Prochaines étapes**
 
-#### **Pipelines adaptatifs**
+1. **Testez** ce template dans votre projet
+2. **Adaptez** les scripts à votre technologie
+3. **Ajoutez** progressivement plus de conditions
+4. **Configurez** des tâches programmées dans GitLab
+5. **Explorez** les déclenchements entre projets
 
-```yaml
-# Pipeline intelligent basé sur l'analyse des changements
-smart_pipeline:
+> **Conseil** : Commencez simple, puis ajoutez de la complexité au fur et à mesure de vos besoins !
+
+---
+
+## ** Pipelines Intelligents : Analyse Automatique des Changements**
+
+### **Analyse Smart des Modifications**
+
+Un pipeline intelligent peut détecter automatiquement quelles parties de votre projet ont été modifiées et adapter les tests en conséquence.
+
+````yaml
+# Job d'analyse des changements
+analyze_changes:
   stage: analyze
-  image: alpine/git:latest
   script:
-    # Analyse des fichiers modifiés
     - |
-      echo "=== ANALYSE INTELLIGENTE ==="
-
-      # Détection des changements
+      # Détection des changements par composant
       if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep -q "^frontend/"; then
         echo "FRONTEND_CHANGED=true" >> smart.env
       fi
@@ -3923,41 +4285,44 @@ smart_pipeline:
         echo "DB_CHANGED=true" >> smart.env
       fi
 
-      # Analyse impact
+      # Analyse de l'impact
       CHANGED_LINES=$(git diff --numstat $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | awk '{sum+=$1+$2} END {print sum}')
       if [ "$CHANGED_LINES" -gt 1000 ]; then
         echo "MAJOR_CHANGES=true" >> smart.env
         echo "EXTENDED_TESTS=true" >> smart.env
       fi
 
-      # Configuration dynamique
+      # Affichage de la configuration dynamique
+      echo "=== Variables d'environnement générées ==="
       cat smart.env
-
   artifacts:
     reports:
       dotenv: smart.env
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
 
 # Jobs conditionnels basés sur l'analyse
+
 test_frontend:
   stage: test
   script:
     - npm run test:frontend
   rules:
-    - if: $FRONTEND_CHANGED == "true"
+    - if: '$FRONTEND_CHANGED == "true"'
 
 test_api:
   stage: test
   script:
     - npm run test:api
   rules:
-    - if: $API_CHANGED == "true"
+    - if: '$API_CHANGED == "true"'
 
 migration_test:
   stage: test
   script:
     - npm run test:migration
   rules:
-    - if: $DB_CHANGED == "true"
+    - if: '$DB_CHANGED == "true"'
 
 extended_test_suite:
   stage: test
@@ -3966,7 +4331,7 @@ extended_test_suite:
     - npm run test:performance
     - npm run test:security
   rules:
-    - if: $MAJOR_CHANGES == "true"
+    - if: '$MAJOR_CHANGES == "true"'
   timeout: 2h
 
 # Auto-rollback en cas d'échec
@@ -3976,12 +4341,11 @@ auto_rollback:
     - echo "Échec détecté, rollback automatique"
     - kubectl rollout undo deployment/app
   rules:
-    - if: $CI_PIPELINE_SOURCE == "pipeline"
-      when: on_failure
+    - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+  when: on_failure
   environment:
     name: production
     action: rollback
-```
 
 #### **Notifications et observabilité**
 
@@ -3993,8 +4357,8 @@ notification_pipeline:
   before_script:
     - apk add --no-cache curl jq
   script:
-    # Collecte des métriques pipeline
     - |
+      # Collecte des métriques pipeline
       PIPELINE_DURATION=$(($(date +%s) - $(date -d "$CI_PIPELINE_CREATED_AT" +%s)))
       PIPELINE_STATUS=$([ "$CI_PIPELINE_STATUS" = "success" ] && echo "Succès" || echo "Échec")
 
@@ -4030,25 +4394,7 @@ notification_pipeline:
       fi
   rules:
     - when: always
-```
-
-### 7.6 Application pratique
-
-📝 **LAB 9** - Review Apps et Collaboration : `S2_S3_lab9_review_apps_collaboration`
-
-**Énoncé du LAB 9** :
-Configurez des Review Apps automatiques pour chaque merge request avec workflows collaboratifs avancés.
-
-- **Objectif** : Créer des environnements éphémères automatiques pour validation collaborative
-- **Contexte** : Équipe développement nécessitant validation visuelle des fonctionnalités via Review Apps
-- **Instructions** :
-  1. Configurer Review Apps automatiques par merge request
-  2. Implémenter cycle de vie des environnements dynamiques
-  3. Intégrer notifications et commentaires automatiques
-  4. Optimiser coûts et performances des Review Apps
-- **Critères de validation** : Review Apps fonctionnelles, intégration MR, notifications actives
-- **Durée estimée** : 55 minutes
-- **Fichier de travail** : `S2_S3_lab9_review_apps_collaboration`
+````
 
 ---
 

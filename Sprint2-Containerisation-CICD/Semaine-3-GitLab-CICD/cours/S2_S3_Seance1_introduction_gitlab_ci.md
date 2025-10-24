@@ -2385,7 +2385,7 @@ ssl_deployment:
 
     # Test de la configuration SSL
     - |
-      echo "🧪 Test configuration SSL..."
+      echo "Test configuration SSL..."
       nginx -t && echo "Configuration Nginx valide"
 
   environment:
@@ -2463,11 +2463,11 @@ secure_deployment:
   script:
     - echo "Deploying with secure variables..."
     - deploy.sh --token="$API_TOKEN" --db-pass="$DATABASE_PASSWORD"
-    
+
     # Nettoyage variables sensibles
     - unset API_TOKEN
     - unset DATABASE_PASSWORD
-    
+
   # Restriction aux branches protégées
   only:
     - main
@@ -2711,16 +2711,19 @@ binary_deploy:
 
 # Configuration avec fichier JSON complexe
 
+```yaml
 config_deployment:
-script: # APP_CONFIG_FILE contient une configuration JSON complexe - echo "Chargement configuration..." - cat "$APP_CONFIG_FILE" | jq '.'
+  script:
+    # APP_CONFIG_FILE contient une configuration JSON complexe
+    - echo "Chargement configuration..."
+    - cat "$APP_CONFIG_FILE" | jq '.'
 
     # Validation schema
     - jsonschema -i "$APP_CONFIG_FILE" config-schema.json
 
     # Déploiement avec configuration
     - kubectl create configmap app-config --from-file="$APP_CONFIG_FILE"
-
-````
+```
 
 ### 5.6 Application pratique
 
@@ -2753,47 +2756,49 @@ La transition de **Docker Compose** (orchestration locale) vers **GitLab CI/CD**
 ```mermaid
 journey
     title Evolution des pratiques DevOps
-    section Phase 1: Développement Local
+    section Phase 1 Developpement Local
       Docker run manuel         : 2: Dev
       Gestion manuelle des deps : 1: Dev
       Tests locaux seulement     : 2: Dev
-    section Phase 2: Docker Compose
+    section Phase 2 Docker Compose
       Orchestration locale       : 4: Dev
       Environnements reproductibles : 4: Dev
-      Workflows standardisés     : 3: Dev
-    section Phase 3: GitLab CI/CD
-      Automatisation complète    : 5: Pipeline
+      Workflows standardises     : 3: Dev
+    section Phase 3 GitLab CI CD
+      Automatisation complete    : 5: Pipeline
       Tests sur chaque commit    : 5: Pipeline
-      Déploiement automatisé     : 5: Pipeline
-      Monitoring intégré         : 4: Pipeline
-````
+      Deploiement automatise     : 5: Pipeline
+      Monitoring integre         : 4: Pipeline
+```
 
 #### **Paradigmes d'intégration Docker**
 
 ```mermaid
-C4Container
-    title Intégration Docker GitLab CI/CD - Architecture
+graph TB
+    subgraph dev ["Environnement Developpement"]
+        compose["Docker Compose<br/>Orchestration locale"]
+        local_registry["Registry Local<br/>Cache images"]
+    end
 
-    Container_Boundary(dev, "Environnement Développement") {
-        Container(compose, "Docker Compose", "YAML", "Orchestration locale")
-        Container(local_registry, "Registry Local", "Docker", "Cache images")
-    }
+    subgraph cicd ["GitLab CI/CD"]
+        pipeline["Pipeline Engine<br/>Orchestrateur CI/CD"]
+        docker_runner["Docker Runner<br/>Execution jobs"]
+        registry["GitLab Registry<br/>Images applicatives"]
+    end
 
-    Container_Boundary(cicd, "GitLab CI/CD") {
-        Container(pipeline, "Pipeline Engine", "GitLab", "Orchestrateur CI/CD")
-        Container(docker_runner, "Docker Runner", "Docker", "Exécution jobs")
-        Container(registry, "GitLab Registry", "Docker", "Images applicatives")
-    }
+    subgraph deploy ["Environnements Cibles"]
+        staging["Staging<br/>Tests integration"]
+        production["Production<br/>Applications live"]
+    end
 
-    Container_Boundary(deploy, "Environnements Cibles") {
-        Container(staging, "Staging", "Docker/K8s", "Tests intégration")
-        Container(production, "Production", "Docker/K8s", "Applications live")
-    }
+    compose --> pipeline
+    docker_runner --> registry
+    pipeline --> staging
+    pipeline --> production
 
-    Rel(compose, pipeline, "Migration workflow")
-    Rel(docker_runner, registry, "Push/Pull images")
-    Rel(pipeline, staging, "Deploy automatique")
-    Rel(pipeline, production, "Deploy contrôlé")
+    style dev fill:#e8f4fd
+    style cicd fill:#fff2cc
+    style deploy fill:#d5e8d4
 ```
 
 ### 6.2 Migration Docker Compose vers GitLab CI

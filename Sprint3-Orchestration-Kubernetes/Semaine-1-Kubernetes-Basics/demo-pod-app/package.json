@@ -1,0 +1,21 @@
+{
+  "name": "demo-pod-app",
+  "version": "1.0.0",
+  "description": "Application Node.js simple pour démonstration Kubernetes",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "keywords": [
+    "kubernetes",
+    "demo",
+    "pod",
+    "nodejs"
+  ],
+  "author": "Formation DevOps",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

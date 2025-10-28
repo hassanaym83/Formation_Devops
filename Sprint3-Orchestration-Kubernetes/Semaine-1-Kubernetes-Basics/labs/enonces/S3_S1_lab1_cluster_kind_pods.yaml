@@ -1,0 +1,178 @@
+# LAB 1 - Cluster Kind et Pods fondamentaux
+#
+# Objectifs :
+# - Installer et configurer un cluster Kind multi-node local
+# - Créer et gérer des pods avec manifests YAML
+# - Maîtriser kubectl pour les opérations de base
+#
+# Points : 8/30 (LAB 1 fondamentaux techniques)
+# Durée estimée : 2 heures
+# Niveau Bloom : 2-Comprendre
+#
+# Contexte DevOps :
+# Mise en place d'un environnement de développement Kubernetes
+# pour une équipe DevOps travaillant sur des microservices.
+
+# Configuration cluster Kind multi-node
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+metadata:
+  name: devops-training-cluster
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "environment=training,team=devops"
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "environment=training,workload=applications"
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "environment=training,workload=database"
+
+---
+# Pod simple - Application web frontend
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend-app
+  namespace: development
+  labels:
+    app: frontend
+    tier: web
+    environment: dev
+spec:
+  containers:
+    - name: nginx-frontend
+      image: nginx:1.21-alpine
+      ports:
+        - containerPort: 80
+          name: http
+      resources:
+        requests:
+          memory: '64Mi'
+          cpu: '50m'
+        limits:
+          memory: '128Mi'
+          cpu: '100m'
+      env:
+        - name: ENVIRONMENT
+          value: 'development'
+        - name: SERVICE_NAME
+          value: 'frontend-service'
+
+---
+# Pod avec initContainer - Base de données
+apiVersion: v1
+kind: Pod
+metadata:
+  name: database-pod
+  namespace: development
+  labels:
+    app: database
+    tier: data
+    environment: dev
+spec:
+  initContainers:
+    - name: database-init
+      image: busybox:1.35
+      command: ['sh', '-c', 'echo "Initializing database..." && sleep 5']
+  containers:
+    - name: postgres
+      image: postgres:14-alpine
+      ports:
+        - containerPort: 5432
+          name: postgres
+      env:
+        - name: POSTGRES_DB
+          value: 'devops_app'
+        - name: POSTGRES_USER
+          value: 'devops'
+        - name: POSTGRES_PASSWORD
+          value: 'training123'
+      resources:
+        requests:
+          memory: '256Mi'
+          cpu: '100m'
+        limits:
+          memory: '512Mi'
+          cpu: '200m'
+
+---
+# Pod multi-conteneurs - Application avec sidecar
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-sidecar
+  namespace: development
+  labels:
+    app: backend-api
+    tier: application
+    pattern: sidecar
+spec:
+  containers:
+    # Conteneur principal - API backend
+    - name: api-server
+      image: node:18-alpine
+      command: ['node']
+      args:
+        [
+          '-e',
+          "const http = require('http'); const server = http.createServer((req, res) => { res.writeHead(200, {'Content-Type': 'application/json'}); res.end(JSON.stringify({status: 'healthy', timestamp: new Date().toISOString(), environment: process.env.ENVIRONMENT})); }); server.listen(3000, () => console.log('API server running on port 3000'));"
+        ]
+      ports:
+        - containerPort: 3000
+          name: api
+      env:
+        - name: ENVIRONMENT
+          value: 'development'
+        - name: LOG_LEVEL
+          value: 'info'
+      resources:
+        requests:
+          memory: '128Mi'
+          cpu: '100m'
+        limits:
+          memory: '256Mi'
+          cpu: '200m'
+
+    # Conteneur sidecar - Log aggregator
+    - name: log-aggregator
+      image: busybox:1.35
+      command: ['sh', '-c']
+      args:
+        - |
+          while true; do
+            echo "$(date): Collecting logs for api-server"
+            echo "$(date): System metrics - CPU: $(cat /proc/loadavg)"
+            sleep 30
+          done
+      resources:
+        requests:
+          memory: '32Mi'
+          cpu: '10m'
+        limits:
+          memory: '64Mi'
+          cpu: '50m'
+
+---
+# Namespace pour organisation
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: development
+  labels:
+    environment: dev
+    team: devops-training
+    purpose: learning

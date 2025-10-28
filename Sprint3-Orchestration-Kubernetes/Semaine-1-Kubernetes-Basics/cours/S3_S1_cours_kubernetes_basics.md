@@ -1,0 +1,1678 @@
+# Simplon Maghreb - Formation DevOps
+
+# Sprint 3 - Semaine 1 : Kubernetes Basics - Introduction à l'orchestration de conteneurs
+
+## Objectifs pédagogiques
+
+- Comprendre l'architecture et les concepts fondamentaux de Kubernetes
+- Maîtriser la création et gestion des objets Kubernetes essentiels
+- Développer l'autonomie dans le déploiement d'applications containerisées
+- Acquérir les reflexes DevOps pour l'orchestration en production
+
+## Objectifs techniques
+
+Architecture Kubernetes, Pods, Services, Deployments, ConfigMaps, Secrets, Volumes, Ingress, kubectl, YAML manifests, orchestration conteneurs, haute disponibilité
+
+## Table des matières
+
+1. [Introduction à Kubernetes](#1-introduction-à-kubernetes)
+2. [Architecture Kubernetes](#2-architecture-kubernetes)
+3. [Installation et configuration](#3-installation-et-configuration)
+4. [Pods et conteneurs](#4-pods-et-conteneurs)
+5. [Services et networking](#5-services-et-networking)
+6. [Deployments et ReplicaSets](#6-deployments-et-replicasets)
+7. [Configuration et secrets](#7-configuration-et-secrets)
+8. [Volumes et persistance](#8-volumes-et-persistance)
+9. [Ingress et exposition](#9-ingress-et-exposition)
+10. [Monitoring et debugging](#10-monitoring-et-debugging)
+11. [Récapitulatif et prochaines étapes](#11-récapitulatif-et-prochaines-étapes)
+12. [Ressources complémentaires](#12-ressources-complémentaires)
+
+---
+
+## 1. Introduction à Kubernetes
+
+### 1.1 Qu'est-ce que Kubernetes ? Comprendre les bases
+
+Kubernetes (prononcé "kube-eur-netes" ou abrégé **K8s**) est un système qui vous aide à gérer des applications dans des conteneurs. Mais commençons par le début...
+
+#### Analogie du port de conteneurs
+
+Imaginez un port maritime géant avec des milliers de conteneurs :
+
+- Chaque conteneur contient des marchandises (votre application)
+- Il faut les organiser, les déplacer, les surveiller
+- Certains conteneurs doivent être proches d'autres
+- Il faut remplacer ceux qui sont endommagés
+- Il faut adapter le nombre selon la demande
+
+**Kubernetes fait exactement cela, mais avec des conteneurs d'applications !**
+
+#### Définition simple
+
+Kubernetes est un **chef d'orchestre** qui :
+
+- Déploie vos applications dans des conteneurs
+- Les surveille en permanence
+- Les répare automatiquement si elles cassent
+- Les fait grandir ou diminuer selon les besoins
+- Les organise de manière intelligente
+
+### 1.2 Pourquoi Kubernetes existe-t-il ?
+
+#### Le problème avant Kubernetes
+
+Vous développez une application web moderne. Sans Kubernetes, voici ce qui se passe :
+
+**Scénario concret** : Boutique en ligne "TechShop"
+
+```
+Application = Frontend + API + Base de données + Service de paiement
+```
+
+**Les défis quotidiens** :
+
+1. **Déploiement manuel** : "Il faut que je me connecte à 5 serveurs différents..."
+2. **Surveillance constante** : "Est-ce que tout fonctionne ? Je dois vérifier toutes les heures..."
+3. **Scaling difficile** : "Black Friday arrive, il faut 10 fois plus de serveurs. Vite !"
+4. **Pannes** : "Le serveur 3 est tombé à 2h du matin. Personne ne l'a vu..."
+5. **Mises à jour risquées** : "Si je me trompe, tout le site tombe..."
+
+#### Ce que Kubernetes résout
+
+Kubernetes automatise tout cela :
+
+```
+ Déploiement automatique    → "kubectl apply" et c'est parti !
+ Surveillance 24/7          → Redémarre automatiquement ce qui casse
+ Scaling intelligent        → Ajoute des serveurs quand il y a du trafic
+ Auto-réparation           → Détecte et corrige les problèmes
+ Mises à jour sécurisées   → Remplace progressivement sans interruption
+```
+
+### 1.3 Comment Kubernetes simplifie votre travail
+
+#### Avant et après Kubernetes
+
+**AVANT Kubernetes** (la vie difficile) :
+
+```bash
+# Vous devez faire cela sur chaque serveur...
+ssh serveur1.com
+docker stop mon-app
+docker pull mon-app:nouvelle-version
+docker run mon-app:nouvelle-version
+# Puis répéter sur serveur2, serveur3, serveur4...
+# En espérant que rien ne casse !
+```
+
+**AVEC Kubernetes** (la vie facile) :
+
+```bash
+# Une seule commande pour tout mettre à jour !
+kubectl set image deployment/mon-app app=mon-app:nouvelle-version
+# Kubernetes s'occupe de tout : 50 serveurs ? Pas de problème !
+```
+
+#### Les superpouvoir de Kubernetes
+
+**1. Auto-guérison** : Comme un infirmier robot
+
+- Une application crashe ? Kubernetes la redémarre
+- Un serveur tombe ? Kubernetes déplace les applications ailleurs
+
+**2. Scaling magique** : Comme un élastique intelligent
+
+- Plus d'utilisateurs ? Plus d'applications automatiquement
+- Moins d'utilisateurs ? Moins d'applications pour économiser
+
+**3. Équilibrage de charge** : Comme un répartiteur de trafic
+
+- Distribue les utilisateurs sur toutes vos applications
+- Évite qu'une seule application soit surchargée
+
+### 1.4 Les concepts de base (sans jargon technique)
+
+Kubernetes organise tout avec quelques éléments simples :
+
+#### Pod = La plus petite boîte
+
+```
+Un Pod = Un conteneur avec votre application
+Exemple : Un Pod avec votre site web
+```
+
+#### Deployment = Le gestionnaire intelligent
+
+```
+Un Deployment = "Je veux 3 copies de mon site web"
+Kubernetes s'assure qu'il y en a toujours 3 qui fonctionnent
+```
+
+#### Service = L'adresse fixe
+
+```
+Un Service = "Mon site est toujours accessible à cette adresse"
+Même si les Pods bougent, l'adresse reste la même
+```
+
+#### Exemple concret : Restaurant moderne
+
+Imaginez un restaurant avec :
+
+- **Cuisiniers** (Pods) : Ils préparent les plats
+- **Chef de cuisine** (Deployment) : "Il me faut 5 cuisiniers en permanence"
+- **Maître d'hôtel** (Service) : Accueille les clients et les dirige vers les cuisiniers disponibles
+
+Si un cuisinier tombe malade (Pod crashe), le chef embauche immédiatement un remplaçant !
+
+### 1.5 Kubernetes dans le monde réel
+
+#### Qui utilise Kubernetes ?
+
+**Netflix** : Gère des millions de films et séries
+
+- 1000+ microservices orchestrés par Kubernetes
+- Scaling automatique selon l'audience
+
+**Spotify** : Votre musique partout dans le monde
+
+- Déploie 4000+ fois par jour grâce à Kubernetes
+- Disponibilité 99.9% garantie
+
+**Airbnb** : Des millions de réservations
+
+- 1000+ services migrés vers Kubernetes
+- Économies de 50% sur l'infrastructure
+
+#### Kubernetes vs. alternatives
+
+| Solution       | Complexité | Flexibilité   | Communauté |
+| -------------- | ---------- | ------------- | ---------- |
+| **Kubernetes** | Élevée     | Maximale      | Énorme     |
+| Docker Swarm   | Faible     | Limitée       | Petite     |
+| Amazon ECS     | Moyenne    | AWS seulement | AWS        |
+
+**Pourquoi choisir Kubernetes ?**
+
+- Standard de l'industrie (80% des entreprises)
+- Fonctionne partout (AWS, Azure, Google, on-premise)
+- Communauté massive et support à long terme
+
+### 1.6 Votre parcours d'apprentissage
+
+#### Étapes de ce cours
+
+```
+Étape 1: Installation de votre "laboratoire" Kubernetes
+    ↓
+Étape 2: Votre premier Pod (Hello World !)
+    ↓
+Étape 3: Créer un Deployment (plusieurs copies)
+    ↓
+Étape 4: Exposer avec un Service (accès externe)
+    ↓
+Étape 5: Configuration et secrets
+    ↓
+Étape 6: Stockage persistant
+    ↓
+Étape 7: Exposition sur Internet
+    ↓
+Étape 8: Surveillance et debugging
+```
+
+#### Objectifs d'apprentissage
+
+À la fin de cette semaine, vous saurez :
+
+**Compétences pratiques** :
+
+- Installer et configurer un cluster Kubernetes
+- Déployer vos applications en toute confiance
+- Diagnostiquer et résoudre les problèmes courants
+- Faire du scaling et des mises à jour sans stress
+
+**Compétences conceptuelles** :
+
+- Comprendre l'architecture Kubernetes
+- Choisir les bons objets pour vos besoins
+- Appliquer les bonnes pratiques de production
+- Intégrer Kubernetes dans vos workflows DevOps
+
+#### Prérequis recommandés
+
+**Indispensables** :
+
+- Docker : Création et gestion de conteneurs
+- Linux : Ligne de commande et concepts de base
+- Réseaux : IP, ports, DNS
+
+**Recommandés** :
+
+- YAML : Syntaxe de base
+- Git : Versionning du code
+- CI/CD : Pipelines de déploiement
+
+### 1.7 Préparation de votre environnement
+
+#### Outils que nous allons utiliser
+
+**minikube** : Votre Kubernetes personnel
+
+- Cluster Kubernetes complet sur votre machine
+- Parfait pour apprendre et tester
+
+**kubectl** : Votre baguette magique
+
+- Interface en ligne de commande pour Kubernetes
+- Toutes les opérations passent par cet outil
+
+**Docker Desktop** : Moteur de conteneurs
+
+- Création et gestion des images
+- Intégration native avec Kubernetes
+
+#### Méthodologie pédagogique
+
+**Approche "Learning by Doing"** :
+
+1. **Théorie** (15 min) : Concepts expliqués simplement
+2. **Démonstration** (10 min) : Je vous montre comment faire
+3. **Pratique** (20 min) : Vous faites un LAB guidé
+4. **Validation** (5 min) : Quiz pour vérifier la compréhension
+
+**Progression douce** :
+
+- Chaque concept s'appuie sur le précédent
+- Exemples concrets avant les abstractions
+- Erreurs courantes expliquées et évitées
+
+---
+
+**Prêt pour l'aventure ?** Maintenant que vous comprenez POURQUOI Kubernetes existe et ce qu'il peut faire pour vous, passons à découvrir COMMENT il fonctionne avec son architecture !
+
+---
+
+## 2. Architecture Kubernetes
+
+### 2.1 Vue d'ensemble architecturale
+
+Kubernetes suit une architecture **maître-esclave** avec séparation claire entre le **control plane** (gestion) et les **worker nodes** (exécution).
+
+```mermaid
+C4Component
+    title Architecture Kubernetes - Control Plane et Worker Nodes
+
+    Container_Boundary(control_plane, "Control Plane") {
+        Component(api_server, "API Server", "Point d'entrée", "Expose l'API Kubernetes<br/>Authentification<br/>Validation requêtes")
+        Component(etcd, "etcd", "Base de données", "Stockage clé-valeur<br/>État du cluster<br/>Configuration")
+        Component(scheduler, "Scheduler", "Planificateur", "Placement des Pods<br/>Optimisation ressources<br/>Contraintes placement")
+        Component(controller_manager, "Controller Manager", "Gestionnaire", "Boucles de contrôle<br/>État désiré<br/>Réconciliation")
+    }
+
+    Container_Boundary(worker_nodes, "Worker Nodes") {
+        Component(kubelet, "Kubelet", "Agent node", "Gestion Pods locaux<br/>Communication API Server<br/>Monitoring santé")
+        Component(kube_proxy, "Kube-proxy", "Proxy réseau", "Load balancing<br/>Service discovery<br/>Règles iptables")
+        Component(container_runtime, "Container Runtime", "Moteur conteneurs", "Docker/containerd<br/>Gestion cycle vie<br/>Isolation processus")
+    }
+
+    Rel(api_server, etcd, "Stockage état")
+    Rel(api_server, scheduler, "Attribution Pods")
+    Rel(api_server, controller_manager, "Contrôle état")
+    Rel(kubelet, api_server, "Synchronisation")
+    Rel(kube_proxy, api_server, "Services/Endpoints")
+    Rel(kubelet, container_runtime, "Gestion conteneurs")
+```
+
+### 2.2 Composants du Control Plane
+
+#### API Server
+
+**Rôle** : Point d'entrée unique pour toutes les opérations du cluster
+**Fonctions** :
+
+- Expose l'API REST Kubernetes
+- Authentification et autorisation des requêtes
+- Validation et admission des objets
+- Interface avec etcd pour la persistance
+
+#### etcd
+
+**Rôle** : Base de données distribuée du cluster
+**Fonctions** :
+
+- Stockage clé-valeur hautement disponible
+- Persistance de l'état désiré du cluster
+- Configuration et métadonnées des objets
+
+#### Scheduler
+
+**Rôle** : Planificateur intelligent des workloads
+**Fonctions** :
+
+- Attribution des Pods aux nodes appropriés
+- Optimisation des ressources (CPU, mémoire)
+- Respect des contraintes de placement
+
+#### Controller Manager
+
+**Rôle** : Moteur de réconciliation de l'état
+**Fonctions** :
+
+- Exécution des boucles de contrôle
+- Maintien de l'état désiré vs état réel
+- Gestion des objets Kubernetes (ReplicaSets, Services)
+
+### 2.3 Composants des Worker Nodes
+
+#### Kubelet
+
+**Rôle** : Agent principal du node, interface avec le control plane
+**Fonctions** :
+
+- Communication bidirectionnelle avec l'API Server
+- Gestion du cycle de vie des Pods sur le node
+- Monitoring de la santé des conteneurs
+- Reporting du statut du node et des Pods
+
+#### Kube-proxy
+
+**Rôle** : Proxy réseau pour la connectivité des Services
+**Fonctions** :
+
+- Implémentation des Services Kubernetes via iptables/IPVS
+- Load balancing du trafic vers les Pods backends
+- Service discovery et routage réseau
+- Gestion des règles de pare-feu réseau
+
+#### Container Runtime
+
+**Rôle** : Moteur d'exécution des conteneurs
+**Options supportées** :
+
+- **Docker** : Runtime traditionnel (en cours de deprecation)
+- **containerd** : Runtime léger, performant (recommandé)
+- **CRI-O** : Runtime optimisé pour Kubernetes
+
+**Fonctions** :
+
+- Téléchargement et gestion des images conteneurs
+- Création et démarrage des conteneurs
+- Isolation des processus et gestion des ressources
+- Interface avec le système d'exploitation hôte
+
+#### Add-ons optionnels
+
+**DNS Cluster (CoreDNS)** :
+
+- Résolution DNS interne du cluster
+- Service discovery automatique
+
+**Network Plugin (CNI)** :
+
+- Implémentation du modèle réseau Kubernetes
+- Plugins populaires : Calico, Flannel, Weave
+
+C'est tout ce que vous devez savoir sur l'architecture pour commencer !
+
+---
+
+## 3. Installation et configuration
+
+### 3.1 Options d'installation disponibles
+
+**Important** : Il existe plusieurs méthodes pour installer Kubernetes selon l'environnement :
+
+#### Environnements de développement
+
+- **Minikube** : Cluster local sur une seule machine (recommandé pour l'apprentissage)
+- **Kind** : Kubernetes dans Docker
+- **Docker Desktop** : Intégration Kubernetes native
+
+#### Environnements de production
+
+- **Kubeadm** : Installation manuelle sur infrastructure
+- **Solutions cloud managées** : EKS (AWS), GKE (Google), AKS (Azure)
+
+### 3.2 Installation pour l'apprentissage - Windows avec Chocolatey
+
+**Pour des objectifs pédagogiques, nous allons installer Minikube avec VirtualBox comme driver.**
+
+Cette configuration est idéale pour :
+
+- Apprendre les concepts Kubernetes
+- Tester des configurations
+- Développer des applications
+
+#### Étape 1 : Vérifier les prérequis
+
+```powershell
+# Vérifier que Windows est en version compatible
+winver
+
+# Vérifier que la virtualisation est activée
+systeminfo | findstr /i "hyper-v"
+```
+
+#### Étape 2 : Installer Chocolatey (si pas déjà fait)
+
+```powershell
+# Exécuter en tant qu'administrateur
+Set-ExecutionPolicy Bypass -Scope Process -Force;
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+```
+
+#### Étape 3 : Installer VirtualBox (driver pour Minikube)
+
+```powershell
+# Installer VirtualBox via Chocolatey
+choco install virtualbox -y
+
+# Redémarrer si demandé
+```
+
+#### Étape 4 : Installer kubectl
+
+**Référence officielle** : [Install kubectl on Windows](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/)
+
+```powershell
+# Option 1 : Via Chocolatey (recommandé)
+choco install kubernetes-cli -y
+
+# Option 2 : Via curl (alternative)
+curl.exe -LO "https://dl.k8s.io/release/v1.28.0/bin/windows/amd64/kubectl.exe"
+
+# Vérifier l'installation
+kubectl version --client
+```
+
+#### Étape 5 : Installer Minikube
+
+**Référence officielle** : [Install Minikube](https://kubernetes.io/fr/docs/tasks/tools/install-minikube/)
+
+```powershell
+# Via Chocolatey
+choco install minikube -y
+
+# Ou via téléchargement direct
+curl.exe -LO "https://storage.googleapis.com/minikube/releases/latest/minikube-windows-amd64.exe"
+# Puis déplacer vers un dossier dans le PATH
+```
+
+#### Étape 6 : Démarrer votre cluster Kubernetes
+
+**Méthode recommandée - VirtualBox** :
+
+```powershell
+# Démarrer Minikube avec VirtualBox
+minikube start --driver=virtualbox
+```
+
+** Si VirtualBox échoue (problème VT-X/AMD-v)** :
+
+Si vous obtenez l'erreur `This computer doesn't have VT-X/AMD-v enabled`, utilisez Docker à la place :
+
+```powershell
+# Solution alternative avec Docker Desktop
+minikube delete  # Nettoyer si échec précédent
+minikube start --driver=docker
+
+# Ou avec plus d'options si nécessaire
+minikube start --driver=docker --container-runtime=docker
+```
+
+**Vérification du cluster** :
+
+```powershell
+# Vérifier le statut
+minikube status
+
+# Vérifier que kubectl fonctionne
+kubectl cluster-info
+kubectl get nodes
+```
+
+### 3.3 Configuration et vérification
+
+#### Configurer kubectl pour Minikube
+
+```bash
+# Minikube configure automatiquement kubectl
+# Vérifier la configuration
+kubectl config current-context
+
+# Voir les détails du cluster
+kubectl cluster-info
+
+# Lister les nodes (vous devriez voir minikube)
+kubectl get nodes
+```
+
+#### Commandes de diagnostic essentielles
+
+```bash
+# État du cluster
+minikube status
+kubectl get componentstatuses
+
+# État des nodes
+kubectl get nodes -o wide
+
+# Pods système
+kubectl get pods -n kube-system
+
+# Événements récents
+kubectl get events --sort-by='.firstTimestamp'
+```
+
+#### Interface graphique (optionnel)
+
+```bash
+# Démarrer le dashboard Kubernetes
+minikube dashboard
+
+# Cela ouvrira une interface web dans votre navigateur
+```
+
+### 3.4 Commandes utiles Minikube
+
+```bash
+# Arrêter le cluster
+minikube stop
+
+# Supprimer le cluster
+minikube delete
+
+# Voir l'IP du cluster
+minikube ip
+
+# Se connecter en SSH au node
+minikube ssh
+
+# Voir les addons disponibles
+minikube addons list
+
+# Activer un addon (ex: ingress)
+minikube addons enable ingress
+```
+
+### 3.5 Gestion des profils Minikube
+
+**Concept important** : Minikube permet de créer et gérer plusieurs **profils** (clusters isolés) simultanément. Chaque profil est un cluster Kubernetes indépendant avec sa propre configuration.
+
+#### Pourquoi utiliser plusieurs profils ?
+
+- **Isolation des environnements** : dev, test, staging séparés
+- **Versions Kubernetes différentes** : tester la compatibilité
+- **Configurations spécifiques** : ressources, addons, drivers
+- **Projets multiples** : éviter les conflits entre applications
+
+#### Commandes de gestion des profils
+
+```bash
+# Lister tous les profils existants
+minikube profile list
+
+# Créer et démarrer un nouveau profil
+minikube start -p dev-cluster --kubernetes-version=v1.28.0
+minikube start -p prod-cluster --cpus=4 --memory=8192
+
+# Changer de profil actif
+minikube profile dev-cluster
+
+# Voir le profil actuellement actif
+minikube profile
+
+# Démarrer un profil spécifique
+minikube start -p dev-cluster
+
+# Arrêter un profil spécifique
+minikube stop -p dev-cluster
+
+# Supprimer un profil
+minikube delete -p dev-cluster
+```
+
+#### Interaction kubectl avec les profils
+
+**Important** : `kubectl` suit automatiquement le profil Minikube actif via les contextes.
+
+```bash
+# Voir le contexte kubectl actuel
+kubectl config current-context
+
+# Lister tous les contextes disponibles
+kubectl config get-contexts
+
+# Changer de contexte kubectl manuellement
+kubectl config use-context minikube-dev-cluster
+
+# Vérifier sur quel cluster vous travaillez
+kubectl cluster-info
+kubectl get nodes
+```
+
+#### Exemple pratique : Environnements séparés
+
+```bash
+# Environnement de développement
+minikube start -p development \
+  --cpus=2 --memory=4096 \
+  --kubernetes-version=v1.28.0
+
+# Environnement de test
+minikube start -p testing \
+  --cpus=3 --memory=6144 \
+  --kubernetes-version=v1.29.0
+
+# Basculer entre environnements
+minikube profile development
+kubectl get pods  # Pods de l'env development
+
+minikube profile testing
+kubectl get pods  # Pods de l'env testing
+```
+
+#### Bonnes pratiques profils
+
+- **Nommage cohérent** : `dev`, `test`, `staging`
+- **Documentation** : Noter la purpose de chaque profil
+- **Nettoyage régulier** : Supprimer les profils inutilisés
+- **Ressources appropriées** : Ajuster CPU/mémoire selon l'usage
+
+#### 3.5.1 Différence cruciale : Profil vs Contexte
+
+**Confusion courante** : Beaucoup confondent profils Minikube et contextes kubectl. Voici les différences essentielles :
+
+| Aspect         | **Profil Minikube**                          | **Contexte kubectl**                            |
+| -------------- | -------------------------------------------- | ----------------------------------------------- |
+| **Définition** | Instance réelle de cluster Kubernetes        | Configuration client dans kubeconfig            |
+| **Objet**      | Cluster physique (API server, kubelet, etcd) | Pointeur vers cluster + utilisateur + namespace |
+| **Gestion**    | Commandés par `minikube`                     | Gérés par `kubectl config`                      |
+| **Stockage**   | `~/.minikube/profiles/<nom>/`                | `~/.kube/config`                                |
+| **Action**     | Démarre/arrête un cluster réel               | Change la cible du client kubectl               |
+
+#### Exemples pratiques de la différence
+
+**Scénario 1 : Créer un profil Minikube**
+
+```bash
+# Crée ET démarre un cluster réel nommé "development"
+minikube start -p development
+
+# Résultat :
+# Cluster Kubernetes running sur votre machine
+# Contexte "development" ajouté automatiquement dans kubeconfig
+# kubectl pointe maintenant vers ce cluster
+```
+
+**Scénario 2 : Basculer entre contextes**
+
+```bash
+# Lister les contextes disponibles
+kubectl config get-contexts
+
+# Changer de contexte (ne démarre PAS de cluster)
+kubectl config use-context minikube-production
+
+# Résultat :
+# kubectl pointe vers le cluster "production"
+# Si le cluster n'est pas démarré → erreurs de connexion
+```
+
+**Scénario 3 : Arrêter un profil**
+
+```bash
+# Arrête le cluster physique "development"
+minikube stop -p development
+
+# Résultat :
+# Cluster "development" arrêté (plus d'API server)
+# Contexte "development" existe toujours dans kubeconfig
+# kubectl vers ce contexte → erreurs "connection refused"
+```
+
+#### Workflow typique profil + contexte
+
+```bash
+# 1. Créer et démarrer un profil (cluster réel)
+minikube start -p mon-projet --cpus=2 --memory=4096
+
+# 2. Vérifier que le contexte est créé automatiquement
+kubectl config get-contexts
+# * minikube-mon-projet    minikube-mon-projet   minikube-mon-projet
+
+# 3. Travailler avec kubectl (utilise le contexte actif)
+kubectl get nodes
+kubectl create deployment nginx --image=nginx
+
+# 4. Créer un autre profil
+minikube start -p autre-projet --cpus=1 --memory=2048
+
+# 5. Basculer manuellement entre contextes
+kubectl config use-context minikube-mon-projet
+kubectl get pods  # Pods du premier projet
+
+kubectl config use-context minikube-autre-projet
+kubectl get pods  # Pods du second projet
+```
+
+#### Points d'attention importants
+
+**Erreur fréquente** :
+
+```bash
+# Mauvais : essayer de démarrer un "contexte"
+kubectl config use-context mon-cluster  # ← Juste pointer kubectl
+# Si le cluster n'est pas running → erreurs !
+
+# Correct : démarrer le profil puis utiliser le contexte
+minikube start -p mon-cluster  # ← Démarrer le cluster réel
+kubectl config use-context minikube-mon-cluster  # ← Pointer kubectl
+```
+
+**Règle mnémotechnique** :
+
+- **Profil** = Cluster **physique** (CPU, mémoire, processus)
+- **Contexte** = Configuration **logique** (fichier texte)
+
+### 3.6 Résolution de problèmes courants
+
+#### Problème de virtualisation (VT-X/AMD-v)
+
+**Erreur** : `This computer doesn't have VT-X/AMD-v enabled`
+
+**Causes possibles** :
+
+- Virtualisation désactivée dans le BIOS
+- Hyper-V activé (incompatible avec VirtualBox)
+- Machine virtuelle ou WSL2 qui interfère
+
+**Solutions** :
+
+1. **Solution immédiate - Utiliser Docker** :
+
+```bash
+minikube delete
+minikube start --driver=docker
+```
+
+2. **Vérifier Hyper-V (PowerShell Admin)** :
+
+```powershell
+# Désactiver Hyper-V si activé
+dism.exe /Online /Disable-Feature:Microsoft-Hyper-V-All
+# Redémarrer la machine
+```
+
+3. **Activer la virtualisation dans le BIOS** :
+   - Redémarrer et entrer dans le BIOS (F2, F12, Del selon le fabricant)
+   - Chercher "Virtualization Technology" ou "VT-X"
+   - Activer et sauvegarder
+
+#### Minikube ne démarre pas avec Docker
+
+**Erreur** : `error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/version"`
+
+**Solution** :
+
+```bash
+# S'assurer que Docker Desktop est démarré
+docker version
+
+# Si Docker ne répond pas, redémarrer Docker Desktop
+# Puis essayer de nouveau
+minikube start --driver=docker --container-runtime=docker
+```
+
+#### Minikube démarre mais kubectl ne fonctionne pas
+
+```bash
+# Vérifier les contextes
+kubectl config get-contexts
+
+# Utiliser le contexte minikube
+kubectl config use-context minikube
+
+# Vérifier la connectivité
+kubectl cluster-info
+```
+
+#### Problèmes de réseau/proxy
+
+**Erreur** : `Failing to connect to https://registry.k8s.io/`
+
+**Solutions** :
+
+```bash
+# Démarrer avec une image locale si disponible
+minikube start --driver=docker --base-image=gcr.io/k8s-minikube/kicbase:v0.0.48
+
+# Ou configurer un proxy si nécessaire
+minikube start --driver=docker --docker-env HTTP_PROXY=http://proxy:8080
+```
+
+#### Commandes de diagnostic
+
+```bash
+# Logs détaillés
+minikube logs
+
+# Statut complet
+minikube status
+
+# Informations système
+minikube profile list
+docker ps -a
+
+# Redémarrage complet
+minikube stop
+minikube delete
+minikube start --driver=docker
+```
+
+** Une fois cette installation terminée, vous aurez un cluster Kubernetes fonctionnel pour suivre tous les exercices du cours !**
+
+### 3.7 Application pratique - Installation et premiers tests
+
+📝 **LAB 1** - Installation et configuration de l'environnement : `labs/enonces/S3_S1_S1_lab1_installation_configuration.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab1_installation_configuration_correction.md`
+
+**Énoncé du LAB 1** :
+
+Installez et configurez votre environnement Kubernetes local pour les exercices pratiques.
+
+- **Objectif** : Mettre en place un cluster Kubernetes fonctionnel
+- **Contexte** : Préparation de l'environnement de développement DevOps
+- **Instructions** :
+  1. Installer kubectl et minikube via Chocolatey
+  2. Configurer le driver approprié (Docker ou VirtualBox)
+  3. Démarrer le cluster et vérifier son fonctionnement
+  4. Tester les commandes kubectl de base
+- **Critères de validation** : Cluster démarré, kubectl connecté, commandes de base fonctionnelles
+- **Durée estimée** : 30 minutes
+- **Fichier de travail** : Instructions dans l'énoncé
+
+---
+
+## 4. Pods et conteneurs
+
+### 4.1 Concept de Pod
+
+**Définition** : Un **Pod** est la plus petite unité déployable dans Kubernetes. Il encapsule un ou plusieurs conteneurs partageant le même réseau et stockage.
+
+**Caractéristiques** :
+
+- **Adresse IP unique** partagée par tous les conteneurs du Pod
+- **Volumes partagés** entre les conteneurs
+- **Cycle de vie commun** : création, exécution, suppression ensemble
+- **Localité garantie** : conteneurs toujours sur le même node
+
+```mermaid
+graph TB
+    subgraph "Pod - Unité atomique"
+        subgraph "Namespace réseau"
+            A[Container App<br/>Port 8080]
+            B[Container Sidecar<br/>Port 9090]
+        end
+        subgraph "Volumes partagés"
+            C[Volume Config]
+            D[Volume Data]
+        end
+    end
+
+    A -.-> C
+    A -.-> D
+    B -.-> C
+    B -.-> D
+
+    E[Node Worker] --> A
+    F[Réseau Cluster] --> E
+    G[Storage Cluster] --> C
+    G --> D
+```
+
+### 4.2 Manifests YAML des Pods
+
+**Structure de base** :
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+    env: production
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+      resources:
+        requests:
+          memory: '64Mi'
+          cpu: '250m'
+        limits:
+          memory: '128Mi'
+          cpu: '500m'
+```
+
+**Éléments clés** :
+
+- **apiVersion** : Version de l'API Kubernetes (v1 pour Pods)
+- **kind** : Type d'objet (Pod, Service, Deployment...)
+- **metadata** : Nom, labels, annotations
+- **spec** : Spécification désirée (conteneurs, volumes, réseau)
+
+📝 **LAB 2** - Création et gestion de Pods : `labs/enonces/S3_S1_S1_lab2_creation_gestion_pods.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab2_creation_gestion_pods_correction.md`
+
+**Énoncé du LAB 2** :
+
+Créez et gérez des Pods Kubernetes pour maîtriser les concepts fondamentaux.
+
+- **Objectif** : Maîtriser la création et gestion des Pods
+- **Contexte** : Déploiement d'applications conteneurisées de base
+- **Instructions** :
+  1. Créer un Pod simple avec image nginx
+  2. Définir ressources (requests/limits) et health checks
+  3. Utiliser kubectl pour inspecter et déboguer le Pod
+  4. Tester les redémarrages et cycles de vie
+- **Critères de validation** : Pod déployé et opérationnel, ressources configurées, health checks fonctionnels
+- **Durée estimée** : 20 minutes
+- **Fichier de travail** : `S3_S1_lab2_creation_gestion_pods.yml`
+
+---
+
+## 5. Services et networking
+
+### 5.1 Concept de Service
+
+**Problématique** : Les Pods sont éphémères avec des IPs dynamiques. Comment maintenir une connectivité stable ?
+
+**Solution** : Les **Services** fournissent une abstraction stable pour accéder à un ensemble de Pods.
+
+**Fonctionnalités** :
+
+- **IP virtuelle stable** (ClusterIP) pour les Pods backends
+- **Load balancing automatique** entre les réplicas
+- **Service discovery** via DNS interne
+- **Health checking** des endpoints
+
+```mermaid
+graph TB
+    subgraph "Service Abstraction"
+        A[Service nginx<br/>ClusterIP: 10.96.1.10<br/>Port: 80] --> B[Endpoints]
+    end
+
+    B --> C[Pod 1<br/>IP: 10.244.1.5<br/>Port: 80]
+    B --> D[Pod 2<br/>IP: 10.244.2.8<br/>Port: 80]
+    B --> E[Pod 3<br/>IP: 10.244.1.12<br/>Port: 80]
+
+    F[Client Apps] --> A
+
+    subgraph "Load Balancing"
+        G[Round Robin]
+        H[Session Affinity]
+        I[Weighted]
+    end
+
+    A -.-> G
+```
+
+### 5.2 Types de Services
+
+#### ClusterIP (Défaut)
+
+- **Usage** : Communication interne entre composants
+- **Portée** : Accessible uniquement depuis l'intérieur du cluster
+- **Cas d'usage** : APIs internes, bases de données, microservices
+
+#### NodePort
+
+- **Usage** : Exposition externe via port sur chaque node
+- **Portée** : Accessible depuis l'extérieur via `NodeIP:NodePort`
+- **Cas d'usage** : Applications de développement, services simples
+
+#### LoadBalancer
+
+- **Usage** : Exposition via load balancer cloud provider
+- **Portée** : IP externe dédiée fournie par le cloud
+- **Cas d'usage** : Applications production, haute disponibilité
+
+#### ExternalName
+
+- **Usage** : Redirection vers service externe via CNAME DNS
+- **Portée** : Proxy vers services hors cluster
+- **Cas d'usage** : Migration, services legacy
+
+### 5.3 Networking Kubernetes
+
+**Modèle réseau** :
+
+- **Flat network** : Tous les Pods peuvent communiquer directement
+- **No NAT** : Communication sans translation d'adresses
+- **Service mesh** : Couche d'infrastructure pour communication sécurisée
+
+**Composants networking** :
+
+- **CNI (Container Network Interface)** : Plugins réseau (Calico, Flannel, Weave)
+- **kube-proxy** : Implémentation Services via iptables/IPVS
+- **CoreDNS** : Résolution DNS interne du cluster
+
+📝 **LAB 3** - Services et networking : `labs/enonces/S3_S1_S1_lab3_services_networking.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab3_services_networking_correction.md`
+
+**Énoncé du LAB 3** :
+
+Créez des Services Kubernetes pour exposer vos Pods et comprendre le networking dans le cluster.
+
+- **Objectif** : Maîtriser la création et types de Services
+- **Contexte** : Exposition d'API et applications web en production
+- **Instructions** :
+  1. Créer un Deployment nginx avec 3 replicas
+  2. Exposer via Service ClusterIP pour communication interne
+  3. Créer un Service NodePort pour accès externe
+  4. Tester la connectivité et load balancing
+- **Critères de validation** : Services actifs, endpoints configurés, load balancing fonctionnel
+- **Durée estimée** : 25 minutes
+- **Fichier de travail** : `S3_S1_lab3_services_networking.yml`
+
+---
+
+## 6. Deployments et ReplicaSets
+
+### 6.1 Limitations des Pods standalone
+
+**Problématiques** :
+
+- **Pas de résilience** : Pod supprimé = service indisponible
+- **Pas de scaling** : Impossible d'augmenter le nombre d'instances
+- **Pas de rolling updates** : Mise à jour = downtime
+
+**Solution** : Les **Deployments** gèrent les Pods via des **ReplicaSets**.
+
+### 6.2 Architecture Deployment/ReplicaSet/Pod
+
+```mermaid
+graph TB
+    subgraph "Deployment"
+        A[Deployment nginx<br/>replicas: 3<br/>strategy: RollingUpdate]
+    end
+
+    subgraph "ReplicaSet"
+        B[ReplicaSet nginx-v1<br/>replicas: 3<br/>selector: app=nginx]
+    end
+
+    subgraph "Pods"
+        C[Pod nginx-v1-abc<br/>app=nginx<br/>version=v1]
+        D[Pod nginx-v1-def<br/>app=nginx<br/>version=v1]
+        E[Pod nginx-v1-ghi<br/>app=nginx<br/>version=v1]
+    end
+
+    A --> B
+    B --> C
+    B --> D
+    B --> E
+
+    F[Controller Manager] --> A
+    G[Scheduler] --> C
+    G --> D
+    G --> E
+```
+
+### 6.3 Deployment manifest
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.21
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: '64Mi'
+              cpu: '100m'
+            limits:
+              memory: '128Mi'
+              cpu: '200m'
+```
+
+### 6.4 Application pratique - Deployments
+
+📝 **LAB 4** - Deployments et ReplicaSets : `labs/enonces/S3_S1_S1_lab4_deployments_replicasets.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab4_deployments_replicasets_correction.md`
+
+**Énoncé du LAB 4** :
+
+Créez des Deployments pour gérer la haute disponibilité et les mises à jour d'applications.
+
+- **Objectif** : Maîtriser les Deployments et stratégies de déploiement
+- **Contexte** : Gestion production d'applications web critiques
+- **Instructions** :
+  1. Créer un Deployment avec 5 replicas d'une application web
+  2. Effectuer un rolling update vers une nouvelle version
+  3. Tester la résistance aux pannes en supprimant des Pods
+  4. Implémenter un rollback vers la version précédente
+- **Critères de validation** : Haute disponibilité maintenue, rolling update sans downtime, rollback réussi
+- **Durée estimée** : 30 minutes
+- **Fichier de travail** : `S3_S1_lab4_deployments_replicasets.yml`
+
+---
+
+## 7. Configuration et secrets
+
+### 7.1 Séparation configuration/code
+
+**Principe DevOps** : La configuration doit être externalisée du code pour :
+
+- **Portabilité** : Même image dans différents environnements
+- **Sécurité** : Pas de secrets dans le code source
+- **Flexibilité** : Modification sans rebuild
+
+### 7.2 ConfigMaps
+
+**Définition** : Objets Kubernetes pour stocker des données de configuration non sensibles.
+
+```mermaid
+graph LR
+    subgraph "ConfigMap Usage"
+        A[ConfigMap app-config] --> B[Environment Variables]
+        A --> C[Volume Mount]
+        A --> D[Command Arguments]
+    end
+
+    subgraph "Pod Consumption"
+        B --> E[Pod Container]
+        C --> E
+        D --> E
+    end
+
+    subgraph "Configuration Data"
+        F[app.properties]
+        G[nginx.conf]
+        H[database.url]
+    end
+
+    F --> A
+    G --> A
+    H --> A
+```
+
+**Création ConfigMap** :
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  database_url: 'postgresql://db.example.com:5432/app'
+  api_endpoint: 'https://api.example.com/v1'
+  log_level: 'INFO'
+  app.properties: |
+    server.port=8080
+    spring.datasource.url=${database_url}
+    logging.level.root=${log_level}
+```
+
+### 7.3 Secrets
+
+**Définition** : Objets pour données sensibles (mots de passe, tokens, clés).
+
+**Avantages** :
+
+- **Encodage Base64** (pas de chiffrement !)
+- **Accès contrôlé** via RBAC
+- **Audit trail** des accès
+- **Rotation** facilitée
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+data:
+  username: YWRtaW4= # admin en base64
+  password: cGFzc3dvcmQ= # password en base64
+```
+
+### 7.5 Application pratique - Configuration
+
+📝 **LAB 5** - ConfigMaps et variables : `labs/enonces/S3_S1_S1_lab5_configmaps_variables.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab5_configmaps_variables_correction.md`
+
+**Énoncé du LAB 5** :
+
+Externalisez la configuration d'applications avec ConfigMaps pour respecter les bonnes pratiques DevOps.
+
+- **Objectif** : Maîtriser la gestion de configuration externe
+- **Contexte** : Configuration multi-environnements (dev, staging, prod)
+- **Instructions** :
+  1. Créer ConfigMaps pour configuration application web
+  2. Injecter configuration via variables d'environnement
+  3. Monter configuration sous forme de fichiers
+  4. Modifier configuration et observer rechargement
+- **Critères de validation** : Configuration externalisée, variables injectées, fichiers montés correctement
+- **Durée estimée** : 25 minutes
+- **Fichier de travail** : `S3_S1_lab5_configmaps_variables.yml`
+
+📝 **LAB 6** - Secrets et sécurité : `labs/enonces/S3_S1_S1_lab6_secrets_securite.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab6_secrets_securite_correction.md`
+
+**Énoncé du LAB 6** :
+
+Gérez les données sensibles avec les Secrets Kubernetes pour sécuriser vos déploiements.
+
+- **Objectif** : Maîtriser la gestion sécurisée des credentials
+- **Contexte** : Connexions bases de données et APIs externes sécurisées
+- **Instructions** :
+  1. Créer Secrets pour credentials base de données
+  2. Injecter secrets dans Pods via variables d'environnement
+  3. Monter secrets comme volumes dans conteneurs
+  4. Tester rotation des secrets
+- **Critères de validation** : Secrets créés, accès sécurisé, rotation fonctionnelle
+- **Durée estimée** : 30 minutes
+- **Fichier de travail** : `S3_S1_lab6_secrets_securite.yml`
+
+---
+
+## 8. Volumes et persistance
+
+### 8.1 Problématique des données
+
+**Contrainte** : Les conteneurs sont éphémères, leurs données sont perdues à l'arrêt.
+
+**Solution** : Les **Volumes** fournissent un stockage persistant aux Pods.
+
+### 8.2 Types de Volumes
+
+#### emptyDir
+
+- **Usage** : Stockage temporaire partagé entre conteneurs d'un Pod
+- **Durée de vie** : Liée au Pod
+- **Cas d'usage** : Cache, fichiers temporaires
+
+#### hostPath
+
+- **Usage** : Montage d'un répertoire du node hôte
+- **Durée de vie** : Indépendante du Pod
+- **Cas d'usage** : Logs système, accès ressources node
+
+#### persistentVolumeClaim (PVC)
+
+- **Usage** : Demande de stockage persistant
+- **Durée de vie** : Indépendante du Pod et node
+- **Cas d'usage** : Bases de données, stockage applicatif
+
+```mermaid
+graph TB
+    subgraph "Storage Architecture"
+        A[PersistentVolume<br/>50Gi NFS] --> B[PersistentVolumeClaim<br/>10Gi ReadWriteOnce]
+        B --> C[Pod Database]
+
+        D[StorageClass<br/>ssd-storage] --> A
+        E[Physical Storage<br/>NFS/iSCSI/Cloud] --> A
+    end
+
+    subgraph "Volume Types"
+        F[emptyDir<br/>Temporary]
+        G[hostPath<br/>Node Local]
+        H[configMap<br/>Configuration]
+        I[secret<br/>Credentials]
+    end
+
+    F --> C
+    G --> C
+    H --> C
+    I --> C
+```
+
+### 8.3 Persistent Volumes (PV) et Claims (PVC)
+
+**PersistentVolume** : Ressource de stockage dans le cluster
+**PersistentVolumeClaim** : Demande de stockage par un utilisateur
+
+**Cycle de vie** :
+
+1. **Provisioning** : Création du PV (statique ou dynamique)
+2. **Binding** : Association PV/PVC compatible
+3. **Using** : Montage dans Pod via PVC
+4. **Reclaiming** : Politique après suppression PVC (Retain/Delete/Recycle)
+
+### 8.4 Application pratique - Volumes
+
+📝 **LAB 7** - Volumes et persistance : `labs/enonces/S3_S1_S1_lab7_volumes_persistance.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab7_volumes_persistance_correction.md`
+
+**Énoncé du LAB 7** :
+
+Configurez des volumes persistants pour assurer la persistance des données applications.
+
+- **Objectif** : Maîtriser les volumes et la persistance de données
+- **Contexte** : Déploiement base de données avec sauvegarde des données
+- **Instructions** :
+  1. Créer PersistentVolume et PersistentVolumeClaim
+  2. Déployer base de données MySQL avec volume persistant
+  3. Insérer des données et redémarrer le Pod
+  4. Vérifier la persistance des données
+- **Critères de validation** : Données persistantes après redémarrage, volumes montés correctement
+- **Durée estimée** : 35 minutes
+- **Fichier de travail** : `S3_S1_lab7_volumes_persistance.yml`
+
+---
+
+## 9. Ingress et exposition
+
+### 9.1 Limitations des Services
+
+**Problématiques** :
+
+- **NodePort** : Ports aléatoires, pas de SSL/TLS natif
+- **LoadBalancer** : Coûteux, une IP par service
+- **Pas de routage avancé** : Host-based, path-based routing
+
+**Solution** : **Ingress** fournit un point d'entrée unique avec routage intelligent.
+
+### 9.2 Architecture Ingress
+
+```mermaid
+graph TB
+    subgraph "External Traffic"
+        A[Internet] --> B[Load Balancer<br/>External IP]
+    end
+
+    subgraph "Ingress Layer"
+        B --> C[Ingress Controller<br/>nginx/traefik/istio]
+        C --> D[Ingress Rules<br/>Routing Logic]
+    end
+
+    subgraph "Services Layer"
+        D --> E[Service web<br/>ClusterIP]
+        D --> F[Service api<br/>ClusterIP]
+        D --> G[Service admin<br/>ClusterIP]
+    end
+
+    subgraph "Pods Layer"
+        E --> H[Pod web-1]
+        E --> I[Pod web-2]
+        F --> J[Pod api-1]
+        F --> K[Pod api-2]
+        G --> L[Pod admin-1]
+    end
+
+    M[Rules:<br/>example.com/web → Service web<br/>example.com/api → Service api<br/>admin.example.com → Service admin] --> D
+```
+
+### 9.3 Configuration Ingress
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+spec:
+  tls:
+    - hosts:
+        - app.example.com
+      secretName: app-tls
+  rules:
+    - host: app.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-service
+                port:
+                  number: 80
+```
+
+### 9.4 Application pratique - Ingress
+
+📝 **LAB 8** - Ingress et exposition : `labs/enonces/S3_S1_S1_lab8_ingress_exposition.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab8_ingress_exposition_correction.md`
+
+**Énoncé du LAB 8** :
+
+Configurez Ingress pour exposer intelligemment vos applications vers l'extérieur.
+
+- **Objectif** : Maîtriser l'exposition externe via Ingress
+- **Contexte** : Exposition production d'applications web avec SSL/TLS
+- **Instructions** :
+  1. Déployer Ingress Controller (nginx)
+  2. Créer plusieurs services backend (web, api)
+  3. Configurer Ingress avec routage host-based et path-based
+  4. Tester l'accès externe et le routage
+- **Critères de validation** : Ingress actif, routage fonctionnel, SSL configuré
+- **Durée estimée** : 40 minutes
+- **Fichier de travail** : `S3_S1_lab8_ingress_exposition.yml`
+
+---
+
+## 10. Monitoring et debugging
+
+### 10.1 Observabilité Kubernetes
+
+**Dimensions** :
+
+- **Métriques** : CPU, mémoire, réseau, stockage
+- **Logs** : Événements applicatifs et système
+- **Traces** : Suivi des requêtes distribuées
+- **Événements** : Changements d'état du cluster
+
+### 10.2 Outils natifs de debugging
+
+**kubectl** commandes essentielles :
+
+```bash
+# État des ressources
+kubectl get pods -o wide
+kubectl describe pod nginx-pod
+
+# Logs des conteneurs
+kubectl logs nginx-pod
+kubectl logs -f nginx-pod -c sidecar
+
+# Débogage interactif
+kubectl exec -it nginx-pod -- /bin/bash
+kubectl port-forward nginx-pod 8080:80
+
+# Événements cluster
+kubectl get events --sort-by='.firstTimestamp'
+kubectl top nodes
+kubectl top pods
+```
+
+### 10.3 Monitoring avancé
+
+**Stack de monitoring** :
+
+- **Prometheus** : Collecte et stockage métriques
+- **Grafana** : Visualisation et alerting
+- **Alertmanager** : Gestion notifications
+- **Node Exporter** : Métriques système nodes
+
+```mermaid
+graph LR
+    subgraph "Metrics Collection"
+        A[Kubernetes API] --> B[Prometheus Server]
+        C[Node Exporter] --> B
+        D[kube-state-metrics] --> B
+        E[Application Metrics] --> B
+    end
+
+    subgraph "Storage & Query"
+        B --> F[TSDB Storage]
+        F --> G[PromQL Queries]
+    end
+
+    subgraph "Visualization & Alerts"
+        G --> H[Grafana Dashboards]
+        G --> I[Alertmanager]
+        I --> J[Notifications<br/>Slack/Email/PagerDuty]
+    end
+```
+
+### 10.4 Application pratique - Monitoring
+
+📝 **LAB 9** - Monitoring et debugging : `labs/enonces/S3_S1_S1_lab9_monitoring_debugging.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab9_monitoring_debugging_correction.md`
+
+**Énoncé du LAB 9** :
+
+Mettez en place monitoring et debugging pour assurer l'observabilité de vos déploiements.
+
+- **Objectif** : Maîtriser l'observabilité et le debugging Kubernetes
+- **Contexte** : Monitoring production et résolution d'incidents
+- **Instructions** :
+  1. Déployer stack Prometheus/Grafana
+  2. Configurer métriques Kubernetes et applications
+  3. Créer dashboards pour monitoring cluster et workloads
+  4. Simuler incidents et utiliser outils debugging
+- **Critères de validation** : Métriques collectées, dashboards fonctionnels, debugging efficace
+- **Durée estimée** : 45 minutes
+- **Fichier de travail** : `S3_S1_lab9_monitoring_debugging.yml`
+
+---
+
+## 10.5 Challenge d'intégration
+
+📝 **LAB 10 Challenge** - Application multi-tiers complète : `labs/enonces/S3_S1_S1_lab10_challenge_application_complete.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab10_challenge_application_complete_correction.md`
+
+**Énoncé du LAB 10 Challenge** :
+
+Déployez une application web complète multi-tiers intégrant tous les concepts Kubernetes étudiés.
+
+- **Objectif** : Intégrer tous les concepts dans un projet complet
+- **Contexte** : Déploiement production d'application e-commerce DevOps
+- **Instructions** :
+  1. Déployer stack complète (frontend, backend, base de données)
+  2. Configurer networking, persistance, et sécurité
+  3. Implémenter monitoring, logging, et alerting
+  4. Tester haute disponibilité et disaster recovery
+- **Critères de validation** : Application complète fonctionnelle, haute disponibilité, monitoring actif
+- **Durée estimée** : 60 minutes
+- **Fichier de travail** : `S3_S1_lab10_challenge_application_complete.yml`
+
+---
+
+## 11. Récapitulatif et prochaines étapes
+
+### 11.1 Concepts maîtrisés
+
+À l'issue de cette semaine, vous maîtrisez :
+
+**Architecture** :
+
+- Control plane et worker nodes
+- API Server, etcd, scheduler, controller manager
+- Kubelet, kube-proxy, container runtime
+
+**Objets fondamentaux** :
+
+- Pods comme unité d'exécution atomique
+- Services pour networking stable
+- Deployments pour haute disponibilité
+- ConfigMaps et Secrets pour configuration
+
+**Stockage et réseau** :
+
+- Volumes et persistance de données
+- Ingress pour exposition externe
+- Service discovery et load balancing
+
+**Opérations** :
+
+- Installation et configuration cluster
+- Déploiement et gestion d'applications
+- Monitoring et debugging
+
+### 11.2 Prochaines étapes - Semaine 2
+
+**Kubernetes Applications** :
+
+- Helm pour package management
+- StatefulSets pour applications stateful
+- Jobs et CronJobs pour tâches batch
+- DaemonSets pour services système
+
+**Sécurité avancée** :
+
+- RBAC et gestion des accès
+- Network Policies pour micro-segmentation
+- Pod Security Policies
+- Service Mesh (Istio)
+
+**Production ready** :
+
+- High Availability cluster setup
+- Backup et disaster recovery
+- Performance tuning
+- Troubleshooting avancé
+
+---
+
+## 12. Ressources complémentaires
+
+### 12.1 Documentation officielle
+
+- **Kubernetes.io** : Documentation complète et tutoriels
+- **Kubectl Reference** : Référence complète des commandes
+- **API Reference** : Spécification des objets Kubernetes
+
+### 12.2 Outils et extensions
+
+- **Lens** : IDE Kubernetes pour gestion visuelle
+- **k9s** : Interface terminal avancée
+- **Helm** : Package manager pour Kubernetes
+- **Kustomize** : Gestion configuration native
+
+### 12.3 Environnements d'apprentissage
+
+- **Minikube** : Cluster local pour développement
+- **Kind** : Kubernetes in Docker pour tests
+- **Katacoda** : Labs interactifs en ligne
+- **Play with Kubernetes** : Environnement web gratuit
+
+### 12.4 Certifications
+
+- **CKA** : Certified Kubernetes Administrator
+- **CKAD** : Certified Kubernetes Application Developer
+- **CKS** : Certified Kubernetes Security Specialist
+
+---
+
+_Formateur : Hassan ESSADIK | Sprint 3 - Semaine 1 - Kubernetes Basics_

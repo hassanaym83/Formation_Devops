@@ -16,6 +16,7 @@ Architecture Kubernetes, Pods, Services, Deployments, ConfigMaps, Secrets, Volum
 ## Table des matières
 
 1. [Introduction à Kubernetes](#1-introduction-à-kubernetes)
+   - [1.8 Qu'est-ce qu'un cluster Kubernetes ?](#18-quest-ce-quun-cluster-kubernetes)
 2. [Architecture Kubernetes](#2-architecture-kubernetes)
 3. [Installation et configuration](#3-installation-et-configuration)
 4. [Pods et conteneurs](#4-pods-et-conteneurs)
@@ -289,7 +290,221 @@ Si un cuisinier tombe malade (Pod crashe), le chef embauche immédiatement un re
 
 ---
 
-**Prêt pour l'aventure ?** Maintenant que vous comprenez POURQUOI Kubernetes existe et ce qu'il peut faire pour vous, passons à découvrir COMMENT il fonctionne avec son architecture !
+**Prêt pour l'aventure ?** Maintenant que vous comprenez POURQUOI Kubernetes existe et ce qu'il peut faire pour vous, commençons par comprendre ce qu'est un **cluster** avant de découvrir son architecture !
+
+---
+
+## 1.8 Qu'est-ce qu'un cluster Kubernetes ?
+
+### 1.8.1 Définition du cluster
+
+Un **cluster Kubernetes** est un ensemble de machines (physiques ou virtuelles) qui travaillent ensemble pour faire fonctionner vos applications conteneurisées.
+
+**Analogie simple** : Imaginez un orchestre symphonique :
+
+- **Le chef d'orchestre** = Control Plane (dirige tout)
+- **Les musiciens** = Worker Nodes (exécutent le travail)
+- **La partition** = Vos applications à déployer
+
+```mermaid
+graph TB
+    subgraph "Cluster Kubernetes"
+        subgraph "Control Plane - Chef d'orchestre"
+            A[Master Node<br/>Gestion centrale]
+        end
+
+        subgraph "Worker Nodes - Musiciens"
+            B[Worker Node 1<br/>Applications A]
+            C[Worker Node 2<br/>Applications B]
+            D[Worker Node 3<br/>Applications C]
+        end
+
+        A --> B
+        A --> C
+        A --> D
+    end
+
+    E[Utilisateurs/Développeurs] --> A
+    F[Applications déployées] --> B
+    F --> C
+    F --> D
+```
+
+### 1.8.2 Anatomie d'un cluster
+
+#### Control Plane - Le cerveau du cluster
+
+**Rôle** : Prendre toutes les décisions importantes
+
+- Où placer les applications ?
+- Comment gérer les pannes ?
+- Qui peut accéder à quoi ?
+
+**Composants clés** :
+
+- **API Server** : Point d'entrée pour toutes les commandes
+- **etcd** : Mémoire du cluster (base de données)
+- **Scheduler** : Décide où placer les applications
+- **Controller Manager** : Surveille et corrige les problèmes
+
+#### Worker Nodes - Les exécutants
+
+**Rôle** : Faire tourner vos applications
+
+- Héberger les conteneurs
+- Communiquer avec le Control Plane
+- Surveiller la santé des applications
+
+**Composants clés** :
+
+- **Kubelet** : Agent qui reçoit les ordres
+- **Container Runtime** : Moteur qui fait tourner les conteneurs
+- **Kube-proxy** : Gère le réseau entre les applications
+
+### 1.8.3 Communication dans le cluster
+
+```mermaid
+sequenceDiagram
+    participant Dev as Développeur
+    participant API as API Server
+    participant Sched as Scheduler
+    participant Node as Worker Node
+    participant App as Application
+
+    Dev->>API: kubectl create deployment
+    API->>Sched: Où placer cette app ?
+    Sched->>API: Sur Worker Node 2
+    API->>Node: Démarre l'application
+    Node->>App: Lance le conteneur
+    App->>Node: Je suis prêt !
+    Node->>API: Application démarrée
+    API->>Dev: Déploiement réussi
+```
+
+### 1.8.4 Avantages du cluster
+
+#### Haute disponibilité
+
+- Si un Worker Node tombe, les autres continuent
+- Le Control Plane peut être dupliqué pour éviter les pannes
+
+#### Scalabilité horizontale
+
+**Deux niveaux de scalabilité distincts** :
+
+- **Infrastructure** : Cluster saturé ? Un administrateur (ou Cluster Autoscaler) ajoute des Worker Nodes
+- **Applications** : Trop de charge applicative ? Kubernetes scale automatiquement les pods (HPA)
+
+#### Isolation et sécurité
+
+- Chaque application dans son propre conteneur
+- Réseau isolé entre les composants
+- Contrôle d'accès granulaire
+
+```mermaid
+graph LR
+    subgraph "Évolution du cluster"
+        subgraph "Début - 1 Node"
+            A1[Control Plane + Worker<br/>Minikube]
+        end
+
+        subgraph "Croissance - 3 Nodes"
+            B1[Control Plane]
+            B2[Worker Node 1]
+            B3[Worker Node 2]
+        end
+
+        subgraph "Production - 6+ Nodes"
+            C1[Control Plane 1]
+            C2[Control Plane 2]
+            C3[Worker Node 1]
+            C4[Worker Node 2]
+            C5[Worker Node 3]
+            C6[Worker Node 4]
+        end
+    end
+
+    A1 --> B1
+    B1 --> C1
+```
+
+### 1.8.5 Types de clusters selon l'usage
+
+#### Cluster de développement (Minikube)
+
+- **1 seule machine** : Votre laptop
+- **Tous les composants** sur le même node
+- **Parfait pour** : Apprendre et tester
+
+#### Cluster de production
+
+- **Plusieurs machines** : Control Plane séparé des Workers
+- **Haute disponibilité** : Redondance des composants critiques
+- **Parfait pour** : Applications critiques en production
+
+#### Cluster cloud managé
+
+- **Infrastructure gérée** : Le cloud provider s'occupe du Control Plane
+- **Vous gérez** : Seulement les Worker Nodes et applications
+- **Parfait pour** : Focus sur les applications, pas l'infrastructure
+
+### 1.8.6 Clarifications importantes sur les responsabilités
+
+#### Qui crée le cluster ? (Kubernetes ne crée PAS l'infrastructure)
+
+** Responsabilités EXTERNES à Kubernetes** :
+
+- **Provisioning du cluster** : Créer les machines/VMs physiques ou cloud
+- **Installation de Kubernetes** : Installer K8s sur ces machines
+- **Configuration réseau de base** : Connectivité entre nodes
+
+** Responsabilités de Kubernetes** :
+
+- **Orchestration** : Gérer les applications dans un cluster existant
+- **Scheduling** : Décider où placer les pods
+- **Networking** : Connecter les services entre eux
+- **Monitoring** : Surveiller la santé des applications
+
+#### Qui crée réellement le cluster ?
+
+**Plateformes cloud managées** :
+
+- AWS EKS, Google GKE, Azure AKS
+- Le cloud provider gère l'infrastructure, K8s gère les workloads
+
+**Outils d'installation** :
+
+- `kubeadm` (installation manuelle)
+- `kops` (AWS), Terraform + Ansible
+- Cluster Autoscaler (ajout automatique de nodes)
+
+#### Les deux types de scalabilité
+
+**1. Scalabilité des APPLICATIONS** ( Kubernetes s'en occupe automatiquement) :
+
+```
+Traffic ↑ → CPU usage ↑ → HPA déclenché → Plus de pods créés
+1 pod nginx → 5 pods nginx (sur les nodes existants)
+```
+
+**2. Scalabilité de l'INFRASTRUCTURE** ( Kubernetes ne peut PAS le faire seul) :
+
+```
+Tous les nodes saturés → Un humain ou outil externe ajoute des Worker Nodes
+Kubernetes ne peut pas appeler AWS pour créer une nouvelle EC2
+```
+
+**Analogie du chef d'orchestre** :
+
+- **Kubernetes = Chef d'orchestre** : Dirige les musiciens existants, peut leur demander de jouer plus fort (scale pods)
+- **Infrastructure = Salle de concert** : Il faut des humains/outils pour agrandir la salle et embaucher de nouveaux musiciens (nodes)
+
+**Outils pour la scalabilité infrastructure** :
+
+- Cluster Autoscaler (outil externe qui s'interface avec K8s)
+- Cloud provider auto-scaling (AWS Auto Scaling Groups)
+- Terraform/Pulumi pour provisioning
+- Scripts d'administration manuelle
 
 ---
 
@@ -303,17 +518,17 @@ Kubernetes suit une architecture **maître-esclave** avec séparation claire ent
 C4Component
     title Architecture Kubernetes - Control Plane et Worker Nodes
 
-    Container_Boundary(control_plane, "Control Plane") {
-        Component(api_server, "API Server", "Point d'entrée", "Expose l'API Kubernetes<br/>Authentification<br/>Validation requêtes")
+    System_Boundary(control_plane, "Control Plane") {
+        Component(api_server, "API Server", "API REST", "Expose l'API Kubernetes<br/>Authentification<br/>Validation requêtes")
         Component(etcd, "etcd", "Base de données", "Stockage clé-valeur<br/>État du cluster<br/>Configuration")
         Component(scheduler, "Scheduler", "Planificateur", "Placement des Pods<br/>Optimisation ressources<br/>Contraintes placement")
-        Component(controller_manager, "Controller Manager", "Gestionnaire", "Boucles de contrôle<br/>État désiré<br/>Réconciliation")
+        Component(controller_manager, "Controller Manager", "Contrôleur", "Boucles de contrôle<br/>État désiré<br/>Réconciliation")
     }
 
-    Container_Boundary(worker_nodes, "Worker Nodes") {
-        Component(kubelet, "Kubelet", "Agent node", "Gestion Pods locaux<br/>Communication API Server<br/>Monitoring santé")
+    System_Boundary(worker_nodes, "Worker Nodes") {
+        Component(kubelet, "Kubelet", "Agent", "Gestion Pods locaux<br/>Communication API Server<br/>Monitoring santé")
         Component(kube_proxy, "Kube-proxy", "Proxy réseau", "Load balancing<br/>Service discovery<br/>Règles iptables")
-        Component(container_runtime, "Container Runtime", "Moteur conteneurs", "Docker/containerd<br/>Gestion cycle vie<br/>Isolation processus")
+        Component(container_runtime, "Container Runtime", "Runtime", "Docker/containerd<br/>Gestion cycle vie<br/>Isolation processus")
     }
 
     Rel(api_server, etcd, "Stockage état")
@@ -329,6 +544,7 @@ C4Component
 #### API Server
 
 **Rôle** : Point d'entrée unique pour toutes les opérations du cluster
+
 **Fonctions** :
 
 - Expose l'API REST Kubernetes
@@ -339,6 +555,7 @@ C4Component
 #### etcd
 
 **Rôle** : Base de données distribuée du cluster
+
 **Fonctions** :
 
 - Stockage clé-valeur hautement disponible
@@ -348,6 +565,7 @@ C4Component
 #### Scheduler
 
 **Rôle** : Planificateur intelligent des workloads
+
 **Fonctions** :
 
 - Attribution des Pods aux nodes appropriés
@@ -357,6 +575,7 @@ C4Component
 #### Controller Manager
 
 **Rôle** : Moteur de réconciliation de l'état
+
 **Fonctions** :
 
 - Exécution des boucles de contrôle
@@ -368,6 +587,7 @@ C4Component
 #### Kubelet
 
 **Rôle** : Agent principal du node, interface avec le control plane
+
 **Fonctions** :
 
 - Communication bidirectionnelle avec l'API Server
@@ -378,6 +598,7 @@ C4Component
 #### Kube-proxy
 
 **Rôle** : Proxy réseau pour la connectivité des Services
+
 **Fonctions** :
 
 - Implémentation des Services Kubernetes via iptables/IPVS
@@ -388,6 +609,7 @@ C4Component
 #### Container Runtime
 
 **Rôle** : Moteur d'exécution des conteneurs
+
 **Options supportées** :
 
 - **Docker** : Runtime traditionnel (en cours de deprecation)
@@ -400,20 +622,6 @@ C4Component
 - Création et démarrage des conteneurs
 - Isolation des processus et gestion des ressources
 - Interface avec le système d'exploitation hôte
-
-#### Add-ons optionnels
-
-**DNS Cluster (CoreDNS)** :
-
-- Résolution DNS interne du cluster
-- Service discovery automatique
-
-**Network Plugin (CNI)** :
-
-- Implémentation du modèle réseau Kubernetes
-- Plugins populaires : Calico, Flannel, Weave
-
-C'est tout ce que vous devez savoir sur l'architecture pour commencer !
 
 ---
 
@@ -898,74 +1106,453 @@ Installez et configurez votre environnement Kubernetes local pour les exercices 
 
 ## 4. Pods et conteneurs
 
-### 4.1 Concept de Pod
+### 4.1 Comprendre les Pods : L'unité fondamentale de Kubernetes
 
-**Définition** : Un **Pod** est la plus petite unité déployable dans Kubernetes. Il encapsule un ou plusieurs conteneurs partageant le même réseau et stockage.
+#### Qu'est-ce qu'un Pod exactement ?
 
-**Caractéristiques** :
+**Définition simplifiée** : Un **Pod** est comme un "studio d'appartement" pour vos conteneurs. C'est la plus petite unité que Kubernetes peut gérer et déployer.
 
-- **Adresse IP unique** partagée par tous les conteneurs du Pod
-- **Volumes partagés** entre les conteneurs
-- **Cycle de vie commun** : création, exécution, suppression ensemble
-- **Localité garantie** : conteneurs toujours sur le même node
+#### L'analogie du studio d'appartement
+
+Imaginez un Pod comme un studio d'appartement :
+
+- **Un ou plusieurs colocataires** (conteneurs) vivent ensemble
+- **Ils partagent la même adresse** (IP unique)
+- **Ils partagent les mêmes ressources** (électricité, eau = CPU, mémoire)
+- **Ils ont accès aux mêmes placards** (volumes partagés)
+- **Ils naissent et meurent ensemble** (cycle de vie commun)
 
 ```mermaid
 graph TB
-    subgraph "Pod - Unité atomique"
-        subgraph "Namespace réseau"
-            A[Container App<br/>Port 8080]
-            B[Container Sidecar<br/>Port 9090]
+    subgraph "Pod"
+        subgraph "Réseau partagé: 10.244.1.5"
+            A[Conteneur Principal<br/>Application Web<br/>Port 8080]
+            B[Conteneur Sidecar<br/>Logs Collector<br/>Port 9090]
         end
         subgraph "Volumes partagés"
-            C[Volume Config]
-            D[Volume Data]
+            C[Volume Config<br/>/app/config]
+            D[Volume Logs<br/>/var/logs]
         end
     end
 
-    A -.-> C
-    A -.-> D
-    B -.-> C
-    B -.-> D
+    A -.->|Lit config| C
+    A -.->|Écrit logs| D
+    B -.->|Lit config| C
+    B -.->|Collecte logs| D
 
     E[Node Worker] --> A
     F[Réseau Cluster] --> E
-    G[Storage Cluster] --> C
+    G[Storage] --> C
     G --> D
 ```
 
-### 4.2 Manifests YAML des Pods
+#### Caractéristiques fondamentales d'un Pod
 
-**Structure de base** :
+**1. Unité atomique** :
+
+- On ne peut pas déployer un conteneur seul, toujours dans un Pod
+- Le Pod est créé et détruit comme une seule entité
+
+**2. Réseau partagé** :
+
+- Tous les conteneurs du Pod partagent la même IP
+- Communication entre conteneurs via `localhost`
+- Chaque conteneur peut écouter sur un port différent
+
+**3. Stockage partagé** :
+
+- Volumes montés et accessibles par tous les conteneurs
+- Partage de données et configuration simplifié
+
+**4. Localité garantie** :
+
+- Tous les conteneurs d'un Pod sont toujours sur le même node
+- Latence minimale entre conteneurs
+
+### 4.2 Patterns de conception des Pods
+
+#### Pod mono-conteneur (95% des cas)
 
 ```yaml
+# Pod simple avec un seul conteneur
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx-pod
-  labels:
-    app: nginx
-    env: production
+  name: webapp-simple
 spec:
   containers:
-    - name: nginx
+    - name: webapp
       image: nginx:1.21
       ports:
         - containerPort: 80
-      resources:
-        requests:
-          memory: '64Mi'
-          cpu: '250m'
-        limits:
-          memory: '128Mi'
-          cpu: '500m'
 ```
 
-**Éléments clés** :
+#### Comment utiliser ce YAML pour créer un Pod
 
-- **apiVersion** : Version de l'API Kubernetes (v1 pour Pods)
-- **kind** : Type d'objet (Pod, Service, Deployment...)
-- **metadata** : Nom, labels, annotations
-- **spec** : Spécification désirée (conteneurs, volumes, réseau)
+**Étape 1 : Sauvegarder le YAML dans un fichier**
+
+```bash
+# Créer un fichier avec le contenu YAML
+cat > webapp-simple.yaml << EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-simple
+spec:
+  containers:
+    - name: webapp
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+EOF
+```
+
+Ou simplement créer le fichier avec votre éditeur préféré (nano, vim, VS Code) et coller le contenu.
+
+**Étape 2 : Appliquer le YAML avec kubectl**
+
+```bash
+# Méthode 1 : kubectl apply (recommandée)
+kubectl apply -f webapp-simple.yaml
+
+# Méthode 2 : kubectl create (création unique)
+kubectl create -f webapp-simple.yaml
+```
+
+**Différence entre apply et create :**
+
+```bash
+# kubectl apply (recommandé)
+kubectl apply -f webapp-simple.yaml
+# ✅ Crée le Pod s'il n'existe pas
+# ✅ Met à jour le Pod s'il existe déjà
+# ✅ Gère les modifications futures
+# ✅ Idempotent (peut être relancé sans problème)
+
+# kubectl create
+kubectl create -f webapp-simple.yaml
+# ✅ Crée le Pod s'il n'existe pas
+# ❌ Erreur si le Pod existe déjà
+# ❌ Ne peut pas gérer les mises à jour
+```
+
+**Comprendre ce que fait ce YAML :**
+
+Analyse ligne par ligne :
+
+```yaml
+apiVersion: v1 # Version de l'API Kubernetes pour les Pods
+kind: Pod # Type d'objet : c'est un Pod
+metadata: # Métadonnées du Pod
+  name: webapp-simple # Nom unique du Pod dans le namespace
+spec: # Spécification de ce qu'on veut
+  containers: # Liste des conteneurs dans ce Pod
+    - name: webapp # Nom du conteneur (unique dans le Pod)
+      image: nginx:1.21 # Image Docker à utiliser
+      ports: # Ports que le conteneur expose
+        - containerPort: 80 # Le conteneur écoute sur le port 80
+```
+
+**Ce qui se passe quand vous appliquez ce YAML :**
+
+1. **Kubernetes lit le fichier** et comprend que vous voulez un Pod
+2. **Le Scheduler** choisit un Worker Node disponible
+3. **Kubelet** sur ce node télécharge l'image `nginx:1.21`
+4. **Le container runtime** démarre le conteneur nginx
+5. **Le Pod obtient une IP** interne du cluster (ex: 10.244.1.5)
+6. **nginx démarre** et écoute sur le port 80 à l'intérieur du conteneur
+
+**Tester que ça fonctionne :**
+
+```bash
+# Port forwarding pour tester localement
+kubectl port-forward pod/webapp-simple 8080:80
+
+# Puis dans un autre terminal :
+curl http://localhost:8080
+# Vous devriez voir la page d'accueil nginx
+```
+
+**Workflow complet typique :**
+
+````bash
+# 1. Créer le fichier YAML
+cat > my-pod.yaml << EOF
+[votre YAML ici]
+EOF
+
+# 2. Valider le YAML (optionnel)
+kubectl apply --dry-run=client -f my-pod.yaml
+
+# 3. Appliquer
+kubectl apply -f my-pod.yaml
+
+# 4. Tester
+kubectl port-forward pod/webapp-simple 8080:80
+
+# 5. Nettoyer quand terminé
+kubectl delete -f my-pod.yaml
+```#### Pod multi-conteneurs : Le pattern Sidecar
+
+```yaml
+# Pod avec conteneur principal + sidecar
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-avec-sidecar
+spec:
+  containers:
+    # Conteneur principal
+    - name: webapp
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: logs-volume
+          mountPath: /var/log/nginx
+
+    # Conteneur sidecar pour collecter les logs
+    - name: log-collector
+      image: fluent/fluent-bit:1.8
+      volumeMounts:
+        - name: logs-volume
+          mountPath: /var/log/nginx
+          readOnly: true
+
+  volumes:
+    - name: logs-volume
+      emptyDir: {}
+````
+
+### 4.3 Création de Pods : Approche impérative
+
+#### Commandes kubectl run - Création rapide
+
+**Syntaxe de base** :
+
+```bash
+kubectl run [nom-pod] --image=[image] [options]
+```
+
+#### Exemples pratiques de création impérative
+
+**1. Pod simple avec nginx** :
+
+```bash
+# Création basique
+kubectl run nginx-pod --image=nginx:1.21
+
+# Avec port exposé
+kubectl run nginx-pod --image=nginx:1.21 --port=80
+
+# Avec restart policy
+kubectl run nginx-pod --image=nginx:1.21 --restart=Never
+```
+
+**2. Pod avec commandes personnalisées** :
+
+```bash
+# Pod avec commande custom
+kubectl run busybox-pod --image=busybox --command -- sleep 3600
+
+# Pod interactif (pour tests)
+kubectl run debug-pod --image=busybox -it --rm --restart=Never -- sh
+```
+
+**3. Pod avec variables d'environnement** :
+
+```bash
+# Avec variables d'environnement
+kubectl run webapp --image=nginx:1.21 --env="ENV=production" --env="DEBUG=false"
+
+# Avec labels
+kubectl run nginx-prod --image=nginx:1.21 --labels="app=nginx,env=prod"
+```
+
+**4. Pod avec ressources limitées** :
+
+```bash
+# Avec limites de ressources
+kubectl run nginx-limited --image=nginx:1.21 \
+  --requests="cpu=100m,memory=128Mi" \
+  --limits="cpu=200m,memory=256Mi"
+```
+
+#### Génération de YAML depuis kubectl run
+
+**Générer le YAML sans créer le Pod** :
+
+```bash
+# Générer et afficher le YAML
+kubectl run nginx-pod --image=nginx:1.21 --dry-run=client -o yaml
+
+# Sauvegarder dans un fichier
+kubectl run nginx-pod --image=nginx:1.21 --dry-run=client -o yaml > nginx-pod.yaml
+
+# Créer à partir du fichier généré
+kubectl apply -f nginx-pod.yaml
+```
+
+### 4.5 Gestion et inspection des Pods
+
+#### Commandes de visualisation
+
+```bash
+# Lister tous les pods
+kubectl get pods
+
+# Informations détaillées
+kubectl get pods -o wide
+
+# Description complète d'un pod
+kubectl describe pod [nom-pod]
+
+# Logs du pod
+kubectl logs [nom-pod]
+
+# Logs en temps réel
+kubectl logs -f [nom-pod]
+
+# Si plusieurs conteneurs dans le pod
+kubectl logs [nom-pod] -c [nom-conteneur]
+```
+
+#### Commandes d'interaction
+
+```bash
+# Exécuter une commande dans le pod
+kubectl exec [nom-pod] -- [commande]
+
+# Shell interactif
+kubectl exec -it [nom-pod] -- bash
+
+# Si plusieurs conteneurs
+kubectl exec -it [nom-pod] -c [nom-conteneur] -- bash
+
+# Copier des fichiers
+kubectl cp [fichier-local] [nom-pod]:/path/dans/conteneur
+kubectl cp [nom-pod]:/path/dans/conteneur [fichier-local]
+```
+
+#### Gestion du cycle de vie
+
+```bash
+# Supprimer un pod
+kubectl delete pod [nom-pod]
+
+# Suppression forcée (attention !)
+kubectl delete pod [nom-pod] --force --grace-period=0
+
+# Supprimer tous les pods d'un label
+kubectl delete pods -l app=nginx
+
+# Redémarrer un pod (suppression + recréation)
+kubectl delete pod [nom-pod]
+kubectl apply -f [manifest.yaml]
+```
+
+### 4.6 États et cycle de vie des Pods
+
+#### Les phases d'un Pod
+
+```mermaid
+graph LR
+    A[Pending] --> B[Running]
+    B --> C[Succeeded]
+    B --> D[Failed]
+    A --> D
+    D --> E[Terminating]
+    C --> E
+
+    F[Unknown] -.-> B
+    F -.-> D
+```
+
+**Pending** : Pod accepté mais conteneurs pas encore créés
+**Running** : Au moins un conteneur fonctionne
+**Succeeded** : Tous les conteneurs terminés avec succès
+**Failed** : Au moins un conteneur a échoué
+**Unknown** : État du Pod impossible à déterminer
+
+#### Conditions des Pods
+
+```bash
+# Voir les conditions détaillées
+kubectl get pod [nom-pod] -o yaml | grep -A 10 conditions:
+```
+
+Les conditions principales :
+
+- **PodScheduled** : Pod assigné à un node
+- **ContainersReady** : Tous les conteneurs sont prêts
+- **Initialized** : Init containers terminés avec succès
+- **Ready** : Pod peut recevoir du trafic
+
+### 4.7 Bonnes pratiques pour les Pods
+
+#### 1. Ressources et limites
+
+```yaml
+# Toujours définir requests et limits
+resources:
+  requests:
+    memory: '64Mi'
+    cpu: '250m' # 0.25 CPU
+  limits:
+    memory: '128Mi'
+    cpu: '500m' # 0.5 CPU
+```
+
+#### 2. Health checks obligatoires
+
+```yaml
+# Liveness : redémarre si l'app plante
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+# Readiness : contrôle le trafic
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+```
+
+#### 3. Labels et sélecteurs
+
+```yaml
+metadata:
+  labels:
+    app: webapp # Application
+    version: v1.2.0 # Version
+    component: frontend # Composant
+    env: production # Environnement
+    team: backend # Équipe responsable
+```
+
+#### 4. Sécurité
+
+```yaml
+spec:
+  securityContext:
+    runAsNonRoot: true # Ne pas run en root
+    runAsUser: 1000 # UID spécifique
+    fsGroup: 2000 # Groupe fichiers
+
+  containers:
+    - name: webapp
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+```
 
 📝 **LAB 2** - Création et gestion de Pods : `labs/enonces/S3_S1_S1_lab2_creation_gestion_pods.md`
 **Correction** : `labs/corrections/S3_S1_S1_lab2_creation_gestion_pods_correction.md`
@@ -974,15 +1561,16 @@ spec:
 
 Créez et gérez des Pods Kubernetes pour maîtriser les concepts fondamentaux.
 
-- **Objectif** : Maîtriser la création et gestion des Pods
-- **Contexte** : Déploiement d'applications conteneurisées de base
+- **Objectif** : Maîtriser la création déclarative et impérative des Pods
+- **Contexte** : Déploiement d'applications conteneurisées avec bonnes pratiques
 - **Instructions** :
-  1. Créer un Pod simple avec image nginx
-  2. Définir ressources (requests/limits) et health checks
-  3. Utiliser kubectl pour inspecter et déboguer le Pod
-  4. Tester les redémarrages et cycles de vie
-- **Critères de validation** : Pod déployé et opérationnel, ressources configurées, health checks fonctionnels
-- **Durée estimée** : 20 minutes
+  1. Créer des Pods avec `kubectl run` (approche impérative)
+  2. Créer des Pods avec manifests YAML (approche déclarative)
+  3. Configurer ressources, health checks et variables d'environnement
+  4. Inspecter, déboguer et gérer le cycle de vie des Pods
+  5. Tester les patterns multi-conteneurs (sidecar)
+- **Critères de validation** : Pods déployés et opérationnels, ressources configurées, health checks fonctionnels, commandes impératives maîtrisées
+- **Durée estimée** : 45 minutes
 - **Fichier de travail** : `S3_S1_lab2_creation_gestion_pods.yml`
 
 ---

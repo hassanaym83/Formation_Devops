@@ -582,6 +582,14 @@ C4Component
 - Maintien de l'état désiré vs état réel
 - Gestion des objets Kubernetes (ReplicaSets, Services)
 
+**Controllers intégrés** :
+
+- **ReplicaSet Controller** : Assure le nombre correct de Pods
+- **Deployment Controller** : Gère les déploiements et rolling updates
+- **Service Controller** : Maintient les endpoints des Services
+- **Node Controller** : Surveille l'état des nodes
+- **Namespace Controller** : Gère le cycle de vie des namespaces
+
 ### 2.3 Composants des Worker Nodes
 
 #### Kubelet
@@ -1224,16 +1232,16 @@ kubectl create -f webapp-simple.yaml
 ```bash
 # kubectl apply (recommandé)
 kubectl apply -f webapp-simple.yaml
-# ✅ Crée le Pod s'il n'existe pas
-# ✅ Met à jour le Pod s'il existe déjà
-# ✅ Gère les modifications futures
-# ✅ Idempotent (peut être relancé sans problème)
+# Crée le Pod s'il n'existe pas
+# Met à jour le Pod s'il existe déjà
+# Gère les modifications futures
+# Idempotent (peut être relancé sans problème)
 
 # kubectl create
 kubectl create -f webapp-simple.yaml
-# ✅ Crée le Pod s'il n'existe pas
-# ❌ Erreur si le Pod existe déjà
-# ❌ Ne peut pas gérer les mises à jour
+# Crée le Pod s'il n'existe pas
+# Erreur si le Pod existe déjà
+# Ne peut pas gérer les mises à jour
 ```
 
 **Comprendre ce que fait ce YAML :**
@@ -1673,96 +1681,990 @@ Créez des Services Kubernetes pour exposer vos Pods et comprendre le networking
 
 ## 6. Deployments et ReplicaSets
 
-### 6.1 Limitations des Pods standalone
+### 6.1 Comprendre les limitations des Pods standalone
 
-**Problématiques** :
+#### Problématiques des Pods isolés
 
-- **Pas de résilience** : Pod supprimé = service indisponible
-- **Pas de scaling** : Impossible d'augmenter le nombre d'instances
-- **Pas de rolling updates** : Mise à jour = downtime
+Imaginez un site e-commerce géré par un seul Pod :
 
-**Solution** : Les **Deployments** gèrent les Pods via des **ReplicaSets**.
+**Scénarios de défaillance** :
 
-### 6.2 Architecture Deployment/ReplicaSet/Pod
+- **Panne du node** : Pod perdu = site indisponible
+- **Bug de l'application** : Pod crash = perte de service
+- **Pic de trafic** : Un seul Pod = surcharge et lenteur
+- **Mise à jour** : Redéploiement = downtime obligatoire
 
 ```mermaid
 graph TB
-    subgraph "Deployment"
-        A[Deployment nginx<br/>replicas: 3<br/>strategy: RollingUpdate]
+    subgraph "Problèmes des Pods standalone"
+        A[Pod unique nginx]
+        B[Crash du Pod]
+        C[Pas de redémarrage automatique]
+        D[Service indisponible]
     end
 
-    subgraph "ReplicaSet"
-        B[ReplicaSet nginx-v1<br/>replicas: 3<br/>selector: app=nginx]
+    A --> B --> C --> D
+
+    subgraph "Solution avec Deployment"
+        E[Deployment nginx<br/>3 replicas]
+        F[Pod 1]
+        G[Pod 2]
+        H[Pod 3]
+        I[Pod 1 crash]
+        J[Nouveau Pod créé automatiquement]
+        K[Service maintenu]
     end
 
-    subgraph "Pods"
-        C[Pod nginx-v1-abc<br/>app=nginx<br/>version=v1]
-        D[Pod nginx-v1-def<br/>app=nginx<br/>version=v1]
-        E[Pod nginx-v1-ghi<br/>app=nginx<br/>version=v1]
-    end
-
-    A --> B
-    B --> C
-    B --> D
-    B --> E
-
-    F[Controller Manager] --> A
-    G[Scheduler] --> C
-    G --> D
-    G --> E
+    E --> F
+    E --> G
+    E --> H
+    F --> I --> J --> K
 ```
 
-### 6.3 Deployment manifest
+#### Besoins en production
+
+- **Haute disponibilité** : Plusieurs instances pour éviter les points de défaillance unique
+- **Scaling** : Adapter le nombre d'instances selon la charge
+- **Rolling updates** : Mise à jour sans interruption de service
+- **Rollback** : Retour rapide en cas de problème
+
+### 6.2 ReplicaSets : La fondation
+
+#### Qu'est-ce qu'un ReplicaSet ?
+
+Un **ReplicaSet** assure qu'un nombre spécifié de Pods identiques fonctionnent à tout moment.
+
+**Analogie du garde du corps** :
+
+- Vous demandez 3 gardes du corps (replicas: 3)
+- Si un garde est malade, un remplaçant arrive automatiquement
+- Tous les gardes ont la même formation (même Pod template)
+- Le chef de sécurité (ReplicaSet controller) surveille en permanence
+
+> **Note technique** : Le **ReplicaSet Controller** fait partie du **Controller Manager** qui s'exécute sur le Control Plane. C'est lui qui surveille en permanence l'état des Pods et prend les actions correctives nécessaires.
+
+#### Fonctionnement interne
+
+```mermaid
+graph LR
+    subgraph "ReplicaSet Controller"
+        A[Surveille en continu]
+        B[Compare état actuel<br/>vs état désiré]
+        C[Crée/Supprime des Pods<br/>si nécessaire]
+    end
+
+    A --> B --> C --> A
+
+    subgraph "État désiré"
+        D[replicas: 3]
+    end
+
+    subgraph "État actuel"
+        E[Pod 1 Running]
+        F[Pod 2 Running]
+        G[Pod 3 Crashed]
+    end
+
+    B --> D
+    B --> E
+    B --> F
+    B --> G
+
+    C --> H[Nouveau Pod 3 créé]
+```
+
+#### ReplicaSet manifest de base
 
 ```yaml
 apiVersion: apps/v1
-kind: Deployment
+kind: ReplicaSet
 metadata:
-  name: nginx-deployment
+  name: nginx-replicaset
   labels:
     app: nginx
 spec:
-  replicas: 3
-  selector:
+  replicas: 3 # Nombre de Pods désirés
+  selector: # Comment identifier les Pods à gérer
     matchLabels:
       app: nginx
-  template:
+      version: v1
+  template: # Modèle pour créer les Pods
     metadata:
       labels:
         app: nginx
+        version: v1
     spec:
       containers:
         - name: nginx
           image: nginx:1.21
           ports:
             - containerPort: 80
-          resources:
-            requests:
-              memory: '64Mi'
-              cpu: '100m'
-            limits:
-              memory: '128Mi'
-              cpu: '200m'
 ```
 
-### 6.4 Application pratique - Deployments
+**Éléments clés** :
+
+- **replicas** : Nombre de Pods souhaités
+- **selector** : Labels pour identifier les Pods gérés
+- **template** : Spécification des Pods à créer
+
+### 6.3 Deployments : La couche supérieure
+
+#### Pourquoi les Deployments ?
+
+Les **ReplicaSets** seuls ne suffisent pas pour la production :
+
+**Problèmes des ReplicaSets** :
+
+- Pas de gestion des mises à jour
+- Pas de rollback automatique
+- Pas d'historique des versions
+- Gestion manuelle complexe
+
+**Solutions des Deployments** :
+
+- Rolling updates automatiques
+- Rollback en une commande
+- Historique des révisions
+- Stratégies de déploiement configurables
+
+### 6.4 Concepts fondamentaux des Deployments
+
+#### 6.4.1 Rolling Updates : Mise à jour progressive
+
+**Principe** : Remplacer progressivement les anciens Pods par de nouveaux, sans interruption de service.
+
+**Scénario concret** : Mise à jour nginx:1.20 → nginx:1.21
+
+```mermaid
+sequenceDiagram
+    participant U as Utilisateurs
+    participant LB as LoadBalancer
+    participant P1 as Pod v1.20 #1
+    participant P2 as Pod v1.20 #2
+    participant P3 as Pod v1.20 #3
+    participant N1 as Nouveau Pod v1.21 #1
+    participant N2 as Nouveau Pod v1.21 #2
+    participant N3 as Nouveau Pod v1.21 #3
+
+    Note over P1,P3: État initial : 3 Pods v1.20
+    U->>LB: Trafic continu
+    LB->>P1: Route vers Pods v1.20
+    LB->>P2: Route vers Pods v1.20
+    LB->>P3: Route vers Pods v1.20
+
+    Note over N1: Étape 1 : Créer Pod v1.21
+    N1->>N1: Démarrage v1.21
+    Note over P1: Étape 2 : Supprimer Pod v1.20
+    P1->>P1: Terminaison
+    LB->>N1: Route vers nouveau Pod
+    LB->>P2: Trafic continue
+    LB->>P3: Trafic continue
+
+    Note over N2: Étape 3 : Créer Pod v1.21 #2
+    N2->>N2: Démarrage v1.21
+    P2->>P2: Terminaison
+    LB->>N2: Route vers nouveau Pod
+
+    Note over N3: Étape 4 : Créer Pod v1.21 #3
+    N3->>N3: Démarrage v1.21
+    P3->>P3: Terminaison
+    LB->>N3: Route vers nouveau Pod
+
+    Note over N1,N3: État final : 3 Pods v1.21
+    U->>LB: Trafic jamais interrompu !
+```
+
+**Paramètres de contrôle** :
+
+- **maxUnavailable** : Nombre max de Pods indisponibles pendant la mise à jour
+- **maxSurge** : Nombre max de Pods supplémentaires créés temporairement
+
+**Exemple** :
+
+- 3 replicas, maxUnavailable=1, maxSurge=1
+- Kubernetes peut avoir temporairement 4 Pods (3+1) et minimum 2 Pods (3-1)
+
+#### 6.4.2 Rollback : Retour vers version précédente
+
+**Principe** : Revenir rapidement à une version stable en cas de problème.
+
+**Mécanisme** :
+
+1. Kubernetes garde l'historique des ReplicaSets
+2. Chaque déploiement crée un nouveau ReplicaSet
+3. Les anciens ReplicaSets sont conservés (replicas=0)
+4. Le rollback réactive un ancien ReplicaSet
+
+```mermaid
+graph TB
+    subgraph "Historique des déploiements"
+        D1[Deployment v1<br/>nginx:1.19<br/>STABLE]
+        D2[Deployment v2<br/>nginx:1.20<br/>STABLE]
+        D3[Deployment v3<br/>nginx:1.21<br/>BUG CRITIQUE!]
+    end
+
+    subgraph "ReplicaSets conservés"
+        RS1[ReplicaSet v1<br/>replicas: 0<br/>nginx:1.19]
+        RS2[ReplicaSet v2<br/>replicas: 0<br/>nginx:1.20]
+        RS3[ReplicaSet v3<br/>replicas: 3<br/>nginx:1.21]
+    end
+
+    subgraph "Action de rollback"
+        RB[kubectl rollout undo]
+        RS2_NEW[ReplicaSet v2<br/>replicas: 3<br/>nginx:1.20]
+        RS3_OLD[ReplicaSet v3<br/>replicas: 0<br/>nginx:1.21]
+    end
+
+    D1 --> RS1
+    D2 --> RS2
+    D3 --> RS3
+
+    RB --> RS2_NEW
+    RB --> RS3_OLD
+```
+
+**Avantages** :
+
+- **Rapidité** : Retour en quelques secondes
+- **Fiabilité** : Version précédente déjà testée
+- **Simplicité** : Une seule commande
+
+#### 6.4.3 Historique des révisions
+
+**Principe** : Kubernetes conserve un historique de tous les déploiements.
+
+**Structure** :
+
+```
+Deployment "web-app"
+├── Revision 1: nginx:1.19 (Initial deployment)
+├── Revision 2: nginx:1.20 (Security update)
+├── Revision 3: nginx:1.21 (Feature update)
+└── Revision 4: nginx:1.20 (Rollback après bug)
+```
+
+**Métadonnées conservées** :
+
+- Image utilisée
+- Date/heure du déploiement
+- Cause du changement (changement d'image, de config, etc.)
+- Status de la révision (succès/échec)
+
+**Rétention** : Par défaut, Kubernetes garde les 10 dernières révisions
+
+#### 6.4.4 Stratégies de déploiement
+
+**1. RollingUpdate (défaut)** :
+
+- Remplacement progressif
+- Service maintenu pendant la mise à jour
+- Idéal pour les applications stateless
+
+**2. Recreate** :
+
+- Suppression de tous les Pods puis création des nouveaux
+- Interruption de service temporaire
+- Nécessaire pour certaines applications avec états partagés
+
+```yaml
+# Stratégie RollingUpdate (recommandée)
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 25%    # Max 25% des Pods indisponibles
+    maxSurge: 25%          # Max 25% de Pods supplémentaires
+
+# Stratégie Recreate (attention : downtime!)
+strategy:
+  type: Recreate
+```
+
+**Comparaison des stratégies** :
+
+| Aspect            | RollingUpdate          | Recreate                |
+| ----------------- | ---------------------- | ----------------------- |
+| **Downtime**      | Aucun                  | Temporaire              |
+| **Ressources**    | Plus consommées        | Optimisées              |
+| **Compatibilité** | Applications stateless | Applications avec états |
+| **Complexité**    | Gestion progressive    | Simple                  |
+| **Rollback**      | Progressif             | Interruption            |
+
+### 6.5 Architecture hiérarchique
+
+```mermaid
+graph TB
+    subgraph "Deployment nginx-app"
+        A[Deployment<br/>Gère les ReplicaSets<br/>Stratégies de déploiement]
+    end
+
+    subgraph "ReplicaSets gérés"
+        B[ReplicaSet v1<br/>nginx:1.20<br/>replicas: 0]
+        C[ReplicaSet v2<br/>nginx:1.21<br/>replicas: 3]
+    end
+
+    subgraph "Pods actifs"
+        D[Pod v2-abc]
+        E[Pod v2-def]
+        F[Pod v2-ghi]
+    end
+
+    A --> B
+    A --> C
+    C --> D
+    C --> E
+    C --> F
+
+    G[kubectl rollout undo] --> A
+    H[Rollback vers v1] --> B
+```
+
+### 6.5 Exemple pratique : Cycle de vie d'un déploiement
+
+#### Scénario : Application e-commerce en production
+
+**Contexte** : Votre équipe gère une API e-commerce critique qui doit être mise à jour sans interruption de service.
+
+**Étape 1 : Déploiement initial**
+
+```yaml
+# Deployment initial - API v1.0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-api
+  labels:
+    app: ecommerce-api
+spec:
+  replicas: 5 # 5 instances pour haute disponibilité
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1 # Max 1 Pod indisponible (80% uptime garanti)
+      maxSurge: 2 # Max 2 Pods supplémentaires (7 Pods max temporairement)
+  selector:
+    matchLabels:
+      app: ecommerce-api
+  template:
+    metadata:
+      labels:
+        app: ecommerce-api
+    spec:
+      containers:
+        - name: api
+          image: mycompany/ecommerce-api:v1.0
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '250m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
+```
+
+**Étape 2 : Rolling Update vers v1.1**
+
+Lors de la mise à jour vers v1.1 :
+
+```
+État initial: 5 Pods v1.0
+┌─────────────────────────────────────┐
+│ Pod1 │ Pod2 │ Pod3 │ Pod4 │ Pod5 │   │  Status: 5/5 Ready
+│ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.0 │   │
+└─────────────────────────────────────┘
+
+Étape 1: Création 2 nouveaux Pods (maxSurge: 2)
+┌─────────────────────────────────────────────────┐
+│ Pod1 │ Pod2 │ Pod3 │ Pod4 │ Pod5 │ Pod6 │ Pod7 │   │  Status: 7/7 Ready
+│ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.1 │ v1.1 │   │
+└─────────────────────────────────────────────────┘
+
+Étape 2: Suppression 1 ancien Pod (maxUnavailable: 1)
+┌─────────────────────────────────────────────────┐
+│      │ Pod2 │ Pod3 │ Pod4 │ Pod5 │ Pod6 │ Pod7 │   │  Status: 6/6 Ready
+│  X   │ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.1 │ v1.1 │   │
+└─────────────────────────────────────────────────┘
+
+... Processus continue ...
+
+État final: 5 Pods v1.1
+┌─────────────────────────────────────┐
+│ Pod6 │ Pod7 │ Pod8 │ Pod9 │ Pod10│   │  Status: 5/5 Ready
+│ v1.1 │ v1.1 │ v1.1 │ v1.1 │ v1.1 │   │
+└─────────────────────────────────────┘
+```
+
+**Étape 3 : Détection d'un bug critique**
+
+La v1.1 présente un bug qui affecte les paiements !
+
+```bash
+# Logs montrent des erreurs
+kubectl logs deployment/ecommerce-api | grep ERROR
+# ERROR: Payment processing failed for user 12345
+# ERROR: Database connection timeout
+```
+
+**Étape 4 : Rollback immédiat**
+
+```bash
+# Retour rapide vers v1.0 (version stable)
+kubectl rollout undo deployment/ecommerce-api
+
+# Résultat: Retour en ~30 secondes vers v1.0
+# Aucune donnée perdue, service restauré
+```
+
+**Bénéfices obtenus** :
+
+- **Zéro downtime** pendant la mise à jour v1.0 → v1.1
+- **Rollback rapide** quand un problème est détecté
+- **Historique conservé** pour analysis post-incident
+- **Service toujours disponible** pour les clients
+
+### 6.6 Création de Deployments : Approches impératives
+
+#### Commandes kubectl create deployment
+
+**Création de base** :
+
+```bash
+# Deployment simple
+kubectl create deployment nginx-app --image=nginx:1.21
+
+# Avec nombre de replicas
+kubectl create deployment web-app --image=nginx:1.21 --replicas=5
+
+# Avec port exposé
+kubectl create deployment api-app --image=myapi:v1.0 --port=8080
+```
+
+**Avec options avancées** :
+
+```bash
+# Deployment avec ressources
+kubectl create deployment heavy-app \
+  --image=myapp:v2.0 \
+  --replicas=3 \
+  --port=3000
+
+# Avec variables d'environnement
+kubectl create deployment config-app \
+  --image=nginx:1.21 \
+  --replicas=2 \
+  --env="ENV=production" \
+  --env="DEBUG=false"
+```
+
+#### Génération de YAML
+
+```bash
+# Générer le YAML sans créer
+kubectl create deployment nginx-app \
+  --image=nginx:1.21 \
+  --replicas=3 \
+  --dry-run=client -o yaml
+
+# Sauvegarder dans un fichier
+kubectl create deployment nginx-app \
+  --image=nginx:1.21 \
+  --replicas=3 \
+  --dry-run=client -o yaml > nginx-deployment.yaml
+
+# Modifier et appliquer
+kubectl apply -f nginx-deployment.yaml
+```
+
+### 6.5 Deployment manifest complet
+
+#### Structure détaillée
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+  labels:
+    app: nginx
+    version: v1.0
+    environment: production
+  annotations:
+    deployment.kubernetes.io/revision: '1'
+
+spec:
+  # Configuration des replicas
+  replicas: 5
+
+  # Sélecteur pour les Pods
+  selector:
+    matchLabels:
+      app: nginx
+      version: v1.0
+
+  # Stratégie de déploiement
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1 # Maximum de Pods indisponibles
+      maxSurge: 1 # Maximum de Pods supplémentaires
+
+  # Contrôle de progression
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
+
+  # Template des Pods
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v1.0
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9113'
+
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.21
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+
+          env:
+            - name: ENVIRONMENT
+              value: 'production'
+            - name: LOG_LEVEL
+              value: 'info'
+
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '100m'
+            limits:
+              memory: '256Mi'
+              cpu: '200m'
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+```
+
+### 6.6 Scaling : Gestion dynamique des replicas
+
+#### Scaling horizontal manuel
+
+**Commandes impératives** :
+
+```bash
+# Scale up - augmenter les replicas
+kubectl scale deployment nginx-app --replicas=10
+
+# Scale down - réduire les replicas
+kubectl scale deployment nginx-app --replicas=2
+
+# Scale conditionnel
+kubectl scale deployment nginx-app --current-replicas=3 --replicas=5
+```
+
+**Modification déclarative** :
+
+```bash
+# Éditer directement
+kubectl edit deployment nginx-app
+
+# Ou modifier le fichier YAML
+kubectl patch deployment nginx-app -p '{"spec":{"replicas":8}}'
+```
+
+#### Auto-scaling avec HPA (Horizontal Pod Autoscaler)
+
+**Création d'un HPA** :
+
+```bash
+# Autoscaling basé sur le CPU
+kubectl autoscale deployment nginx-app \
+  --cpu-percent=70 \
+  --min=3 \
+  --max=15
+
+# Vérifier l'HPA
+kubectl get hpa
+
+# Détails de l'autoscaler
+kubectl describe hpa nginx-app
+```
+
+**HPA manifest** :
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-app
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+```
+
+### 6.7 Rolling Updates : Mises à jour sans interruption
+
+#### Stratégies de déploiement
+
+**RollingUpdate (par défaut)** :
+
+```yaml
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 25% # Ou un nombre absolu comme 2
+    maxSurge: 25% # Ou un nombre absolu comme 2
+```
+
+**Recreate** :
+
+```yaml
+strategy:
+  type: Recreate # Tous les Pods arrêtés puis recréés
+```
+
+#### Mise à jour d'image
+
+**Commandes impératives** :
+
+```bash
+# Mettre à jour l'image
+kubectl set image deployment/nginx-app nginx=nginx:1.22
+
+# Mettre à jour avec plusieurs conteneurs
+kubectl set image deployment/app-deployment \
+  nginx=nginx:1.22 \
+  sidecar=sidecar:v2.0
+
+# Forcer un redéploiement (même image)
+kubectl rollout restart deployment/nginx-app
+```
+
+**Suivi du déploiement** :
+
+```bash
+# Suivre le statut du rollout
+kubectl rollout status deployment/nginx-app
+
+# Voir les détails en temps réel
+kubectl rollout status deployment/nginx-app --watch=true
+
+# Timeout personnalisé
+kubectl rollout status deployment/nginx-app --timeout=300s
+```
+
+#### Processus de Rolling Update
+
+```mermaid
+sequenceDiagram
+    participant User as Utilisateur
+    participant Deploy as Deployment
+    participant RS1 as ReplicaSet v1
+    participant RS2 as ReplicaSet v2
+    participant Pods as Pods
+
+    User->>Deploy: kubectl set image
+    Deploy->>RS2: Créer nouveau ReplicaSet
+    RS2->>Pods: Créer nouveau Pod v2
+    Note over Pods: Pod v2 démarre
+    Deploy->>RS1: Réduire replicas v1
+    RS1->>Pods: Terminer Pod v1
+    Note over Pods: Répéter jusqu'à completion
+    Deploy->>User: Rolling update terminé
+```
+
+### 6.8 Rollback : Retour aux versions précédentes
+
+#### Gestion de l'historique
+
+**Voir l'historique des révisions** :
+
+```bash
+# Historique des deployments
+kubectl rollout history deployment/nginx-app
+
+# Détails d'une révision spécifique
+kubectl rollout history deployment/nginx-app --revision=3
+
+# Voir les changements entre révisions
+kubectl rollout history deployment/nginx-app --revision=2 --revision=3
+```
+
+#### Rollback commands
+
+**Rollback simple** :
+
+```bash
+# Retour à la révision précédente
+kubectl rollout undo deployment/nginx-app
+
+# Retour à une révision spécifique
+kubectl rollout undo deployment/nginx-app --to-revision=2
+
+# Vérifier le rollback
+kubectl rollout status deployment/nginx-app
+```
+
+**Rollback avancé** :
+
+```bash
+# Rollback avec confirmation
+kubectl rollout undo deployment/nginx-app --dry-run=server
+
+# Rollback et suivi
+kubectl rollout undo deployment/nginx-app && \
+kubectl rollout status deployment/nginx-app --watch
+```
+
+### 6.9 Gestion et monitoring des Deployments
+
+#### Commandes d'inspection
+
+**Visualisation** :
+
+```bash
+# Lister tous les deployments
+kubectl get deployments
+
+# Informations détaillées
+kubectl get deployments -o wide
+
+# Format personnalisé
+kubectl get deployments -o custom-columns=\
+NAME:.metadata.name,\
+READY:.status.readyReplicas,\
+UP-TO-DATE:.status.updatedReplicas,\
+AVAILABLE:.status.availableReplicas
+
+# Description complète
+kubectl describe deployment nginx-app
+```
+
+**Debugging** :
+
+```bash
+# Voir les événements
+kubectl get events --field-selector involvedObject.name=nginx-app
+
+# Logs de tous les Pods du deployment
+kubectl logs -l app=nginx --tail=100
+
+# Logs en streaming
+kubectl logs -l app=nginx -f
+
+# Exécuter des commandes dans les Pods
+kubectl exec -l app=nginx -- nginx -t
+```
+
+#### États et conditions
+
+**Comprendre les statuts** :
+
+```bash
+# Statut détaillé
+kubectl get deployment nginx-app -o yaml | grep -A 10 conditions
+
+# Conditions de santé
+kubectl describe deployment nginx-app | grep -A 5 Conditions
+```
+
+**Conditions communes** :
+
+- **Progressing** : Déploiement en cours
+- **Available** : Replicas minimum disponibles
+- **ReplicaFailure** : Échec de création de replicas
+
+### 6.10 Stratégies avancées et patterns
+
+#### Blue-Green Deployment
+
+```bash
+# Version Blue (actuelle)
+kubectl create deployment app-blue --image=myapp:v1.0 --replicas=3
+
+# Version Green (nouvelle)
+kubectl create deployment app-green --image=myapp:v2.0 --replicas=3
+
+# Tester Green en interne
+kubectl port-forward deployment/app-green 8080:80
+
+# Basculer le service vers Green
+kubectl patch service app-service -p '{"spec":{"selector":{"version":"green"}}}'
+
+# Supprimer Blue après validation
+kubectl delete deployment app-blue
+```
+
+#### Canary Deployment
+
+```yaml
+# Deployment principal (90% du trafic)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-stable
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      app: myapp
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: stable
+    spec:
+      containers:
+        - name: app
+          image: myapp:v1.0
+
+---
+# Deployment canary (10% du trafic)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: canary
+    spec:
+      containers:
+        - name: app
+          image: myapp:v2.0
+```
+
+### 6.11 Bonnes pratiques de production
+
+#### Configuration des ressources
+
+```yaml
+resources:
+  requests: # Ressources garanties
+    memory: '256Mi'
+    cpu: '100m'
+  limits: # Limites maximales
+    memory: '512Mi'
+    cpu: '500m'
+```
+
+#### Health checks obligatoires
+
+```yaml
+livenessProbe: # Redémarre si échec
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe: # Retire du service si échec
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+#### Labels et annotations
+
+```yaml
+metadata:
+  labels:
+    app: myapp # Application
+    version: v1.0 # Version
+    component: frontend # Composant
+    environment: production # Environnement
+    team: platform # Équipe responsable
+  annotations:
+    deployment.kubernetes.io/revision: '1'
+    kubernetes.io/change-cause: 'Initial deployment'
+    contact: 'platform-team@company.com'
+```
+
+#### Stratégie de rolling update optimisée
+
+```yaml
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1 # Conserve la disponibilité
+    maxSurge: 1 # Contrôle la consommation de ressources
+```
 
 📝 **LAB 4** - Deployments et ReplicaSets : `labs/enonces/S3_S1_S1_lab4_deployments_replicasets.md`
 **Correction** : `labs/corrections/S3_S1_S1_lab4_deployments_replicasets_correction.md`
 
 **Énoncé du LAB 4** :
 
-Créez des Deployments pour gérer la haute disponibilité et les mises à jour d'applications.
+Maîtrisez les Deployments pour la gestion production d'applications conteneurisées.
 
-- **Objectif** : Maîtriser les Deployments et stratégies de déploiement
-- **Contexte** : Gestion production d'applications web critiques
+- **Objectif** : Maîtriser scaling, rolling updates, rollback et monitoring des Deployments
+- **Contexte** : Déploiement et gestion d'une application web critique en production
 - **Instructions** :
-  1. Créer un Deployment avec 5 replicas d'une application web
-  2. Effectuer un rolling update vers une nouvelle version
-  3. Tester la résistance aux pannes en supprimant des Pods
-  4. Implémenter un rollback vers la version précédente
-- **Critères de validation** : Haute disponibilité maintenue, rolling update sans downtime, rollback réussi
-- **Durée estimée** : 30 minutes
+  1. Créer un Deployment avec commandes impératives et déclaratives
+  2. Effectuer du scaling manuel et configurer l'autoscaling
+  3. Réaliser un rolling update vers une nouvelle version
+  4. Tester la résistance aux pannes et l'auto-healing
+  5. Effectuer un rollback et gérer l'historique des révisions
+  6. Implémenter les health checks et bonnes pratiques
+- **Critères de validation** : Deployments opérationnels, scaling fonctionnel, rolling updates sans downtime, rollback réussi, monitoring configuré
+- **Durée estimée** : 60 minutes
 - **Fichier de travail** : `S3_S1_lab4_deployments_replicasets.yml`
 
 ---

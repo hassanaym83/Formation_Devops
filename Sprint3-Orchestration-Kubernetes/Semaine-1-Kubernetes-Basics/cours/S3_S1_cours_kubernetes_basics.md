@@ -16,7 +16,6 @@ Architecture Kubernetes, Pods, Services, Deployments, ConfigMaps, Secrets, Volum
 ## Table des matières
 
 1. [Introduction à Kubernetes](#1-introduction-à-kubernetes)
-   - [1.8 Qu'est-ce qu'un cluster Kubernetes ?](#18-quest-ce-quun-cluster-kubernetes)
 2. [Architecture Kubernetes](#2-architecture-kubernetes)
 3. [Installation et configuration](#3-installation-et-configuration)
 4. [Pods et conteneurs](#4-pods-et-conteneurs)
@@ -294,9 +293,9 @@ Si un cuisinier tombe malade (Pod crashe), le chef embauche immédiatement un re
 
 ---
 
-## 1.8 Qu'est-ce qu'un cluster Kubernetes ?
+### 1.8 Qu'est-ce qu'un cluster Kubernetes ?
 
-### 1.8.1 Définition du cluster
+#### 1.8.1 Définition du cluster
 
 Un **cluster Kubernetes** est un ensemble de machines (physiques ou virtuelles) qui travaillent ensemble pour faire fonctionner vos applications conteneurisées.
 
@@ -2122,6 +2121,282 @@ kubectl rollout undo deployment/ecommerce-api
 - **Rollback rapide** quand un problème est détecté
 - **Historique conservé** pour analysis post-incident
 - **Service toujours disponible** pour les clients
+
+### 6.5 Selectors : Comprendre le lien entre Deployments et Pods
+
+#### 6.5.1 Principe fondamental des selectors
+
+**Problématique** : Comment un Deployment sait-il quels Pods lui appartiennent ?
+
+La réponse : **Les selectors et les labels** !
+
+**Analogie** : Imaginez un berger et son troupeau :
+
+- Le berger (Deployment) doit identifier ses moutons (Pods)
+- Chaque mouton porte un collier avec des étiquettes (labels)
+- Le berger a une liste de critères (selector) pour reconnaître ses moutons
+
+```mermaid
+graph TB
+    subgraph "Deployment nginx-app"
+        A[selector:<br/>matchLabels:<br/>app: nginx<br/>env: production]
+    end
+
+    subgraph "Pods dans le cluster"
+        B[Pod 1<br/>Labels:<br/>app: nginx<br/>env: production]
+        C[Pod 2<br/>Labels:<br/>app: nginx<br/>env: staging]
+        D[Pod 3<br/>Labels:<br/>app: apache<br/>env: production]
+        E[Pod 4<br/>Labels:<br/>app: nginx<br/>env: production]
+    end
+
+    A -.->|MATCH| B
+    A -.->|NO MATCH| C
+    A -.->|NO MATCH| D
+    A -.->|MATCH| E
+
+    F[ReplicaSet gère uniquement<br/>Pod 1 et Pod 4]
+    A --> F
+```
+
+#### 6.5.2 matchLabels : Sélection par égalité
+
+**Principe** : Sélection basée sur l'égalité exacte des labels.
+
+**Syntaxe** :
+
+```yaml
+selector:
+  matchLabels:
+    app: nginx # Label "app" DOIT être égal à "nginx"
+    version: v1.0 # Label "version" DOIT être égal à "v1.0"
+    env: production # Label "env" DOIT être égal à "production"
+```
+
+**Exemple concret** :
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend # OBLIGATOIRE : égalité exacte
+      tier: web # OBLIGATOIRE : égalité exacte
+  template:
+    metadata:
+      labels:
+        app: frontend # DOIT correspondre au selector
+        tier: web # DOIT correspondre au selector
+        version: v2.1 # Peut avoir des labels supplémentaires
+    spec:
+      containers:
+        - name: frontend
+          image: nginx:1.21
+```
+
+**Règle importante** : Les labels du template DOIVENT **inclure** tous les labels du selector, mais peuvent en avoir d'autres.
+
+**Exemples de correspondance** :
+
+| Selector matchLabels    | Pod Labels              | Résultat |
+| ----------------------- | ----------------------- | -------- |
+| `app: nginx`            | `app: nginx`            | MATCH    |
+| `app: nginx`            | `app: nginx, env: prod` | MATCH    |
+| `app: nginx, env: prod` | `app: nginx`            | NO MATCH |
+| `app: nginx`            | `app: apache`           | NO MATCH |
+
+#### 6.5.3 matchExpressions : Sélection par expressions
+
+**Principe** : Sélection basée sur des opérateurs logiques plus complexes.
+
+**Opérateurs disponibles** :
+
+- **In** : Label dans une liste de valeurs
+- **NotIn** : Label pas dans une liste de valeurs
+- **Exists** : Label existe (peu importe la valeur)
+- **DoesNotExist** : Label n'existe pas
+
+**Syntaxe** :
+
+```yaml
+selector:
+  matchExpressions:
+    - key: environment # Nom du label
+      operator: In # Opérateur
+      values: ['production', 'staging'] # Liste de valeurs acceptées
+    - key: version
+      operator: NotIn
+      values: ['beta', 'alpha']
+    - key: security-scan
+      operator: Exists # Le label doit exister
+    - key: deprecated
+      operator: DoesNotExist # Le label ne doit PAS exister
+```
+
+**Exemples pratiques** :
+
+**1. Sélection multi-environnements** :
+
+```yaml
+# Déploiement qui cible production ET staging
+selector:
+  matchExpressions:
+    - key: app
+      operator: In
+      values: ['web-server']
+    - key: environment
+      operator: In
+      values: ['production', 'staging'] # Production OU staging
+```
+
+**2. Exclusion de versions instables** :
+
+```yaml
+# Éviter les versions beta et alpha
+selector:
+  matchExpressions:
+    - key: app
+      operator: In
+      values: ['api-backend']
+    - key: version
+      operator: NotIn
+      values: ['beta', 'alpha', 'rc'] # Exclure ces versions
+```
+
+**3. Sélection avec critères obligatoires** :
+
+```yaml
+# Pods qui DOIVENT avoir passé un scan de sécurité
+selector:
+  matchExpressions:
+    - key: app
+      operator: In
+      values: ['secure-app']
+    - key: security-scan-passed # Ce label DOIT exister
+      operator: Exists
+    - key: vulnerability-found # Ce label ne DOIT PAS exister
+      operator: DoesNotExist
+```
+
+#### 6.5.4 Combinaison matchLabels et matchExpressions
+
+**Principe** : Vous pouvez combiner les deux approches. Les conditions sont liées par un **ET logique**.
+
+```yaml
+selector:
+  matchLabels: # Condition 1 : égalité exacte
+    app: web-app
+    tier: frontend
+  matchExpressions: # Condition 2 : expressions
+    - key: environment
+      operator: In
+      values: ['production', 'staging']
+    - key: version
+      operator: NotIn
+      values: ['deprecated']
+```
+
+**Traduction** : Sélectionner les Pods qui ont :
+
+- `app=web-app` **ET**
+- `tier=frontend` **ET**
+- `environment` dans ["production", "staging"] **ET**
+- `version` pas dans ["deprecated"]
+
+#### 6.5.5 Cas d'usage avancés
+
+**1. Canary Deployment** :
+
+```yaml
+# Deployment principal (95% du trafic)
+selector:
+  matchLabels:
+    app: api-server
+    track: stable
+
+---
+# Deployment canary (5% du trafic)
+selector:
+  matchLabels:
+    app: api-server
+    track: canary
+```
+
+**2. Déploiement par zones géographiques** :
+
+```yaml
+selector:
+  matchExpressions:
+    - key: app
+      operator: In
+      values: ['distributed-app']
+    - key: zone
+      operator: In
+      values: ['us-east-1a', 'us-east-1b'] # Zones spécifiques
+```
+
+**3. Maintenance et exclusions** :
+
+```yaml
+selector:
+  matchLabels:
+    app: maintenance-service
+  matchExpressions:
+    - key: maintenance-mode
+      operator: DoesNotExist # Exclure les nodes en maintenance
+    - key: node-ready
+      operator: Exists # Inclure seulement les nodes prêts
+```
+
+#### 6.5.6 Bonnes pratiques pour les selectors
+
+**1. Cohérence des labels** :
+
+```yaml
+# BIEN : Labels cohérents et significatifs
+matchLabels:
+  app: ecommerce-frontend
+  component: web-server
+  version: v2.1.0
+  environment: production
+```
+
+**2. Éviter la sur-spécification** :
+
+```yaml
+# MAL : Trop spécifique
+matchLabels:
+  app: web
+  version: v1.2.3-build-456-commit-abc123  # Trop précis
+
+# BIEN : Approprié
+matchLabels:
+  app: web
+  version: v1.2.3    # Version majeure.mineure.patch suffisante
+```
+
+**3. Labels obligatoires vs optionnels** :
+
+```yaml
+# Dans le selector : seulement les labels ESSENTIELS
+selector:
+  matchLabels:
+    app: web-app # Obligatoire
+    tier: frontend # Obligatoire
+
+# Dans le template : labels obligatoires + optionnels
+template:
+  metadata:
+    labels:
+      app: web-app # Obligatoire (dans selector)
+      tier: frontend # Obligatoire (dans selector)
+      version: v1.2.3 # Optionnel
+      build-date: 2025-10-31 # Optionnel
+      team: frontend-team # Optionnel
+```
 
 ### 6.6 Création de Deployments : Approches impératives
 

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: validation-deployment
+  labels:
+    app: users-app
+    resource-type: deployment
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users-app
+      tier: backend
+  template:
+    metadata:
+      name: validation-pod
+      labels:
+        app: users-app
+        resource-type: pod
+        tier: backend
+    spec:
+      containers:
+        - name: validation-container
+          image: hassanaym/validation-ii-com:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+          resources:
+            requests:
+              memory: '64Mi'
+              cpu: '50m'
+            limits:
+              memory: '128Mi'
+              cpu: '100m'

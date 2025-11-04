@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-deployment
+  labels:
+    app: users-app
+    resource-type: deployment
+    tier: db-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users-app
+      tier: db-backend
+  template:
+    metadata:
+      name: database-pod
+      labels:
+        app: users-app
+        resource-type: pod
+        tier: db-backend
+    spec:
+      containers:
+        - name: database-container
+          image: hassanaym/database-ii-com:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3002
+          resources:
+            requests:
+              memory: '64Mi'
+              cpu: '50m'
+            limits:
+              memory: '128Mi'
+              cpu: '100m'

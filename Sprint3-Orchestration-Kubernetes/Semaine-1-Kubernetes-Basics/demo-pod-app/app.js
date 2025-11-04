@@ -10,7 +10,7 @@ app.use((req, res, next) => {
 
 // Endpoint racine "/"
 app.get('/', (req, res) => {
-  const message = `🚀 Application Node.js pour démonstration Kubernetes
+  const message = `image3 app Node.js pour démonstration Kubernetes__
 📅 Démarrée le: ${new Date().toISOString()}
 🌐 Endpoint: GET /
 ✅ Status: Fonctionnel

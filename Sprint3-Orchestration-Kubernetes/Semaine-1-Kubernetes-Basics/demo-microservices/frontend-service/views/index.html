@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo Kubernetes Communication</title>
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #333;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        background: #2c3e50;
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 2.5em;
+      }
+      .content {
+        padding: 30px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+      }
+      .card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        border-left: 5px solid #3498db;
+      }
+      .card h3 {
+        color: #2c3e50;
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+      }
+      .card h3:before {
+        content: '🔗';
+        margin-right: 10px;
+        font-size: 1.2em;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #2c3e50;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+      .form-group input:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+      .btn {
+        background: #3498db;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+      .btn:hover {
+        background: #2980b9;
+      }
+      .btn.success {
+        background: #27ae60;
+      }
+      .btn.warning {
+        background: #f39c12;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        display: none;
+      }
+      .result.success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .result.error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+      .result.info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+      .communication-flow {
+        background: #e8f4f8;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .step {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        border-left: 4px solid #3498db;
+      }
+      .step-number {
+        background: #3498db;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-weight: bold;
+      }
+      .architecture {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .pods {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+      }
+      .pod {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        border: 2px solid #3498db;
+        min-width: 200px;
+      }
+      .pod h4 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+      }
+      .service {
+        background: #ecf0f1;
+        padding: 8px;
+        margin: 5px 0;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .arrow {
+        font-size: 2em;
+        color: #3498db;
+        margin: 0 20px;
+      }
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .status-success {
+        background: #27ae60;
+      }
+      .status-error {
+        background: #e74c3c;
+      }
+      .status-loading {
+        background: #f39c12;
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .code {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        overflow-x: auto;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚀 Demo Kubernetes Communication</h1>
+        <p>Démonstration des communications intra-pod et inter-pod</p>
+      </div>
+
+      <div class="content">
+        <div class="architecture">
+          <h3>Architecture de l'Application</h3>
+          <div class="pods">
+            <div class="pod">
+              <h4>📦 Pod 1: Frontend + Validation</h4>
+              <div class="service">🌐 Frontend Service (3000)</div>
+              <div class="service">✅ Validation Service (3001)</div>
+              <small>Communication: localhost</small>
+            </div>
+            <div class="arrow">→</div>
+            <div class="pod">
+              <h4>📦 Pod 2: Database</h4>
+              <div class="service">🗄️ Database Service (3002)</div>
+              <small>Communication: DNS Kubernetes</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Test de Connectivité</h3>
+            <p>Teste la communication avec tous les services</p>
+            <button class="btn" onclick="testConnectivity()">
+              🔍 Tester Connectivité
+            </button>
+            <div id="connectivity-result" class="result"></div>
+          </div>
+
+          <div class="card">
+            <h3>Validation Utilisateur</h3>
+            <p>Démontre la communication intra-pod + inter-pod</p>
+            <form onsubmit="validateUser(event)">
+              <div class="form-group">
+                <label for="name">Nom :</label>
+                <input type="text" id="name" name="name" required />
+              </div>
+              <div class="form-group">
+                <label for="email">Email :</label>
+                <input type="email" id="email" name="email" required />
+              </div>
+              <div class="form-group">
+                <label for="phone">Téléphone :</label>
+                <input type="tel" id="phone" name="phone" required />
+              </div>
+              <button type="submit" class="btn success">
+                ✅ Valider et Sauvegarder
+              </button>
+            </form>
+            <div id="validation-result" class="result"></div>
+          </div>
+
+          <div class="card">
+            <h3>Gestion des Utilisateurs</h3>
+            <p>Communication inter-pod avec le service database</p>
+            <button class="btn" onclick="loadUsers()">
+              📋 Charger Utilisateurs
+            </button>
+            <button class="btn warning" onclick="clearUsers()">
+              🗑️ Vider Base
+            </button>
+            <div id="users-result" class="result"></div>
+          </div>
+
+          <div class="card">
+            <h3>Démonstration Complète</h3>
+            <p>Affiche tous les types de communication</p>
+            <button class="btn" onclick="runDemo()">🎯 Lancer Démo</button>
+            <div id="demo-result" class="result"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function testConnectivity() {
+        const resultDiv = document.getElementById('connectivity-result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'result info';
+        resultDiv.innerHTML =
+          '<span class="status-indicator status-loading"></span>Test en cours...';
+
+        try {
+          const response = await fetch('/connectivity');
+          const data = await response.json();
+
+          let html = '<h4>🔍 Résultats de Connectivité</h4>';
+          data.tests.forEach((test) => {
+            const statusClass =
+              test.status === 'success' ? 'status-success' : 'status-error';
+            const duration = test.duration_ms ? ` (${test.duration_ms}ms)` : '';
+            html += `
+                        <div class="step">
+                            <span class="status-indicator ${statusClass}"></span>
+                            <strong>${test.type}</strong>: ${
+              test.target
+            }${duration}
+                            ${
+                              test.status === 'error'
+                                ? `<br><small style="color: #e74c3c;">${test.error}</small>`
+                                : ''
+                            }
+                        </div>
+                    `;
+          });
+
+          resultDiv.className = 'result success';
+          resultDiv.innerHTML = html;
+        } catch (error) {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = `<strong>❌ Erreur:</strong> ${error.message}`;
+        }
+      }
+
+      async function validateUser(event) {
+        event.preventDefault();
+        const resultDiv = document.getElementById('validation-result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'result info';
+        resultDiv.innerHTML =
+          '<span class="status-indicator status-loading"></span>Validation en cours...';
+
+        const formData = new FormData(event.target);
+        const userData = Object.fromEntries(formData);
+
+        try {
+          const response = await fetch('/validate-user', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(userData)
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            let html = '<h4>✅ Validation Réussie</h4>';
+            html += '<div class="communication-flow">';
+            html += '<h5>Flux de Communication:</h5>';
+
+            data.communication_flow.forEach((step) => {
+              html += `
+                            <div class="step">
+                                <div class="step-number">${step.step}</div>
+                                <div>
+                                    <strong>${step.type}</strong>: ${step.service}<br>
+                                    <small>URL: ${step.url}</small>
+                                </div>
+                            </div>
+                        `;
+            });
+
+            html += '</div>';
+            html += `<div class="code">Utilisateur créé: ${JSON.stringify(
+              data.user,
+              null,
+              2
+            )}</div>`;
+
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = html;
+            event.target.reset();
+          } else {
+            resultDiv.className = 'result error';
+            resultDiv.innerHTML = `<strong>❌ Validation échouée:</strong><br>${
+              data.errors?.join('<br>') || data.error
+            }`;
+          }
+        } catch (error) {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = `<strong>❌ Erreur:</strong> ${error.message}`;
+        }
+      }
+
+      async function loadUsers() {
+        const resultDiv = document.getElementById('users-result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'result info';
+        resultDiv.innerHTML =
+          '<span class="status-indicator status-loading"></span>Chargement des utilisateurs...';
+
+        try {
+          const response = await fetch('/users');
+          const data = await response.json();
+
+          let html = '<h4>👥 Liste des Utilisateurs</h4>';
+          html += `<p><strong>Communication:</strong> ${data.communication} vers ${data.target}</p>`;
+
+          if (data.data && data.data.length > 0) {
+            html += '<div style="max-height: 300px; overflow-y: auto;">';
+            data.data.forEach((user) => {
+              html += `
+                            <div class="step">
+                                <strong>${user.name}</strong><br>
+                                <small>📧 ${user.email} | 📞 ${user.phone}</small>
+                            </div>
+                        `;
+            });
+            html += '</div>';
+          } else {
+            html += '<p>Aucun utilisateur trouvé.</p>';
+          }
+
+          resultDiv.className = 'result success';
+          resultDiv.innerHTML = html;
+        } catch (error) {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = `<strong>❌ Erreur:</strong> ${error.message}`;
+        }
+      }
+
+      async function clearUsers() {
+        const resultDiv = document.getElementById('users-result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'result info';
+        resultDiv.innerHTML =
+          '<span class="status-indicator status-loading"></span>Suppression en cours...';
+
+        try {
+          const response = await fetch('/users', {method: 'DELETE'});
+          const data = await response.json();
+
+          resultDiv.className = 'result success';
+          resultDiv.innerHTML =
+            '<h4>🗑️ Base de données vidée</h4><p>Tous les utilisateurs ont été supprimés.</p>';
+        } catch (error) {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = `<strong>❌ Erreur:</strong> ${error.message}`;
+        }
+      }
+
+      async function runDemo() {
+        const resultDiv = document.getElementById('demo-result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'result info';
+        resultDiv.innerHTML =
+          '<span class="status-indicator status-loading"></span>Exécution de la démonstration...';
+
+        try {
+          const response = await fetch('/demo');
+          const data = await response.json();
+
+          let html = '<h4>🎯 Démonstration Complète</h4>';
+          html += `<p><strong>Service:</strong> ${data.service}</p>`;
+          html += '<div class="communication-flow">';
+
+          Object.entries(data.communications).forEach(([type, comm]) => {
+            const statusClass =
+              comm.status === 'success' ? 'status-success' : 'status-error';
+            html += `
+                        <div class="step">
+                            <span class="status-indicator ${statusClass}"></span>
+                            <div>
+                                <strong>${type.replace('_', '-')}:</strong> ${
+              comm.target
+            }<br>
+                                <small>URL: ${comm.url}</small>
+                                ${
+                                  comm.status === 'error'
+                                    ? `<br><small style="color: #e74c3c;">Erreur: ${comm.error}</small>`
+                                    : ''
+                                }
+                            </div>
+                        </div>
+                    `;
+          });
+
+          html += '</div>';
+
+          resultDiv.className = 'result success';
+          resultDiv.innerHTML = html;
+        } catch (error) {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = `<strong>❌ Erreur:</strong> ${error.message}`;
+        }
+      }
+
+      // Charger la connectivité au démarrage
+      window.onload = function () {
+        testConnectivity();
+      };
+    </script>
+  </body>
+</html>

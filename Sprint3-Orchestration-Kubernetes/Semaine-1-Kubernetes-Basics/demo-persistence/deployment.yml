@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tech-deployment
+  labels:
+    app: tech-api
+    resource-type: deployment
+    tier: backend
+    environment: development
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tech-api
+      tier: backend
+  template:
+    metadata:
+      name: tech-pod
+      labels:
+        app: tech-api
+        resource-type: pod
+        tier: backend
+        environment: development
+    spec:
+      containers:
+        - name: tech-container
+          image: hassanaym/persistence-demo-app:1.0.0
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /app/data
+              name: tech-volume
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '100m'
+            limits:
+              memory: '256Mi'
+              cpu: '200m'
+      volumes:
+        - name: tech-volume
+          hostPath:
+            path: /data
+            type: DirectoryOrCreate

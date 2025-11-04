@@ -1,0 +1,21 @@
+{
+  "name": "frontend-service",
+  "version": "1.0.0",
+  "description": "Frontend service for Kubernetes communication demo",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Testing frontend service...\" && curl -f http://localhost:3000/health || exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "author": "Hassan ESSADIK",
+  "license": "MIT"
+}

@@ -1,0 +1,30 @@
+{
+  "name": "persistence-demo",
+  "version": "1.0.0",
+  "description": "Application Node.js simple pour démontrer la persistance des données avec les volumes Kubernetes",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "curl -X GET http://localhost:3000/health"
+  },
+  "keywords": [
+    "kubernetes",
+    "volumes",
+    "persistance",
+    "nodejs",
+    "express",
+    "demo"
+  ],
+  "author": "Formation DevOps",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

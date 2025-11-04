@@ -1,0 +1,21 @@
+{
+  "name": "database-service",
+  "version": "1.0.0",
+  "description": "Database service for Kubernetes communication demo",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Testing database service...\" && curl -f http://localhost:3002/health || exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "uuid": "^9.0.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "author": "Hassan ESSADIK",
+  "license": "MIT"
+}

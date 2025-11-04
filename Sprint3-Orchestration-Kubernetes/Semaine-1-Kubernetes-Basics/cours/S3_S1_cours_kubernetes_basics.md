@@ -514,28 +514,26 @@ Kubernetes ne peut pas appeler AWS pour créer une nouvelle EC2
 Kubernetes suit une architecture **maître-esclave** avec séparation claire entre le **control plane** (gestion) et les **worker nodes** (exécution).
 
 ```mermaid
-C4Component
-    title Architecture Kubernetes - Control Plane et Worker Nodes
+graph TB
+    subgraph control_plane["Control Plane"]
+        api_server["API Server<br/>API REST<br/>Expose l'API Kubernetes<br/>Authentification<br/>Validation requêtes"]
+        etcd["etcd<br/>Base de données<br/>Stockage clé-valeur<br/>État du cluster<br/>Configuration"]
+        scheduler["Scheduler<br/>Planificateur<br/>Placement des Pods<br/>Optimisation ressources<br/>Contraintes placement"]
+        controller_manager["Controller Manager<br/>Contrôleur<br/>Boucles de contrôle<br/>État désiré<br/>Réconciliation"]
+    end
 
-    System_Boundary(control_plane, "Control Plane") {
-        Component(api_server, "API Server", "API REST", "Expose l'API Kubernetes<br/>Authentification<br/>Validation requêtes")
-        Component(etcd, "etcd", "Base de données", "Stockage clé-valeur<br/>État du cluster<br/>Configuration")
-        Component(scheduler, "Scheduler", "Planificateur", "Placement des Pods<br/>Optimisation ressources<br/>Contraintes placement")
-        Component(controller_manager, "Controller Manager", "Contrôleur", "Boucles de contrôle<br/>État désiré<br/>Réconciliation")
-    }
+    subgraph worker_nodes["Worker Nodes"]
+        kubelet["Kubelet<br/>Agent<br/>Gestion Pods locaux<br/>Communication API Server<br/>Monitoring santé"]
+        kube_proxy["Kube-proxy<br/>Proxy réseau<br/>Load balancing<br/>Service discovery<br/>Règles iptables"]
+        container_runtime["Container Runtime<br/>Runtime<br/>Docker-containerd<br/>Gestion cycle vie<br/>Isolation processus"]
+    end
 
-    System_Boundary(worker_nodes, "Worker Nodes") {
-        Component(kubelet, "Kubelet", "Agent", "Gestion Pods locaux<br/>Communication API Server<br/>Monitoring santé")
-        Component(kube_proxy, "Kube-proxy", "Proxy réseau", "Load balancing<br/>Service discovery<br/>Règles iptables")
-        Component(container_runtime, "Container Runtime", "Runtime", "Docker/containerd<br/>Gestion cycle vie<br/>Isolation processus")
-    }
-
-    Rel(api_server, etcd, "Stockage état")
-    Rel(api_server, scheduler, "Attribution Pods")
-    Rel(api_server, controller_manager, "Contrôle état")
-    Rel(kubelet, api_server, "Synchronisation")
-    Rel(kube_proxy, api_server, "Services/Endpoints")
-    Rel(kubelet, container_runtime, "Gestion conteneurs")
+    api_server -->|"Stockage état"| etcd
+    api_server -->|"Attribution Pods"| scheduler
+    api_server -->|"Contrôle état"| controller_manager
+    kubelet -->|"Synchronisation"| api_server
+    kube_proxy -->|"Services/Endpoints"| api_server
+    kubelet -->|"Gestion conteneurs"| container_runtime
 ```
 
 ### 2.2 Composants du Control Plane
@@ -1137,8 +1135,8 @@ graph TB
             B[Conteneur Sidecar<br/>Logs Collector<br/>Port 9090]
         end
         subgraph "Volumes partagés"
-            C[Volume Config<br/>/app/config]
-            D[Volume Logs<br/>/var/logs]
+            C[Volume Config<br/>app-config]
+            D[Volume Logs<br/>var-logs]
         end
     end
 
@@ -1584,97 +1582,1429 @@ Créez et gérez des Pods Kubernetes pour maîtriser les concepts fondamentaux.
 
 ## 5. Services et networking
 
-### 5.1 Concept de Service
+### 5.1 Introduction au networking Kubernetes
 
-**Problématique** : Les Pods sont éphémères avec des IPs dynamiques. Comment maintenir une connectivité stable ?
+#### 5.1.1 Les défis du networking dans Kubernetes
 
-**Solution** : Les **Services** fournissent une abstraction stable pour accéder à un ensemble de Pods.
+Kubernetes gère des milliers de conteneurs dynamiques qui doivent communiquer entre eux. Imaginez un grand centre commercial avec :
 
-**Fonctionnalités** :
+- **Boutiques (Pods)** qui ouvrent et ferment constamment
+- **Clients (Services)** qui doivent trouver les bonnes boutiques
+- **Système d'adresses (DNS)** pour localiser chaque boutique
+- **Sécurité (Network Policies)** pour contrôler les accès
 
-- **IP virtuelle stable** (ClusterIP) pour les Pods backends
-- **Load balancing automatique** entre les réplicas
-- **Service discovery** via DNS interne
-- **Health checking** des endpoints
+**Problématiques réseau fondamentales** :
 
 ```mermaid
 graph TB
-    subgraph "Service Abstraction"
-        A[Service nginx<br/>ClusterIP: 10.96.1.10<br/>Port: 80] --> B[Endpoints]
+    subgraph "Défis networking Kubernetes"
+        A[Pods éphémères<br/>IPs dynamiques] --> B[Comment maintenir<br/>la connectivité ?]
+        C[Milliers de conteneurs] --> D[Comment gérer<br/>la complexité ?]
+        E[Communication inter-services] --> F[Comment assurer<br/>la découverte ?]
+        G[Trafic externe] --> H[Comment exposer<br/>les applications ?]
+        I[Sécurité réseau] --> J[Comment isoler<br/>les communications ?]
     end
 
-    B --> C[Pod 1<br/>IP: 10.244.1.5<br/>Port: 80]
-    B --> D[Pod 2<br/>IP: 10.244.2.8<br/>Port: 80]
-    B --> E[Pod 3<br/>IP: 10.244.1.12<br/>Port: 80]
-
-    F[Client Apps] --> A
-
-    subgraph "Load Balancing"
-        G[Round Robin]
-        H[Session Affinity]
-        I[Weighted]
+    subgraph "Solutions Kubernetes"
+        K[Services<br/>IP stable + DNS]
+        L[CNI Plugins<br/>Réseau plat]
+        M[Service Discovery<br/>DNS automatique]
+        N[Ingress<br/>Reverse proxy]
+        O[Network Policies<br/>Firewall logiciel]
     end
 
-    A -.-> G
+    B --> K
+    D --> L
+    F --> M
+    H --> N
+    J --> O
 ```
 
-### 5.2 Types de Services
+#### 5.1.2 Architecture réseau Kubernetes
 
-#### ClusterIP (Défaut)
+**Modèle réseau fondamental** :
 
-- **Usage** : Communication interne entre composants
-- **Portée** : Accessible uniquement depuis l'intérieur du cluster
-- **Cas d'usage** : APIs internes, bases de données, microservices
+1. **Un réseau plat** : Tous les Pods peuvent communiquer directement
+2. **Pas de NAT entre Pods** : Communication directe avec IPs réelles
+3. **Un Pod = Une IP** : Chaque Pod a une IP unique dans le cluster
+4. **Node connectivity** : Tous les nodes peuvent se joindre
 
-#### NodePort
+```mermaid
+graph TB
+    subgraph cluster ["Cluster Kubernetes"]
+        subgraph node1 ["Node 1 - Worker"]
+            pod1["Pod A<br/>App Frontend<br/>IP - 10.244.1.10"]
+            pod2["Pod B<br/>App API<br/>IP - 10.244.1.11"]
+            kubelet1["Kubelet<br/>Agent<br/>Gestion locale réseau"]
+            proxy1["kube-proxy<br/>Network proxy<br/>iptables-IPVS rules"]
+        end
 
-- **Usage** : Exposition externe via port sur chaque node
-- **Portée** : Accessible depuis l'extérieur via `NodeIP:NodePort`
-- **Cas d'usage** : Applications de développement, services simples
+        subgraph node2 ["Node 2 - Worker"]
+            pod3["Pod C<br/>App DB<br/>IP - 10.244.2.10"]
+            pod4["Pod D<br/>App Cache<br/>IP - 10.244.2.11"]
+            kubelet2["Kubelet<br/>Agent<br/>Gestion locale réseau"]
+            proxy2["kube-proxy<br/>Network proxy<br/>iptables-IPVS rules"]
+        end
 
-#### LoadBalancer
+        subgraph master ["Control Plane"]
+            api["API Server<br/>Control<br/>Gestion Services/Endpoints"]
+            coredns["CoreDNS<br/>DNS Server<br/>Service discovery"]
+        end
 
-- **Usage** : Exposition via load balancer cloud provider
-- **Portée** : IP externe dédiée fournie par le cloud
-- **Cas d'usage** : Applications production, haute disponibilité
+        cni["CNI Plugin<br/>Network<br/>Calico-Flannel-Weave"]
+    end
 
-#### ExternalName
+    pod1 -->|"Communication directe<br/>10.244.2.10-5432"| pod3
+    pod2 -->|"API calls<br/>cache-service-6379"| pod4
+    proxy1 -->|"Sync endpoints"| api
+    proxy2 -->|"Sync endpoints"| api
+    pod1 -->|"DNS queries<br/>api-service.default.svc.cluster.local"| coredns
+    cni -->|"IP allocation"| pod1
+    cni -->|"Network setup"| pod3
+```
 
-- **Usage** : Redirection vers service externe via CNAME DNS
-- **Portée** : Proxy vers services hors cluster
-- **Cas d'usage** : Migration, services legacy
+### 5.2 Communication intra-pod et inter-pod
 
-### 5.3 Networking Kubernetes
+#### 5.2.1 Communication intra-pod (conteneurs dans le même Pod)
 
-**Modèle réseau** :
+**Principe** : Les conteneurs d'un même Pod partagent le même namespace réseau.
 
-- **Flat network** : Tous les Pods peuvent communiquer directement
-- **No NAT** : Communication sans translation d'adresses
-- **Service mesh** : Couche d'infrastructure pour communication sécurisée
+**Caractéristiques** :
 
-**Composants networking** :
+- **Même IP** pour tous les conteneurs du Pod
+- **Communication via localhost** (127.0.0.1)
+- **Ports partagés** : pas de conflit de ports possible
+- **Volumes réseau communs** : sockets Unix, named pipes
 
-- **CNI (Container Network Interface)** : Plugins réseau (Calico, Flannel, Weave)
-- **kube-proxy** : Implémentation Services via iptables/IPVS
-- **CoreDNS** : Résolution DNS interne du cluster
+```mermaid
+graph TB
+    subgraph "Pod nginx-with-sidecar"
+        subgraph "Namespace réseau partagé - 10.244.1.10"
+            A[Conteneur Nginx<br/>Port 80<br/>localhost-80]
+            B[Conteneur Log Collector<br/>Port 9090<br/>localhost-9090]
+            C[Conteneur Metrics<br/>Port 8080<br/>localhost-8080]
+        end
 
-📝 **LAB 3** - Services et networking : `labs/enonces/S3_S1_S1_lab3_services_networking.md`
-**Correction** : `labs/corrections/S3_S1_S1_lab3_services_networking_correction.md`
+        subgraph "Interface réseau"
+            D[eth0 - 10.244.1.10]
+            E[lo - 127.0.0.1]
+        end
 
-**Énoncé du LAB 3** :
+        subgraph "Volumes partagés"
+            F[var-logs - Shared volume]
+            G[tmp-sockets - Unix sockets]
+        end
+    end
 
-Créez des Services Kubernetes pour exposer vos Pods et comprendre le networking dans le cluster.
+    A -.->|Écrit logs| F
+    B -.->|Lit logs| F
+    C -.->|Métriques via socket| G
+    A -.->|Stats via socket| G
 
-- **Objectif** : Maîtriser la création et types de Services
-- **Contexte** : Exposition d'API et applications web en production
-- **Instructions** :
-  1. Créer un Deployment nginx avec 3 replicas
-  2. Exposer via Service ClusterIP pour communication interne
-  3. Créer un Service NodePort pour accès externe
-  4. Tester la connectivité et load balancing
-- **Critères de validation** : Services actifs, endpoints configurés, load balancing fonctionnel
-- **Durée estimée** : 25 minutes
-- **Fichier de travail** : `S3_S1_lab3_services_networking.yml`
+    H[Trafic externe] --> D
+    D --> A
+
+    I[Autres Pods] --> D
+
+    note1[Communication interne via localhost]
+    note2[Communication externe via IP Pod]
+    A -.-> note1
+    D -.-> note2
+```
+
+**Exemple concret d'application** :
+
+```yaml
+# Pod avec application + sidecar de monitoring
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-monitoring
+spec:
+  containers:
+    # Application principale
+    - name: webapp
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+          name: http
+      volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log/nginx
+        - name: shared-socket
+          mountPath: /tmp/sockets
+
+    # Sidecar collecteur de logs
+    - name: log-collector
+      image: fluent/fluent-bit:1.8
+      ports:
+        - containerPort: 24224
+          name: fluentd
+      env:
+        - name: WEBAPP_ENDPOINT
+          value: 'http://localhost:80/status' # ← Communication via localhost!
+      volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log/nginx
+          readOnly: true
+
+    # Sidecar métriques
+    - name: metrics-exporter
+      image: nginx/nginx-prometheus-exporter:0.9.0
+      ports:
+        - containerPort: 9113
+          name: metrics
+      env:
+        - name: SCRAPE_URI
+          value: 'http://localhost:80/nginx_status' # ← localhost encore!
+      volumeMounts:
+        - name: shared-socket
+          mountPath: /tmp/sockets
+
+  volumes:
+    - name: shared-logs
+      emptyDir: {}
+    - name: shared-socket
+      emptyDir: {}
+```
+
+**Tests de communication intra-pod** :
+
+```bash
+# Se connecter au Pod
+kubectl exec -it webapp-monitoring -c webapp -- bash
+
+# Tester communication entre conteneurs
+curl http://localhost:24224/   # Vers fluent-bit
+curl http://localhost:9113/metrics  # Vers metrics exporter
+
+# Vérifier les processus qui écoutent
+netstat -tlnp
+# Vous verrez tous les ports des 3 conteneurs !
+```
+
+#### 5.2.2 Communication inter-pod
+
+**Principe** : Chaque Pod a une IP unique, communication directe possible.
+
+**Modèle de communication** :
+
+```mermaid
+sequenceDiagram
+    participant P1 as Pod Frontend<br/>10.244.1.10
+    participant CNI as CNI Network
+    participant P2 as Pod API<br/>10.244.2.15
+    participant P3 as Pod DB<br/>10.244.1.25
+
+    Note over P1,P3: Communication directe inter-pod
+
+    P1->>CNI: Requête vers 10.244.2.15-8080
+    CNI->>P2: Route vers Pod API
+    P2->>CNI: Réponse données
+    CNI->>P1: Retour réponse
+
+    Note over P1,P3: Même node ou nodes différents
+
+    P1->>CNI: Requête vers 10.244.1.25-5432
+    CNI->>P3: Route vers Pod DB (même node)
+    P3->>CNI: Réponse DB
+    CNI->>P1: Retour réponse
+
+    Note over P1,P3: Pas de NAT, IPs directes !
+```
+
+**Démonstration pratique** :
+
+```bash
+# Créer des Pods de test
+kubectl run pod-client --image=busybox --command -- sleep 3600
+kubectl run pod-server --image=nginx:1.21
+
+# Obtenir les IPs
+kubectl get pods -o wide
+# NAME         READY   STATUS    RESTARTS   AGE   IP            NODE
+# pod-client   1/1     Running   0          1m    10.244.1.10   minikube
+# pod-server   1/1     Running   0          1m    10.244.1.11   minikube
+
+# Test communication directe via IP
+kubectl exec pod-client -- wget -qO- http://10.244.1.11:80
+# Cela fonctionne ! Communication directe Pod-to-Pod
+```
+
+#### 5.2.3 Rôle du CNI (Container Network Interface)
+
+**CNI Plugin** : Composant qui configure le réseau des conteneurs.
+
+**Responsabilités** :
+
+- **Allocation d'IPs** : Attribuer une IP unique à chaque Pod
+- **Routage** : Configurer les routes entre nodes
+- **Interface réseau** : Créer les interfaces eth0 dans chaque Pod
+- **Politique réseau** : Appliquer les Network Policies
+
+**CNI Plugins populaires** :
+
+```mermaid
+graph TB
+    subgraph "CNI Plugins - Choix de l'architecture"
+        A[Calico<br/>BGP + IPIP/VXLAN<br/>Network Policies]
+        B[Flannel<br/>VXLAN Overlay<br/>Simple, performant]
+        C[Weave<br/>Mesh Network<br/>Encryption native]
+        D[Cilium<br/>eBPF based<br/>Observabilité avancée]
+        E[AWS VPC CNI<br/>Native AWS<br/>IPs VPC directes]
+    end
+
+    subgraph "Critères de choix"
+        F[Performance<br/>Latence réseau]
+        G[Sécurité<br/>Network Policies]
+        H[Simplicité<br/>Configuration]
+        I[Observabilité<br/>Debugging]
+        J[Cloud Integration<br/>Load balancers]
+    end
+
+    A --> G
+    A --> I
+    B --> F
+    B --> H
+    C --> G
+    D --> I
+    D --> G
+    E --> J
+```
+
+**Installation et configuration CNI** :
+
+```bash
+# Voir le CNI plugin actuel (Minikube = kindnet par défaut)
+kubectl get pods -n kube-system | grep -E "(calico|flannel|weave|cilium)"
+
+# Voir la configuration CNI
+ls /etc/cni/net.d/
+cat /etc/cni/net.d/*.conflist
+
+# Voir les routes configurées par CNI
+kubectl exec -it <pod-name> -- ip route
+kubectl exec -it <pod-name> -- ip addr show eth0
+```
+
+### 5.3 Services : L'abstraction réseau stable
+
+#### 5.3.1 Pourquoi les Services sont indispensables
+
+**Problématique sans Services** :
+
+```mermaid
+graph TB
+    subgraph "SANS Services - Chaos réseau"
+        A[Frontend Pod] --> B[API Pod 1<br/>IP - 10.244.1.10]
+        A --> C[API Pod 2<br/>IP - 10.244.1.11]
+        A --> D[API Pod 3<br/>IP - 10.244.1.12]
+
+        E[Pod 2 crash] --> F[IP 10.244.1.11<br/>plus disponible]
+        G[Nouveau Pod 4] --> H[Nouvelle IP - 10.244.1.15]
+
+        I[Frontend doit<br/>connaître toutes les IPs] --> J[Gestion manuelle<br/>complexe]
+        K[Pas de load balancing] --> L[Répartition manuelle<br/>du trafic]
+    end
+
+    subgraph "AVEC Services - Stabilité"
+        M[Frontend Pod] --> N[Service API<br/>ClusterIP - 10.96.1.20]
+        N --> O[Endpoints automatiques]
+        O --> P[Pod 1, Pod 3, Pod 4]
+
+        Q[Load balancing<br/>automatique] --> R[Round-robin<br/>par défaut]
+        S[Service discovery<br/>DNS] --> T[api-service.default.svc.cluster.local]
+    end
+```
+
+**Avantages des Services** :
+
+- **IP stable** : L'IP du Service ne change jamais
+- **Load balancing automatique** : Distribution équitable du trafic
+- **Service discovery** : Résolution DNS automatique
+- **Health checking** : Exclusion automatique des Pods non sains
+- **Abstraction** : Le frontend n'a pas besoin de connaître les IPs des Pods
+
+#### 5.3.2 Fonctionnement interne des Services
+
+**Architecture Service + Endpoints** :
+
+```mermaid
+graph TB
+    subgraph "Objet Service"
+        A[Service - api-service<br/>ClusterIP - 10.96.1.20<br/>Port - 80]
+        B[Selector<br/>app - api<br/>version - v1]
+    end
+
+    subgraph "Objet Endpoints automatique"
+        C[Endpoints - api-service<br/>Mis à jour automatiquement]
+        D[Subset 1<br/>10.244.1.10-8080<br/>10.244.1.15-8080]
+        E[Subset 2<br/>10.244.2.12-8080<br/>Node différent]
+    end
+
+    subgraph "Pods correspondants"
+        F[Pod API 1<br/>10.244.1.10-8080<br/>Labels: app=api, version=v1]
+        G[Pod API 2<br/>10.244.1.15-8080<br/>Labels: app=api, version=v1]
+        H[Pod API 3<br/>10.244.2.12-8080<br/>Labels: app=api, version=v1]
+    end
+
+    subgraph "kube-proxy (sur chaque node)"
+        I[iptables rules<br/>10.96.1.20:80 → Pods]
+        J[Load balancing<br/>Round-robin]
+    end
+
+    A --> B
+    B -.->|Surveille labels| F
+    B -.->|Surveille labels| G
+    B -.->|Surveille labels| H
+
+    C --> D
+    C --> E
+    D --> F
+    D --> G
+    E --> H
+
+    A --> I
+    I --> J
+    J --> F
+    J --> G
+    J --> H
+```
+
+**Mise à jour automatique des Endpoints** :
+
+```mermaid
+sequenceDiagram
+    participant K as kubectl
+    participant API as API Server
+    participant EP as Endpoints Controller
+    participant KP as kube-proxy
+    participant P as Pods
+
+    Note over K,P: Cycle de vie automatique des Endpoints
+
+    K->>API: kubectl scale deployment api --replicas=5
+    API->>P: Création de nouveaux Pods
+    P->>API: Pods Ready avec labels
+    API->>EP: Event: Pods ajoutés
+    EP->>API: Mise à jour Endpoints
+    API->>KP: Sync nouvel état Endpoints
+    KP->>KP: Reconfigure iptables rules
+
+    Note over EP,KP: Process continu automatique
+
+    P->>API: Pod crash (ReadinessProbe fail)
+    API->>EP: Event: Pod unhealthy
+    EP->>API: Retire Pod des Endpoints
+    API->>KP: Sync Endpoints mis à jour
+    KP->>KP: Supprime routes vers Pod défaillant
+```
+
+#### 5.3.3 Types de Services détaillés
+
+**1. ClusterIP - Communication interne**
+
+```yaml
+# Service ClusterIP - Communication interne uniquement
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-internal-service
+  labels:
+    app: api
+    tier: backend
+spec:
+  type: ClusterIP # Défaut - peut être omis
+  selector:
+    app: api
+    version: v1
+  ports:
+    - name: http-api
+      port: 80 # Port du Service
+      targetPort: 8080 # Port du conteneur
+      protocol: TCP
+    - name: grpc-api
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  sessionAffinity: None # None (défaut) ou ClientIP
+```
+
+**Caractéristiques ClusterIP** :
+
+- **IP allouée** : Plage CIDR interne (ex: 10.96.0.0/12)
+- **Accessible depuis** : Pods et nodes du cluster uniquement
+- **DNS automatique** : `api-internal-service.default.svc.cluster.local`
+- **Use cases** : APIs internes, bases de données, caches
+
+**2. NodePort - Exposition externe simple**
+
+```yaml
+# Service NodePort - Exposition sur tous les nodes
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: webapp
+    tier: frontend
+  ports:
+    - name: http
+      port: 80 # Port du Service (ClusterIP)
+      targetPort: 8080 # Port du conteneur
+      nodePort: 30080 # Port exposé sur chaque node (30000-32767)
+      protocol: TCP
+```
+
+**Mécanisme NodePort** :
+
+```mermaid
+graph LR
+    subgraph "Utilisateur externe"
+        A[Client Web<br/>Browser]
+    end
+
+    subgraph "Cluster Kubernetes"
+        subgraph "Node 1 - IP - 192.168.1.10"
+            B[kube-proxy<br/>Port 30080]
+            C[Pod webapp-1<br/>10.244.1.10-8080]
+        end
+
+        subgraph "Node 2 - IP - 192.168.1.11"
+            D[kube-proxy<br/>Port 30080]
+            E[Pod webapp-2<br/>10.244.2.15-8080]
+        end
+
+        subgraph "Node 3 - IP - 192.168.1.12"
+            F[kube-proxy<br/>Port 30080]
+            G[Pod webapp-3<br/>10.244.1.20-8080]
+        end
+
+        H[Service ClusterIP<br/>10.96.1.30:80]
+    end
+
+    A -->|192.168.1.10:30080| B
+    A -->|192.168.1.11:30080| D
+    A -->|192.168.1.12:30080| F
+
+    B --> H
+    D --> H
+    F --> H
+
+    H --> C
+    H --> E
+    H --> G
+```
+
+**3. LoadBalancer - Exposition cloud native**
+
+```yaml
+# Service LoadBalancer - Exposition via cloud provider
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-loadbalancer
+  annotations:
+    # Annotations spécifiques au cloud provider
+    service.beta.kubernetes.io/aws-load-balancer-type: 'nlb'
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+spec:
+  type: LoadBalancer
+  selector:
+    app: webapp
+    tier: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: 8443
+      protocol: TCP
+  loadBalancerSourceRanges: # Restriction IP sources
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+```
+
+**Mécanisme LoadBalancer** :
+
+```mermaid
+graph TB
+    subgraph "Internet"
+        A[Utilisateurs<br/>Trafic HTTPS]
+    end
+
+    subgraph "Cloud Provider (AWS/Azure/GCP)"
+        B[Cloud LoadBalancer<br/>IP Public: 203.0.113.10<br/>Gestion SSL/TLS]
+    end
+
+    subgraph "Cluster Kubernetes"
+        C[Service LoadBalancer<br/>ClusterIP - 10.96.1.40]
+
+        subgraph "Worker Nodes"
+            D[NodePort - 30443<br/>Node 1]
+            E[NodePort: 30443<br/>Node 2]
+            F[NodePort: 30443<br/>Node 3]
+        end
+
+        subgraph "Pods"
+            G[webapp-pod-1<br/>10.244.1.5-8443]
+            H[webapp-pod-2<br/>10.244.2.8-8443]
+            I[webapp-pod-3<br/>10.244.1.12-8443]
+        end
+    end
+
+    A --> B
+    B --> D
+    B --> E
+    B --> F
+    D --> C
+    E --> C
+    F --> C
+    C --> G
+    C --> H
+    C --> I
+```
+
+**4. ExternalName - Redirection DNS**
+
+```yaml
+# Service ExternalName - Proxy vers service externe
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-api-service
+spec:
+  type: ExternalName
+  externalName: api.external-company.com
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+```
+
+**Use case ExternalName** :
+
+```mermaid
+sequenceDiagram
+    participant P as Pod Application
+    participant DNS as CoreDNS
+    participant EXT as Service Externe<br/>api.external-company.com
+
+    Note over P,EXT: Migration progressive vers service externe
+
+    P->>DNS: Résolution DNS: external-api-service.default.svc.cluster.local
+    DNS->>DNS: CNAME → api.external-company.com
+    DNS->>P: Réponse: 203.0.113.50
+    P->>EXT: Requête HTTP: api.external-company.com:443
+    EXT->>P: Réponse API
+
+    Note over P,EXT: Code application inchangé !<br/>Service discovery transparent
+```
+
+### 5.4 Service Discovery et DNS
+
+#### 5.4.1 CoreDNS : Le serveur DNS du cluster
+
+**Architecture DNS Kubernetes** :
+
+```mermaid
+graph TB
+    subgraph cluster["Cluster Kubernetes"]
+        subgraph kube_system["Namespace kube-system"]
+            coredns["CoreDNS<br/>DNS Server<br/>Résolution service discovery<br/>Configuration automatique<br/>Cache DNS"]
+            coredns_configmap["CoreDNS ConfigMap<br/>Configuration<br/>Corefile<br/>Zones DNS<br/>Plugins"]
+        end
+
+        subgraph default_ns["Namespace default"]
+            app_pod["Application Pod<br/>Client<br/>DNS queries<br/>Service calls"]
+            api_service["API Service<br/>ClusterIP<br/>api-service.default.svc.cluster.local"]
+            db_service["DB Service<br/>ClusterIP<br/>database.default.svc.cluster.local"]
+        end
+
+        subgraph production_ns["Namespace production"]
+            prod_api["Prod API Service<br/>ClusterIP<br/>api-service.production.svc.cluster.local"]
+            prod_db["Prod DB Service<br/>ClusterIP<br/>database.production.svc.cluster.local"]
+        end
+    end
+
+    app_pod -->|"DNS Query: api-service.default.svc.cluster.local"| coredns
+    coredns -->|"Load config"| coredns_configmap
+    coredns -->|"Resolve to ClusterIP"| api_service
+    app_pod -->|"Cross-namespace: api-service.production.svc.cluster.local"| prod_api
+```
+
+#### 5.4.2 Formats DNS dans Kubernetes
+
+**Hiérarchie DNS complète** :
+
+```
+[service-name].[namespace].[svc].[cluster-domain]
+     ↓             ↓        ↓         ↓
+  api-service  . default . svc . cluster.local
+```
+
+**Résolutions possibles** :
+
+```mermaid
+graph TB
+    subgraph "Pod dans namespace 'default'"
+        A[Application Pod]
+    end
+
+    subgraph "Résolutions DNS possibles"
+        B[api-service<br/>Court - même namespace]
+        C[api-service.default<br/>Namespace explicite]
+        D[api-service.default.svc<br/>Type de ressource]
+        E[api-service.default.svc.cluster.local<br/>FQDN complet]
+    end
+
+    subgraph "Résolutions cross-namespace"
+        F[api-service.production<br/>Autre namespace]
+        G[database.kube-system<br/>Services système]
+    end
+
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    A --> G
+
+    B -.->|Résout vers| H[10.96.1.20]
+    C -.->|Résout vers| H
+    D -.->|Résout vers| H
+    E -.->|Résout vers| H
+```
+
+#### 5.4.3 Variables d'environnement automatiques
+
+**Génération automatique** : Kubernetes injecte des variables pour chaque Service.
+
+```bash
+# Pour un Service nommé "api-service" sur port 80
+API_SERVICE_SERVICE_HOST=10.96.1.20
+API_SERVICE_SERVICE_PORT=80
+API_SERVICE_SERVICE_PORT_HTTP=80
+API_SERVICE_PORT=tcp://10.96.1.20:80
+API_SERVICE_PORT_80_TCP=tcp://10.96.1.20:80
+API_SERVICE_PORT_80_TCP_ADDR=10.96.1.20
+API_SERVICE_PORT_80_TCP_PORT=80
+API_SERVICE_PORT_80_TCP_PROTO=tcp
+```
+
+**Utilisation dans le code** :
+
+```yaml
+# Deployment utilisant les variables auto-générées
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: webapp
+          image: my-frontend:v1.0
+          env:
+            # Option 1: Variables Kubernetes auto-générées
+            - name: API_ENDPOINT
+              value: 'http://$(API_SERVICE_SERVICE_HOST):$(API_SERVICE_SERVICE_PORT)'
+
+            # Option 2: DNS direct (recommandé)
+            - name: API_ENDPOINT_DNS
+              value: 'http://api-service:80'
+
+            # Option 3: DNS avec namespace explicite
+            - name: API_ENDPOINT_FULL
+              value: 'http://api-service.production.svc.cluster.local:80'
+```
+
+#### 5.4.4 Tests et debugging DNS
+
+**Outils de diagnostic DNS** :
+
+```bash
+# Pod de test avec outils réseau
+kubectl run dns-test --image=busybox:1.36 --rm -it --restart=Never -- sh
+
+# Dans le pod de test :
+# 1. Test résolution DNS basique
+nslookup api-service
+nslookup api-service.default.svc.cluster.local
+
+# 2. Test résolution avec dig (plus détaillé)
+dig api-service.default.svc.cluster.local
+
+# 3. Vérifier la configuration DNS du pod
+cat /etc/resolv.conf
+# nameserver 10.96.0.10  <- IP du service CoreDNS
+# search default.svc.cluster.local svc.cluster.local cluster.local
+# options ndots:5
+
+# 4. Test connectivité HTTP
+wget -qO- http://api-service/health
+curl -v http://api-service:80/status
+```
+
+**Debugging avancé CoreDNS** :
+
+```bash
+# Voir les logs CoreDNS
+kubectl logs -n kube-system -l k8s-app=kube-dns
+
+# Configuration CoreDNS
+kubectl get configmap coredns -n kube-system -o yaml
+
+# Tester depuis un pod spécifique
+kubectl exec -it <pod-name> -- nslookup api-service
+kubectl exec -it <pod-name> -- cat /etc/resolv.conf
+```
+
+### 5.5 kube-proxy et implémentation des Services
+
+#### 5.5.1 Rôle de kube-proxy
+
+**kube-proxy** : Agent réseau qui s'exécute sur chaque node pour implémenter les Services.
+
+**Responsabilités** :
+
+- **Maintien des règles de redirection** : iptables/IPVS rules
+- **Load balancing** : Distribution du trafic vers les Pods
+- **Health checking** : Exclusion des Pods non sains
+- **Mise à jour dynamique** : Synchronisation avec l'API Server
+
+```mermaid
+graph TB
+    subgraph "Node Worker"
+        subgraph "kube-proxy process"
+            A[Sync avec API Server<br/>Services & Endpoints]
+            B[Génération règles<br/>iptables-IPVS]
+            C[Mise à jour continue<br/>Watch API changes]
+        end
+
+        subgraph "Iptables chains"
+            D[KUBE-SERVICES<br/>Point d'entrée]
+            E[KUBE-SVC-XXX<br/>Règles par Service]
+            F[KUBE-SEP-XXX<br/>Règles par Endpoint]
+        end
+
+        subgraph "Pods locaux"
+            G[Pod 1<br/>10.244.1.5]
+            H[Pod 2<br/>10.244.1.8]
+        end
+
+        subgraph "Network interface"
+            I[eth0<br/>Interface node]
+            J[kube-ipvs0<br/>Virtual interface]
+        end
+    end
+
+    A --> B
+    B --> D
+    D --> E
+    E --> F
+    F --> G
+    F --> H
+
+    I --> D
+    J --> E
+
+    K[Trafic entrant] --> I
+    L[API Server] --> A
+```
+
+#### 5.5.2 Modes de fonctionnement kube-proxy
+
+**1. Mode iptables (défaut)** :
+
+```bash
+# Voir les règles iptables créées par kube-proxy
+sudo iptables -t nat -L KUBE-SERVICES
+sudo iptables -t nat -L KUBE-SVC-XXXX
+
+# Exemple de règle pour un Service ClusterIP
+-A KUBE-SERVICES -d 10.96.1.20/32 -p tcp -m tcp --dport 80 \
+   -j KUBE-SVC-API-SERVICE
+
+-A KUBE-SVC-API-SERVICE -m statistic --mode random --probability 0.33333 \
+   -j KUBE-SEP-POD1
+-A KUBE-SVC-API-SERVICE -m statistic --mode random --probability 0.50000 \
+   -j KUBE-SEP-POD2
+-A KUBE-SVC-API-SERVICE -j KUBE-SEP-POD3
+```
+
+**2. Mode IPVS (haute performance)** :
+
+```bash
+# Configuration kube-proxy en mode IPVS
+kubectl edit configmap kube-proxy -n kube-system
+
+# Voir les règles IPVS
+ipvsadm -L -n
+# TCP  10.96.1.20:80 rr
+#   -> 10.244.1.5:8080      Masq    1      0          0
+#   -> 10.244.1.8:8080      Masq    1      0          0
+#   -> 10.244.2.12:8080     Masq    1      0          0
+```
+
+**Comparaison iptables vs IPVS** :
+
+| Aspect               | **iptables**     | **IPVS**                   |
+| -------------------- | ---------------- | -------------------------- |
+| **Performance**      | O(n) - linéaire  | O(1) - constante           |
+| **Scalabilité**      | <1000 services   | >10000 services            |
+| **Load balancing**   | Random seulement | Multiples algorithmes      |
+| **Troubleshooting**  | Règles complexes | Vue claire avec ipvsadm    |
+| **Compatibilité**    | Universelle      | Kernel Linux récent requis |
+| **Session affinity** | Limitée          | Support avancé             |
+
+#### 5.5.3 Session Affinity (persistance de session)
+
+**Configuration** :
+
+```yaml
+# Service avec session affinity
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-sticky
+spec:
+  selector:
+    app: webapp
+  ports:
+    - port: 80
+      targetPort: 8080
+  sessionAffinity: ClientIP # None (défaut) ou ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600 # 1 heure de persistance
+```
+
+**Cas d'usage session affinity** :
+
+- **Applications avec état en mémoire** : Sessions utilisateur, caches locaux
+- **WebSockets** : Connexions persistantes nécessaires
+- **Upload de fichiers** : Progression partagée entre requêtes
+
+### 5.6 Network Policies et sécurité réseau
+
+#### 5.6.1 Introduction aux Network Policies
+
+**Principe** : Par défaut, tous les Pods peuvent communiquer avec tous les autres. Les **Network Policies** permettent de restreindre ce trafic.
+
+**Analogie du bureau** :
+
+- **Sans Network Policies** : Open space total, tout le monde peut parler à tout le monde
+- **Avec Network Policies** : Bureaux séparés avec portes contrôlées, communication autorisée selon les règles
+
+```mermaid
+graph TB
+    subgraph "Sans Network Policies - Trafic libre"
+        A[Pod Frontend] --> B[Pod API]
+        A --> C[Pod Database]
+        A --> D[Pod Cache]
+        B --> C
+        B --> D
+        E[Pod Externe] --> A
+        E --> B
+        E --> C
+        F[Internet] --> A
+    end
+
+    subgraph "Avec Network Policies - Trafic contrôlé"
+        G[Pod Frontend<br/>Ingress: LoadBalancer<br/>Egress: API only] --> H[Pod API<br/>Ingress: Frontend only<br/>Egress: DB, Cache]
+        H --> I[Pod Database<br/>Ingress: API only<br/>Egress: None]
+        H --> J[Pod Cache<br/>Ingress: API only<br/>Egress: None]
+        K[Internet] --> G
+        L[Pod Externe] -.->|BLOQUÉ| H
+        L -.->|BLOQUÉ| I
+    end
+```
+
+#### 5.6.2 Types de Network Policies
+
+**1. Ingress Policies (trafic entrant)** :
+
+```yaml
+# Policy restrictive : seul le frontend peut accéder à l'API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-ingress-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+      tier: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # Seulement les pods frontend du même namespace
+        - podSelector:
+            matchLabels:
+              app: frontend
+              tier: frontend
+        # ET seulement depuis le namespace production
+        - namespaceSelector:
+            matchLabels:
+              name: production
+      ports:
+        - protocol: TCP
+          port: 8080
+    - from:
+        # Exception : monitoring depuis kube-system
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9090 # Port métriques
+```
+
+**2. Egress Policies (trafic sortant)** :
+
+```yaml
+# Policy egress : API peut seulement accéder à la DB et services externes autorisés
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-egress-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+      tier: backend
+  policyTypes:
+    - Egress
+  egress:
+    # Accès à la base de données
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgresql
+              tier: database
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Accès au cache Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+              tier: cache
+      ports:
+        - protocol: TCP
+          port: 6379
+
+    # Accès DNS (requis pour service discovery)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+        - podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Accès services externes autorisés
+    - to: [] # Toutes les IPs externes
+      ports:
+        - protocol: TCP
+          port: 443 # HTTPS uniquement
+```
+
+**3. Policy complète Ingress + Egress** :
+
+```yaml
+# Database : très restrictive
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-isolation-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: postgresql
+      tier: database
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Ingress : seulement API et backup service
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Backup service depuis namespace ops
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ops
+        - podSelector:
+            matchLabels:
+              app: pg-backup
+      ports:
+        - protocol: TCP
+          port: 5432
+
+  # Egress : très limité
+  egress:
+    # DNS uniquement
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Pas d'accès externe !
+```
+
+#### 5.6.3 Patterns de sécurité réseau
+
+**1. Defense in Depth (sécurité en couches)** :
+
+```mermaid
+graph TB
+    subgraph "Layers de sécurité réseau"
+        A[Internet/External Traffic]
+        B[Ingress Controller<br/>WAF + Rate limiting]
+        C[LoadBalancer Service<br/>IP whitelisting]
+        D[Network Policy Layer<br/>Pod-to-pod restrictions]
+        E[Service Mesh<br/>mTLS + Authorization]
+        F[Pod Security<br/>SecurityContext + AppArmor]
+    end
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+
+    subgraph "Controls par layer"
+        G[DDoS protection<br/>Geo-blocking]
+        H[Application firewall<br/>Input validation]
+        I[Source IP filtering<br/>Port restrictions]
+        J[Namespace isolation<br/>Label-based rules]
+        K[Identity-based auth<br/>Traffic encryption]
+        L[Container sandbox<br/>Syscall filtering]
+    end
+
+    B -.-> H
+    C -.-> I
+    D -.-> J
+    E -.-> K
+    F -.-> L
+```
+
+**2. Zero Trust Network** :
+
+```yaml
+# Deny-all par défaut, allow explicite
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {} # Tous les pods du namespace
+  policyTypes:
+    - Ingress
+    - Egress
+  # Pas de règles = DENY ALL
+
+---
+# Allow explicite pour chaque communication nécessaire
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-to-api-only
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
+```
+
+### 5.7 Debugging réseau et outils
+
+#### 5.7.1 Outils de diagnostic réseau
+
+**Pod de debug réseau complet** :
+
+```yaml
+# Pod avec tous les outils réseau nécessaires
+apiVersion: v1
+kind: Pod
+metadata:
+  name: network-debug-toolkit
+spec:
+  containers:
+    - name: netshoot
+      image: nicolaka/netshoot:latest
+      command: ['sleep', '3600']
+      securityContext:
+        capabilities:
+          add: ['NET_ADMIN', 'NET_RAW']
+  hostNetwork: false # Utilise le réseau du cluster
+  restartPolicy: Never
+```
+
+**Commands de base** :
+
+```bash
+# Déployer le pod de debug
+kubectl apply -f network-debug-pod.yaml
+kubectl exec -it network-debug-toolkit -- bash
+
+# Dans le pod debug :
+
+# 1. Connectivité basique
+ping 8.8.8.8
+ping google.com
+
+# 2. Test services Kubernetes
+nslookup api-service.default.svc.cluster.local
+curl -v http://api-service:80/health
+
+# 3. Analyse interfaces réseau
+ip addr show
+ip route show
+iptables -t nat -L KUBE-SERVICES
+
+# 4. Scan ports et services
+nmap -sV api-service.default.svc.cluster.local
+nc -zv api-service.default.svc.cluster.local 80
+
+# 5. Capture trafic (si NET_ADMIN capability)
+tcpdump -i eth0 -n host 10.96.1.20
+
+# 6. Test DNS détaillé
+dig +trace api-service.default.svc.cluster.local
+host -v api-service.default.svc.cluster.local
+```
+
+#### 5.7.2 Debugging des Services
+
+**Problèmes courants et diagnostics** :
+
+```bash
+# 1. Service créé mais pas d'endpoints
+kubectl get service api-service
+kubectl get endpoints api-service
+
+# Si pas d'endpoints :
+kubectl get pods -l app=api --show-labels
+kubectl describe service api-service
+
+# 2. Endpoints présents mais connectivité échoue
+kubectl port-forward service/api-service 8080:80
+curl http://localhost:8080/health
+
+# 3. DNS ne résout pas
+kubectl exec debug-pod -- nslookup api-service
+kubectl logs -n kube-system -l k8s-app=kube-dns
+
+# 4. Policy réseau bloque
+kubectl describe networkpolicy
+kubectl exec debug-pod -- nc -zv target-pod-ip 8080
+```
+
+**Debugging kube-proxy** :
+
+```bash
+# Logs kube-proxy
+kubectl logs -n kube-system -l k8s-app=kube-proxy
+
+# Configuration kube-proxy
+kubectl get configmap kube-proxy -n kube-system -o yaml
+
+# Rules iptables sur un node
+sudo iptables -t nat -L KUBE-SERVICES | grep api-service
+```
+
+#### 5.7.3 Monitoring réseau
+
+**Métriques importantes** :
+
+```bash
+# Métriques CoreDNS
+kubectl top pods -n kube-system -l k8s-app=kube-dns
+
+# Métriques réseau des pods
+kubectl top pods --containers
+
+# Events réseau
+kubectl get events --field-selector reason=NetworkNotReady
+kubectl get events --field-selector reason=FailedCreatePodSandBox
+```
+
+### 5.8 Patterns avancés et bonnes pratiques
+
+#### 5.8.1 Service Mesh introduction
+
+**Problématiques que Service Mesh résout** :
+
+- **mTLS automatique** entre tous les services
+- **Traffic management** : retries, timeouts, circuit breakers
+- **Observabilité** : traces, métriques, logs automatiques
+- **Policies** : autorisation fine-grained
+
+```mermaid
+graph TB
+    subgraph "Sans Service Mesh"
+        A[Pod Frontend] -->|HTTP plain| B[Pod API]
+        B -->|Custom mTLS| C[Pod Database]
+        D[Logs manuels<br/>Metrics manuels]
+        E[Security ad-hoc<br/>Retry logic dans app]
+    end
+
+    subgraph "Avec Service Mesh (ex: Istio)"
+        F[Pod Frontend] --> G[Envoy Sidecar]
+        G -->|mTLS auto| H[Envoy Sidecar]
+        H --> I[Pod API]
+        I --> J[Envoy Sidecar]
+        J -->|mTLS auto| K[Envoy Sidecar]
+        K --> L[Pod Database]
+
+        M[Observabilité automatique<br/>Traces, métriques, logs]
+        N[Policies déclaratives<br/>Retries, circuit breakers]
+    end
+```
+
+#### 5.8.2 Multi-cluster networking
+
+**Scénarios multi-cluster** :
+
+- **Disaster recovery** : Clusters dans régions différentes
+- **Development/Production** : Isolation complète
+- **Compliance** : Données dans géographies spécifiques
+
+#### 5.8.3 Bonnes pratiques networking
+
+**1. Naming conventions** :
+
+```yaml
+# Convention de nommage services
+metadata:
+  name: api-users-service # [tier]-[component]-service
+  labels:
+    app: users-api # Application
+    component: api # Composant technique
+    tier: backend # Couche architecture
+    version: v1.2.0 # Version
+```
+
+**2. Port conventions** :
+
+```yaml
+ports:
+  - name: http # Protocole clair
+    port: 80 # Port standard
+    targetPort: 8080 # Port conteneur
+  - name: grpc
+    port: 9090
+    targetPort: grpc # Reference port name
+  - name: metrics
+    port: 9102
+    targetPort: prometheus # Port métriques
+```
+
+**3. Security by default** :
+
+```yaml
+# Toujours définir Network Policies
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes: ['Ingress', 'Egress']
+```
+
+**4. Health checks obligatoires** :
+
+```yaml
+# Probes pour inclusion dans Service endpoints
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+```
+
+### 5.9 Labs pratiques networking
+
+📝 **LAB 3A** - Services et communication : `labs/enonces/S3_S1_lab3a_services_communication.md`
+
+**Objectifs** :
+
+- Créer des Services de tous types (ClusterIP, NodePort, LoadBalancer)
+- Tester la communication inter-pod et service discovery
+- Configurer et valider le DNS interne
+
+📝 **LAB 3B** - Network Policies : `labs/enonces/S3_S1_lab3b_network_policies.md`
+
+**Objectifs** :
+
+- Implémenter des Network Policies restrictives
+- Tester l'isolation réseau entre namespaces
+- Debugging des communications bloquées
+
+📝 **LAB 3C** - Debugging réseau avancé : `labs/enonces/S3_S1_lab3c_network_debugging.md`
+
+**Objectifs** :
+
+- Diagnostiquer des problèmes de connectivité
+- Analyser les règles iptables de kube-proxy
+- Utiliser les outils de monitoring réseau
 
 ---
 
@@ -3149,7 +4479,174 @@ Configurez des volumes persistants pour assurer la persistance des données appl
 
 ## 9. Ingress et exposition
 
-### 9.1 Limitations des Services
+### 9.1 Comprendre le Reverse Proxy dans Kubernetes
+
+#### 9.1.1 Qu'est-ce qu'un Reverse Proxy ?
+
+**Définition** : Un reverse proxy est un serveur qui se place **devant** vos applications et redirige les requêtes clients vers les serveurs backend appropriés.
+
+**Différence avec un Forward Proxy** :
+
+```mermaid
+graph LR
+    subgraph "Forward Proxy (Proxy classique)"
+        A1[Client] --> B1[Forward Proxy] --> C1[Internet/Serveurs]
+    end
+
+    subgraph "Reverse Proxy"
+        A2[Clients Internet] --> B2[Reverse Proxy] --> C2[Serveurs Backend]
+    end
+```
+
+#### 9.1.2 Rôle du Reverse Proxy dans Kubernetes
+
+**Fonctions principales** :
+
+1. **Point d'entrée unique** : Une seule IP/domaine pour accéder à plusieurs services
+2. **Routage intelligent** : Redirection basée sur l'URL, headers, domaine
+3. **Terminaison SSL/TLS** : Gestion des certificats centralisée
+4. **Load Balancing** : Distribution des requêtes entre plusieurs Pods
+5. **Sécurité** : Filtrage, authentification, rate limiting
+
+#### 9.1.3 Exemples concrets dans Kubernetes
+
+**Scenario typique d'une application web** :
+
+```mermaid
+graph TB
+    subgraph "Utilisateurs"
+        U1[Navigateur<br/>shop.example.com]
+        U2[App Mobile<br/>api.shop.example.com]
+        U3[Admin<br/>admin.shop.example.com]
+    end
+
+    subgraph "Reverse Proxy (Ingress)"
+        RP[Ingress Controller<br/>NGINX/Traefik<br/>Point d'entrée unique<br/>Port 80/443]
+    end
+
+    subgraph "Services Kubernetes"
+        S1[Service Frontend<br/>shop.example.com → Port 3000]
+        S2[Service API<br/>api.shop.example.com → Port 8080]
+        S3[Service Admin<br/>admin.shop.example.com → Port 9000]
+    end
+
+    subgraph "Pods"
+        P1[Pod Frontend-1<br/>React App]
+        P2[Pod Frontend-2<br/>React App]
+        P3[Pod API-1<br/>Node.js]
+        P4[Pod API-2<br/>Node.js]
+        P5[Pod Admin<br/>Django]
+    end
+
+    U1 --> RP
+    U2 --> RP
+    U3 --> RP
+
+    RP -->|"shop.example.com/*"| S1
+    RP -->|"api.shop.example.com/*"| S2
+    RP -->|"admin.shop.example.com/*"| S3
+
+    S1 --> P1
+    S1 --> P2
+    S2 --> P3
+    S2 --> P4
+    S3 --> P5
+```
+
+**Configuration de routage typique** :
+
+| Requête entrante                 | Destination      | Fonction              |
+| -------------------------------- | ---------------- | --------------------- |
+| `shop.example.com/`              | Service Frontend | Interface utilisateur |
+| `shop.example.com/products`      | Service Frontend | Pages produits        |
+| `api.shop.example.com/v1/users`  | Service API      | API REST              |
+| `api.shop.example.com/v1/orders` | Service API      | API commandes         |
+| `admin.shop.example.com/`        | Service Admin    | Interface admin       |
+
+#### 9.1.4 Avantages du Reverse Proxy
+
+**1. Simplicité d'exposition** :
+
+```bash
+# Sans reverse proxy - Ports multiples
+http://cluster.local:30001  # Frontend
+http://cluster.local:30002  # API
+http://cluster.local:30003  # Admin
+
+# Avec reverse proxy - Point unique
+https://shop.example.com     # Frontend
+https://api.shop.example.com # API
+https://admin.shop.example.com # Admin
+```
+
+**2. Sécurité centralisée** :
+
+- Certificats SSL gérés à un seul endroit
+- Authentification commune
+- Protection DDoS et rate limiting
+- Headers de sécurité automatiques
+
+**3. Performances** :
+
+- Cache des réponses statiques
+- Compression automatique
+- Connection pooling
+- Health checks
+
+#### 9.1.5 Implémentations populaires dans Kubernetes
+
+**Controllers Ingress courants** :
+
+1. **NGINX Ingress Controller**
+
+   - Plus populaire
+   - Performances élevées
+   - Configuration flexible
+
+2. **Traefik**
+
+   - Auto-discovery des services
+   - Interface UI intégrée
+   - Support natif de Docker/Kubernetes
+
+3. **Istio Gateway**
+
+   - Service mesh complet
+   - Sécurité avancée
+   - Observabilité poussée
+
+4. **HAProxy**
+   - Très performant
+   - Load balancing avancé
+   - Configuration complexe
+
+**Exemple de flux de requête complet** :
+
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant DNS as DNS
+    participant LB as Load Balancer<br/>(Cloud)
+    participant IC as Ingress Controller<br/>(Reverse Proxy)
+    participant S as Service
+    participant P as Pod
+
+    U->>DNS: shop.example.com ?
+    DNS->>U: IP Load Balancer
+    U->>LB: HTTPS Request
+    LB->>IC: Forwarded Request
+
+    Note over IC: Analyse l'Host header<br/>Applique les règles de routage<br/>Termine SSL/TLS
+
+    IC->>S: HTTP Request (interne)
+    S->>P: Load balance vers Pod
+    P->>S: Response
+    S->>IC: Response
+    IC->>LB: HTTPS Response
+    LB->>U: Final Response
+```
+
+### 9.2 Limitations des Services (Suite de la section originale)
 
 **Problématiques** :
 
@@ -3224,7 +4721,305 @@ spec:
                   number: 80
 ```
 
-### 9.4 Application pratique - Ingress
+### 9.4 Cas d'usage avancés du Reverse Proxy
+
+#### 9.4.1 Routage par microservices
+
+**Architecture microservices typique** :
+
+```mermaid
+graph TB
+    subgraph "Clients"
+        C1[Web Browser]
+        C2[Mobile App]
+        C3[Admin Panel]
+    end
+
+    subgraph "Reverse Proxy Layer"
+        RP[Ingress Controller<br/>NGINX<br/>SSL Termination<br/>Load Balancing]
+    end
+
+    subgraph "Microservices"
+        MS1[User Service<br/>/api/v1/users/*]
+        MS2[Product Service<br/>/api/v1/products/*]
+        MS3[Order Service<br/>/api/v1/orders/*]
+        MS4[Frontend Service<br/>/*]
+        MS5[Admin Service<br/>/admin/*]
+    end
+
+    C1 --> RP
+    C2 --> RP
+    C3 --> RP
+
+    RP -->|"/api/v1/users"| MS1
+    RP -->|"/api/v1/products"| MS2
+    RP -->|"/api/v1/orders"| MS3
+    RP -->|"/"| MS4
+    RP -->|"/admin"| MS5
+```
+
+**Configuration Ingress pour microservices** :
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microservices-ingress
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
+    nginx.ingress.kubernetes.io/rate-limit: '100'
+spec:
+  tls:
+    - hosts:
+        - api.myshop.com
+      secretName: api-tls
+  rules:
+    - host: api.myshop.com
+      http:
+        paths:
+          # API Users - Microservice 1
+          - path: /api/v1/users(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 8080
+
+          # API Products - Microservice 2
+          - path: /api/v1/products(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 8080
+
+          # API Orders - Microservice 3
+          - path: /api/v1/orders(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 8080
+
+          # Frontend par défaut
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 3000
+```
+
+#### 9.4.2 Reverse Proxy avec authentification
+
+**Scenario** : API protégée avec authentification centralisée
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: secure-api-ingress
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    # Authentification OAuth via external service
+    nginx.ingress.kubernetes.io/auth-url: 'http://auth-service.default.svc.cluster.local/oauth/validate'
+    nginx.ingress.kubernetes.io/auth-signin: 'https://auth.mycompany.com/oauth/authorize'
+    # Headers pour le service backend
+    nginx.ingress.kubernetes.io/auth-response-headers: 'X-User-Id,X-User-Email,X-User-Roles'
+    # Rate limiting par utilisateur authentifié
+    nginx.ingress.kubernetes.io/rate-limit-rpm: '60'
+spec:
+  tls:
+    - hosts:
+        - secure-api.mycompany.com
+      secretName: secure-api-tls
+  rules:
+    - host: secure-api.mycompany.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: protected-api-service
+                port:
+                  number: 8080
+```
+
+#### 9.4.3 Reverse Proxy avec cache et performances
+
+**Configuration avec mise en cache** :
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: performance-ingress
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    # Configuration cache
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+      }
+
+      location /api/v1/products {
+        proxy_cache products_cache;
+        proxy_cache_valid 200 302 10m;
+        proxy_cache_valid 404 1m;
+        add_header X-Cache-Status $upstream_cache_status;
+      }
+
+    # Compression
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      gzip on;
+      gzip_vary on;
+      gzip_min_length 1024;
+      gzip_types text/plain application/json application/javascript text/css;
+
+    # SSL optimizations
+    nginx.ingress.kubernetes.io/ssl-protocols: 'TLSv1.2 TLSv1.3'
+    nginx.ingress.kubernetes.io/ssl-ciphers: 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256'
+spec:
+  # ... règles de routage
+```
+
+#### 9.4.4 Multi-tenant avec reverse proxy
+
+**Architecture multi-tenant** :
+
+```mermaid
+graph TB
+    subgraph "Tenants"
+        T1[Tenant A<br/>company-a.saas.com]
+        T2[Tenant B<br/>company-b.saas.com]
+        T3[Tenant C<br/>company-c.saas.com]
+    end
+
+    subgraph "Reverse Proxy"
+        RP[Ingress Controller<br/>Tenant Isolation<br/>SSL per Domain]
+    end
+
+    subgraph "Services par Tenant"
+        S1[Service Company-A<br/>Namespace: tenant-a]
+        S2[Service Company-B<br/>Namespace: tenant-b]
+        S3[Service Company-C<br/>Namespace: tenant-c]
+    end
+
+    T1 --> RP
+    T2 --> RP
+    T3 --> RP
+
+    RP -->|"company-a.saas.com"| S1
+    RP -->|"company-b.saas.com"| S2
+    RP -->|"company-c.saas.com"| S3
+```
+
+**Configuration multi-tenant** :
+
+```yaml
+# Ingress pour Tenant A
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tenant-a-ingress
+  namespace: tenant-a
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    # Isolation par headers
+    nginx.ingress.kubernetes.io/server-snippet: |
+      add_header X-Tenant-ID "company-a" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+spec:
+  tls:
+    - hosts:
+        - company-a.saas.com
+      secretName: tenant-a-tls
+  rules:
+    - host: company-a.saas.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webapp-service
+                port:
+                  number: 80
+```
+
+#### 9.4.5 Monitoring du Reverse Proxy
+
+**Métriques importantes à surveiller** :
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitored-ingress
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    # Activation des métriques Prometheus
+    nginx.ingress.kubernetes.io/enable-metrics: 'true'
+    # Logs structurés
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      access_log /var/log/nginx/access.log json_combined;
+
+      # Headers pour debugging
+      add_header X-Request-ID $request_id always;
+      add_header X-Response-Time $request_time always;
+spec:
+  # ... configuration
+```
+
+**Dashboard Grafana typique pour reverse proxy** :
+
+- **Throughput** : Requêtes/seconde par service
+- **Latency** : Temps de réponse P50, P95, P99
+- **Error rates** : 4xx, 5xx par endpoint
+- **Cache hit ratio** : Efficacité du cache
+- **SSL handshake time** : Performance SSL/TLS
+- **Backend health** : Status des services upstream
+
+#### 9.4.6 Troubleshooting du Reverse Proxy
+
+**Commandes de debug utiles** :
+
+```bash
+# Vérifier les logs de l'Ingress Controller
+kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
+
+# Voir la configuration NGINX générée
+kubectl exec -n ingress-nginx deployment/ingress-nginx-controller -- cat /etc/nginx/nginx.conf
+
+# Tester la résolution DNS interne
+kubectl exec -it test-pod -- nslookup myservice.default.svc.cluster.local
+
+# Vérifier les endpoints des services
+kubectl get endpoints
+
+# Tester depuis l'intérieur du cluster
+kubectl run test-pod --image=curlimages/curl -it --rm -- /bin/sh
+curl -v http://myservice.default.svc.cluster.local/health
+```
+
+**Problèmes courants et solutions** :
+
+| Problème           | Symptôme             | Solution                                       |
+| ------------------ | -------------------- | ---------------------------------------------- |
+| 502 Bad Gateway    | Service inaccessible | Vérifier les endpoints et la santé des Pods    |
+| 404 Not Found      | Routage incorrect    | Contrôler les règles Ingress et pathType       |
+| Certificate errors | SSL invalide         | Vérifier cert-manager et les secrets TLS       |
+| Slow response      | Latence élevée       | Analyser les backend et optimiser les timeouts |
+
+### 9.5 Application pratique - Ingress
 
 📝 **LAB 8** - Ingress et exposition : `labs/enonces/S3_S1_S1_lab8_ingress_exposition.md`
 **Correction** : `labs/corrections/S3_S1_S1_lab8_ingress_exposition_correction.md`

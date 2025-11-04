@@ -1,0 +1,16 @@
+services:
+  persistence-demo:
+    build: .
+    container_name: persistence-demo-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - technologies_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+
+volumes:
+  technologies_data:
+    driver: local

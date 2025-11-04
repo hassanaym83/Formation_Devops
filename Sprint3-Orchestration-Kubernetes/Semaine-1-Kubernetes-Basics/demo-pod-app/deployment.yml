@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-dep
+  labels:
+    app: web-app-node-demo
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      name: web-app-pod
+      labels:
+        app: web-app
+        version: v1
+    spec:
+      containers:
+        - name: web-app-c
+          image: hassanaym/web-app:2.0.0
+          ports:
+            - containerPort: 3000

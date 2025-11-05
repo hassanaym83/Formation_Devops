@@ -23,10 +23,9 @@ Architecture Kubernetes, Pods, Services, Deployments, ConfigMaps, Secrets, Volum
 6. [Deployments et ReplicaSets](#6-deployments-et-replicasets)
 7. [Configuration et secrets](#7-configuration-et-secrets)
 8. [Volumes et persistance](#8-volumes-et-persistance)
-9. [Ingress et exposition](#9-ingress-et-exposition)
-10. [Monitoring et debugging](#10-monitoring-et-debugging)
-11. [Récapitulatif et prochaines étapes](#11-récapitulatif-et-prochaines-étapes)
-12. [Ressources complémentaires](#12-ressources-complémentaires)
+9. [Monitoring et debugging](#9-monitoring-et-debugging)
+10. [Récapitulatif et prochaines étapes](#10-récapitulatif-et-prochaines-étapes)
+11. [Ressources complémentaires](#11-ressources-complémentaires)
 
 ---
 
@@ -83,11 +82,11 @@ Application = Frontend + API + Base de données + Service de paiement
 Kubernetes automatise tout cela :
 
 ```
- Déploiement automatique    → "kubectl apply" et c'est parti !
- Surveillance 24/7          → Redémarre automatiquement ce qui casse
- Scaling intelligent        → Ajoute des serveurs quand il y a du trafic
- Auto-réparation           → Détecte et corrige les problèmes
- Mises à jour sécurisées   → Remplace progressivement sans interruption
+ Déploiement automatique → "kubectl apply" et c'est parti !
+ Surveillance 24/7 → Redémarre automatiquement ce qui casse
+ Scaling intelligent → Ajoute des serveurs quand il y a du trafic
+ Auto-réparation → Détecte et corrige les problèmes
+ Mises à jour sécurisées → Remplace progressivement sans interruption
 ```
 
 ### 1.3 Comment Kubernetes simplifie votre travail
@@ -205,19 +204,19 @@ Si un cuisinier tombe malade (Pod crashe), le chef embauche immédiatement un re
 
 ```
 Étape 1: Installation de votre "laboratoire" Kubernetes
-    ↓
+ ↓
 Étape 2: Votre premier Pod (Hello World !)
-    ↓
+ ↓
 Étape 3: Créer un Deployment (plusieurs copies)
-    ↓
+ ↓
 Étape 4: Exposer avec un Service (accès externe)
-    ↓
+ ↓
 Étape 5: Configuration et secrets
-    ↓
+ ↓
 Étape 6: Stockage persistant
-    ↓
+ ↓
 Étape 7: Exposition sur Internet
-    ↓
+ ↓
 Étape 8: Surveillance et debugging
 ```
 
@@ -307,26 +306,26 @@ Un **cluster Kubernetes** est un ensemble de machines (physiques ou virtuelles) 
 
 ```mermaid
 graph TB
-    subgraph "Cluster Kubernetes"
-        subgraph "Control Plane - Chef d'orchestre"
-            A[Master Node<br/>Gestion centrale]
-        end
+ subgraph "Cluster Kubernetes"
+ subgraph "Control Plane - Chef d'orchestre"
+ A[Master Node<br/>Gestion centrale]
+ end
 
-        subgraph "Worker Nodes - Musiciens"
-            B[Worker Node 1<br/>Applications A]
-            C[Worker Node 2<br/>Applications B]
-            D[Worker Node 3<br/>Applications C]
-        end
+ subgraph "Worker Nodes - Musiciens"
+ B[Worker Node 1<br/>Applications A]
+ C[Worker Node 2<br/>Applications B]
+ D[Worker Node 3<br/>Applications C]
+ end
 
-        A --> B
-        A --> C
-        A --> D
-    end
+ A --> B
+ A --> C
+ A --> D
+ end
 
-    E[Utilisateurs/Développeurs] --> A
-    F[Applications déployées] --> B
-    F --> C
-    F --> D
+ E[Utilisateurs/Développeurs] --> A
+ F[Applications déployées] --> B
+ F --> C
+ F --> D
 ```
 
 ### 1.8.2 Anatomie d'un cluster
@@ -364,20 +363,20 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant Dev as Développeur
-    participant API as API Server
-    participant Sched as Scheduler
-    participant Node as Worker Node
-    participant App as Application
+ participant Dev as Développeur
+ participant API as API Server
+ participant Sched as Scheduler
+ participant Node as Worker Node
+ participant App as Application
 
-    Dev->>API: kubectl create deployment
-    API->>Sched: Où placer cette app ?
-    Sched->>API: Sur Worker Node 2
-    API->>Node: Démarre l'application
-    Node->>App: Lance le conteneur
-    App->>Node: Je suis prêt !
-    Node->>API: Application démarrée
-    API->>Dev: Déploiement réussi
+ Dev->>API: kubectl create deployment
+ API->>Sched: Où placer cette app ?
+ Sched->>API: Sur Worker Node 2
+ API->>Node: Démarre l'application
+ Node->>App: Lance le conteneur
+ App->>Node: Je suis prêt !
+ Node->>API: Application démarrée
+ API->>Dev: Déploiement réussi
 ```
 
 ### 1.8.4 Avantages du cluster
@@ -402,29 +401,29 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    subgraph "Évolution du cluster"
-        subgraph "Début - 1 Node"
-            A1[Control Plane + Worker<br/>Minikube]
-        end
+ subgraph "Évolution du cluster"
+ subgraph "Début - 1 Node"
+ A1[Control Plane + Worker<br/>Minikube]
+ end
 
-        subgraph "Croissance - 3 Nodes"
-            B1[Control Plane]
-            B2[Worker Node 1]
-            B3[Worker Node 2]
-        end
+ subgraph "Croissance - 3 Nodes"
+ B1[Control Plane]
+ B2[Worker Node 1]
+ B3[Worker Node 2]
+ end
 
-        subgraph "Production - 6+ Nodes"
-            C1[Control Plane 1]
-            C2[Control Plane 2]
-            C3[Worker Node 1]
-            C4[Worker Node 2]
-            C5[Worker Node 3]
-            C6[Worker Node 4]
-        end
-    end
+ subgraph "Production - 6+ Nodes"
+ C1[Control Plane 1]
+ C2[Control Plane 2]
+ C3[Worker Node 1]
+ C4[Worker Node 2]
+ C5[Worker Node 3]
+ C6[Worker Node 4]
+ end
+ end
 
-    A1 --> B1
-    B1 --> C1
+ A1 --> B1
+ B1 --> C1
 ```
 
 ### 1.8.5 Types de clusters selon l'usage
@@ -515,25 +514,25 @@ Kubernetes suit une architecture **maître-esclave** avec séparation claire ent
 
 ```mermaid
 graph TB
-    subgraph control_plane["Control Plane"]
-        api_server["API Server<br/>API REST<br/>Expose l'API Kubernetes<br/>Authentification<br/>Validation requêtes"]
-        etcd["etcd<br/>Base de données<br/>Stockage clé-valeur<br/>État du cluster<br/>Configuration"]
-        scheduler["Scheduler<br/>Planificateur<br/>Placement des Pods<br/>Optimisation ressources<br/>Contraintes placement"]
-        controller_manager["Controller Manager<br/>Contrôleur<br/>Boucles de contrôle<br/>État désiré<br/>Réconciliation"]
-    end
+ subgraph control_plane["Control Plane"]
+ api_server["API Server<br/>API REST<br/>Expose l'API Kubernetes<br/>Authentification<br/>Validation requêtes"]
+ etcd["etcd<br/>Base de données<br/>Stockage clé-valeur<br/>État du cluster<br/>Configuration"]
+ scheduler["Scheduler<br/>Planificateur<br/>Placement des Pods<br/>Optimisation ressources<br/>Contraintes placement"]
+ controller_manager["Controller Manager<br/>Contrôleur<br/>Boucles de contrôle<br/>État désiré<br/>Réconciliation"]
+ end
 
-    subgraph worker_nodes["Worker Nodes"]
-        kubelet["Kubelet<br/>Agent<br/>Gestion Pods locaux<br/>Communication API Server<br/>Monitoring santé"]
-        kube_proxy["Kube-proxy<br/>Proxy réseau<br/>Load balancing<br/>Service discovery<br/>Règles iptables"]
-        container_runtime["Container Runtime<br/>Runtime<br/>Docker-containerd<br/>Gestion cycle vie<br/>Isolation processus"]
-    end
+ subgraph worker_nodes["Worker Nodes"]
+ kubelet["Kubelet<br/>Agent<br/>Gestion Pods locaux<br/>Communication API Server<br/>Monitoring santé"]
+ kube_proxy["Kube-proxy<br/>Proxy réseau<br/>Load balancing<br/>Service discovery<br/>Règles iptables"]
+ container_runtime["Container Runtime<br/>Runtime<br/>Docker-containerd<br/>Gestion cycle vie<br/>Isolation processus"]
+ end
 
-    api_server -->|"Stockage état"| etcd
-    api_server -->|"Attribution Pods"| scheduler
-    api_server -->|"Contrôle état"| controller_manager
-    kubelet -->|"Synchronisation"| api_server
-    kube_proxy -->|"Services/Endpoints"| api_server
-    kubelet -->|"Gestion conteneurs"| container_runtime
+ api_server -->|"Stockage état"| etcd
+ api_server -->|"Attribution Pods"| scheduler
+ api_server -->|"Contrôle état"| controller_manager
+ kubelet -->|"Synchronisation"| api_server
+ kube_proxy -->|"Services/Endpoints"| api_server
+ kubelet -->|"Gestion conteneurs"| container_runtime
 ```
 
 ### 2.2 Composants du Control Plane
@@ -728,7 +727,7 @@ Si vous obtenez l'erreur `This computer doesn't have VT-X/AMD-v enabled`, utilis
 
 ```powershell
 # Solution alternative avec Docker Desktop
-minikube delete  # Nettoyer si échec précédent
+minikube delete # Nettoyer si échec précédent
 minikube start --driver=docker
 
 # Ou avec plus d'options si nécessaire
@@ -871,20 +870,20 @@ kubectl get nodes
 ```bash
 # Environnement de développement
 minikube start -p development \
-  --cpus=2 --memory=4096 \
-  --kubernetes-version=v1.28.0
+ --cpus=2 --memory=4096 \
+ --kubernetes-version=v1.28.0
 
 # Environnement de test
 minikube start -p testing \
-  --cpus=3 --memory=6144 \
-  --kubernetes-version=v1.29.0
+ --cpus=3 --memory=6144 \
+ --kubernetes-version=v1.29.0
 
 # Basculer entre environnements
 minikube profile development
-kubectl get pods  # Pods de l'env development
+kubectl get pods # Pods de l'env development
 
 minikube profile testing
-kubectl get pods  # Pods de l'env testing
+kubectl get pods # Pods de l'env testing
 ```
 
 #### Bonnes pratiques profils
@@ -954,7 +953,7 @@ minikube start -p mon-projet --cpus=2 --memory=4096
 
 # 2. Vérifier que le contexte est créé automatiquement
 kubectl config get-contexts
-# * minikube-mon-projet    minikube-mon-projet   minikube-mon-projet
+# * minikube-mon-projet minikube-mon-projet minikube-mon-projet
 
 # 3. Travailler avec kubectl (utilise le contexte actif)
 kubectl get nodes
@@ -965,10 +964,10 @@ minikube start -p autre-projet --cpus=1 --memory=2048
 
 # 5. Basculer manuellement entre contextes
 kubectl config use-context minikube-mon-projet
-kubectl get pods  # Pods du premier projet
+kubectl get pods # Pods du premier projet
 
 kubectl config use-context minikube-autre-projet
-kubectl get pods  # Pods du second projet
+kubectl get pods # Pods du second projet
 ```
 
 #### Points d'attention importants
@@ -977,12 +976,12 @@ kubectl get pods  # Pods du second projet
 
 ```bash
 # Mauvais : essayer de démarrer un "contexte"
-kubectl config use-context mon-cluster  # ← Juste pointer kubectl
+kubectl config use-context mon-cluster # ← Juste pointer kubectl
 # Si le cluster n'est pas running → erreurs !
 
 # Correct : démarrer le profil puis utiliser le contexte
-minikube start -p mon-cluster  # ← Démarrer le cluster réel
-kubectl config use-context minikube-mon-cluster  # ← Pointer kubectl
+minikube start -p mon-cluster # ← Démarrer le cluster réel
+kubectl config use-context minikube-mon-cluster # ← Pointer kubectl
 ```
 
 **Règle mnémotechnique** :
@@ -1020,9 +1019,10 @@ dism.exe /Online /Disable-Feature:Microsoft-Hyper-V-All
 ```
 
 3. **Activer la virtualisation dans le BIOS** :
-   - Redémarrer et entrer dans le BIOS (F2, F12, Del selon le fabricant)
-   - Chercher "Virtualization Technology" ou "VT-X"
-   - Activer et sauvegarder
+
+- Redémarrer et entrer dans le BIOS (F2, F12, Del selon le fabricant)
+- Chercher "Virtualization Technology" ou "VT-X"
+- Activer et sauvegarder
 
 #### Minikube ne démarre pas avec Docker
 
@@ -1099,10 +1099,12 @@ Installez et configurez votre environnement Kubernetes local pour les exercices 
 - **Objectif** : Mettre en place un cluster Kubernetes fonctionnel
 - **Contexte** : Préparation de l'environnement de développement DevOps
 - **Instructions** :
-  1. Installer kubectl et minikube via Chocolatey
-  2. Configurer le driver approprié (Docker ou VirtualBox)
-  3. Démarrer le cluster et vérifier son fonctionnement
-  4. Tester les commandes kubectl de base
+
+1.  Installer kubectl et minikube via Chocolatey
+2.  Configurer le driver approprié (Docker ou VirtualBox)
+3.  Démarrer le cluster et vérifier son fonctionnement
+4.  Tester les commandes kubectl de base
+
 - **Critères de validation** : Cluster démarré, kubectl connecté, commandes de base fonctionnelles
 - **Durée estimée** : 30 minutes
 - **Fichier de travail** : Instructions dans l'énoncé
@@ -1129,26 +1131,26 @@ Imaginez un Pod comme un studio d'appartement :
 
 ```mermaid
 graph TB
-    subgraph "Pod"
-        subgraph "Réseau partagé: 10.244.1.5"
-            A[Conteneur Principal<br/>Application Web<br/>Port 8080]
-            B[Conteneur Sidecar<br/>Logs Collector<br/>Port 9090]
-        end
-        subgraph "Volumes partagés"
-            C[Volume Config<br/>app-config]
-            D[Volume Logs<br/>var-logs]
-        end
-    end
+ subgraph "Pod"
+ subgraph "Réseau partagé: 10.244.1.5"
+ A[Conteneur Principal<br/>Application Web<br/>Port 8080]
+ B[Conteneur Sidecar<br/>Logs Collector<br/>Port 9090]
+ end
+ subgraph "Volumes partagés"
+ C[Volume Config<br/>app-config]
+ D[Volume Logs<br/>var-logs]
+ end
+ end
 
-    A -.->|Lit config| C
-    A -.->|Écrit logs| D
-    B -.->|Lit config| C
-    B -.->|Collecte logs| D
+ A -.->|Lit config| C
+ A -.->|Écrit logs| D
+ B -.->|Lit config| C
+ B -.->|Collecte logs| D
 
-    E[Node Worker] --> A
-    F[Réseau Cluster] --> E
-    G[Storage] --> C
-    G --> D
+ E[Node Worker] --> A
+ F[Réseau Cluster] --> E
+ G[Storage] --> C
+ G --> D
 ```
 
 #### Caractéristiques fondamentales d'un Pod
@@ -1187,9 +1189,9 @@ metadata:
 spec:
   containers:
     - name: webapp
-      image: nginx:1.21
-      ports:
-        - containerPort: 80
+  image: nginx:1.21
+  ports:
+    - containerPort: 80
 ```
 
 #### Comment utiliser ce YAML pour créer un Pod
@@ -1202,13 +1204,13 @@ cat > webapp-simple.yaml << EOF
 apiVersion: v1
 kind: Pod
 metadata:
-  name: webapp-simple
+ name: webapp-simple
 spec:
-  containers:
-    - name: webapp
-      image: nginx:1.21
-      ports:
-        - containerPort: 80
+ containers:
+ - name: webapp
+ image: nginx:1.21
+ ports:
+ - containerPort: 80
 EOF
 ```
 
@@ -1253,9 +1255,9 @@ metadata: # Métadonnées du Pod
 spec: # Spécification de ce qu'on veut
   containers: # Liste des conteneurs dans ce Pod
     - name: webapp # Nom du conteneur (unique dans le Pod)
-      image: nginx:1.21 # Image Docker à utiliser
-      ports: # Ports que le conteneur expose
-        - containerPort: 80 # Le conteneur écoute sur le port 80
+  image: nginx:1.21 # Image Docker à utiliser
+  ports: # Ports que le conteneur expose
+    - containerPort: 80 # Le conteneur écoute sur le port 80
 ```
 
 **Ce qui se passe quand vous appliquez ce YAML :**
@@ -1304,29 +1306,29 @@ kubectl delete -f my-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: webapp-avec-sidecar
+ name: webapp-avec-sidecar
 spec:
-  containers:
-    # Conteneur principal
-    - name: webapp
-      image: nginx:1.21
-      ports:
-        - containerPort: 80
-      volumeMounts:
-        - name: logs-volume
-          mountPath: /var/log/nginx
+ containers:
+# Conteneur principal
+ - name: webapp
+ image: nginx:1.21
+ ports:
+ - containerPort: 80
+ volumeMounts:
+ - name: logs-volume
+ mountPath: /var/log/nginx
 
-    # Conteneur sidecar pour collecter les logs
-    - name: log-collector
-      image: fluent/fluent-bit:1.8
-      volumeMounts:
-        - name: logs-volume
-          mountPath: /var/log/nginx
-          readOnly: true
+# Conteneur sidecar pour collecter les logs
+ - name: log-collector
+ image: fluent/fluent-bit:1.8
+ volumeMounts:
+ - name: logs-volume
+ mountPath: /var/log/nginx
+ readOnly: true
 
-  volumes:
-    - name: logs-volume
-      emptyDir: {}
+ volumes:
+ - name: logs-volume
+ emptyDir: {}
 ````
 
 ### 4.3 Création de Pods : Approche impérative
@@ -1379,8 +1381,8 @@ kubectl run nginx-prod --image=nginx:1.21 --labels="app=nginx,env=prod"
 ```bash
 # Avec limites de ressources
 kubectl run nginx-limited --image=nginx:1.21 \
-  --requests="cpu=100m,memory=128Mi" \
-  --limits="cpu=200m,memory=256Mi"
+ --requests="cpu=100m,memory=128Mi" \
+ --limits="cpu=200m,memory=256Mi"
 ```
 
 #### Génération de YAML depuis kubectl run
@@ -1462,15 +1464,15 @@ kubectl apply -f [manifest.yaml]
 
 ```mermaid
 graph LR
-    A[Pending] --> B[Running]
-    B --> C[Succeeded]
-    B --> D[Failed]
-    A --> D
-    D --> E[Terminating]
-    C --> E
+ A[Pending] --> B[Running]
+ B --> C[Succeeded]
+ B --> D[Failed]
+ A --> D
+ D --> E[Terminating]
+ C --> E
 
-    F[Unknown] -.-> B
-    F -.-> D
+ F[Unknown] -.-> B
+ F -.-> D
 ```
 
 **Pending** : Pod accepté mais conteneurs pas encore créés
@@ -1500,12 +1502,12 @@ Les conditions principales :
 ```yaml
 # Toujours définir requests et limits
 resources:
-  requests:
-    memory: '64Mi'
-    cpu: '250m' # 0.25 CPU
-  limits:
-    memory: '128Mi'
-    cpu: '500m' # 0.5 CPU
+ requests:
+ memory: '64Mi'
+ cpu: '250m' # 0.25 CPU
+ limits:
+ memory: '128Mi'
+ cpu: '500m' # 0.5 CPU
 ```
 
 #### 2. Health checks obligatoires
@@ -1514,16 +1516,16 @@ resources:
 # Liveness : redémarre si l'app plante
 livenessProbe:
   httpGet:
-    path: /health
-    port: 8080
+  path: /health
+  port: 8080
   initialDelaySeconds: 30
   periodSeconds: 10
 
 # Readiness : contrôle le trafic
 readinessProbe:
   httpGet:
-    path: /ready
-    port: 8080
+  path: /ready
+  port: 8080
   initialDelaySeconds: 5
   periodSeconds: 5
 ```
@@ -1533,30 +1535,30 @@ readinessProbe:
 ```yaml
 metadata:
   labels:
-    app: webapp # Application
-    version: v1.2.0 # Version
-    component: frontend # Composant
-    env: production # Environnement
-    team: backend # Équipe responsable
+  app: webapp # Application
+  version: v1.2.0 # Version
+  component: frontend # Composant
+  env: production # Environnement
+  team: backend # Équipe responsable
 ```
 
 #### 4. Sécurité
 
 ```yaml
 spec:
-  securityContext:
-    runAsNonRoot: true # Ne pas run en root
-    runAsUser: 1000 # UID spécifique
-    fsGroup: 2000 # Groupe fichiers
+ securityContext:
+ runAsNonRoot: true # Ne pas run en root
+ runAsUser: 1000 # UID spécifique
+ fsGroup: 2000 # Groupe fichiers
 
-  containers:
-    - name: webapp
-      securityContext:
-        allowPrivilegeEscalation: false
-        readOnlyRootFilesystem: true
-        capabilities:
-          drop:
-            - ALL
+ containers:
+ - name: webapp
+ securityContext:
+ allowPrivilegeEscalation: false
+ readOnlyRootFilesystem: true
+ capabilities:
+ drop:
+ - ALL
 ```
 
 📝 **LAB 2** - Création et gestion de Pods : `labs/enonces/S3_S1_S1_lab2_creation_gestion_pods.md`
@@ -1569,11 +1571,13 @@ Créez et gérez des Pods Kubernetes pour maîtriser les concepts fondamentaux.
 - **Objectif** : Maîtriser la création déclarative et impérative des Pods
 - **Contexte** : Déploiement d'applications conteneurisées avec bonnes pratiques
 - **Instructions** :
-  1. Créer des Pods avec `kubectl run` (approche impérative)
-  2. Créer des Pods avec manifests YAML (approche déclarative)
-  3. Configurer ressources, health checks et variables d'environnement
-  4. Inspecter, déboguer et gérer le cycle de vie des Pods
-  5. Tester les patterns multi-conteneurs (sidecar)
+
+1.  Créer des Pods avec `kubectl run` (approche impérative)
+2.  Créer des Pods avec manifests YAML (approche déclarative)
+3.  Configurer ressources, health checks et variables d'environnement
+4.  Inspecter, déboguer et gérer le cycle de vie des Pods
+5.  Tester les patterns multi-conteneurs (sidecar)
+
 - **Critères de validation** : Pods déployés et opérationnels, ressources configurées, health checks fonctionnels, commandes impératives maîtrisées
 - **Durée estimée** : 45 minutes
 - **Fichier de travail** : `S3_S1_lab2_creation_gestion_pods.yml`
@@ -1597,27 +1601,27 @@ Kubernetes gère des milliers de conteneurs dynamiques qui doivent communiquer e
 
 ```mermaid
 graph TB
-    subgraph "Défis networking Kubernetes"
-        A[Pods éphémères<br/>IPs dynamiques] --> B[Comment maintenir<br/>la connectivité ?]
-        C[Milliers de conteneurs] --> D[Comment gérer<br/>la complexité ?]
-        E[Communication inter-services] --> F[Comment assurer<br/>la découverte ?]
-        G[Trafic externe] --> H[Comment exposer<br/>les applications ?]
-        I[Sécurité réseau] --> J[Comment isoler<br/>les communications ?]
-    end
+ subgraph "Défis networking Kubernetes"
+ A[Pods éphémères<br/>IPs dynamiques] --> B[Comment maintenir<br/>la connectivité ?]
+ C[Milliers de conteneurs] --> D[Comment gérer<br/>la complexité ?]
+ E[Communication inter-services] --> F[Comment assurer<br/>la découverte ?]
+ G[Trafic externe] --> H[Comment exposer<br/>les applications ?]
+ I[Sécurité réseau] --> J[Comment isoler<br/>les communications ?]
+ end
 
-    subgraph "Solutions Kubernetes"
-        K[Services<br/>IP stable + DNS]
-        L[CNI Plugins<br/>Réseau plat]
-        M[Service Discovery<br/>DNS automatique]
-        N[Ingress<br/>Reverse proxy]
-        O[Network Policies<br/>Firewall logiciel]
-    end
+ subgraph "Solutions Kubernetes"
+ K[Services<br/>IP stable + DNS]
+ L[CNI Plugins<br/>Réseau plat]
+ M[Service Discovery<br/>DNS automatique]
+ N[Ingress<br/>Reverse proxy]
+ O[Network Policies<br/>Firewall logiciel]
+ end
 
-    B --> K
-    D --> L
-    F --> M
-    H --> N
-    J --> O
+ B --> K
+ D --> L
+ F --> M
+ H --> N
+ J --> O
 ```
 
 #### 5.1.2 Architecture réseau Kubernetes
@@ -1631,36 +1635,36 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph cluster ["Cluster Kubernetes"]
-        subgraph node1 ["Node 1 - Worker"]
-            pod1["Pod A<br/>App Frontend<br/>IP - 10.244.1.10"]
-            pod2["Pod B<br/>App API<br/>IP - 10.244.1.11"]
-            kubelet1["Kubelet<br/>Agent<br/>Gestion locale réseau"]
-            proxy1["kube-proxy<br/>Network proxy<br/>iptables-IPVS rules"]
-        end
+ subgraph cluster ["Cluster Kubernetes"]
+ subgraph node1 ["Node 1 - Worker"]
+ pod1["Pod A<br/>App Frontend<br/>IP - 10.244.1.10"]
+ pod2["Pod B<br/>App API<br/>IP - 10.244.1.11"]
+ kubelet1["Kubelet<br/>Agent<br/>Gestion locale réseau"]
+ proxy1["kube-proxy<br/>Network proxy<br/>iptables-IPVS rules"]
+ end
 
-        subgraph node2 ["Node 2 - Worker"]
-            pod3["Pod C<br/>App DB<br/>IP - 10.244.2.10"]
-            pod4["Pod D<br/>App Cache<br/>IP - 10.244.2.11"]
-            kubelet2["Kubelet<br/>Agent<br/>Gestion locale réseau"]
-            proxy2["kube-proxy<br/>Network proxy<br/>iptables-IPVS rules"]
-        end
+ subgraph node2 ["Node 2 - Worker"]
+ pod3["Pod C<br/>App DB<br/>IP - 10.244.2.10"]
+ pod4["Pod D<br/>App Cache<br/>IP - 10.244.2.11"]
+ kubelet2["Kubelet<br/>Agent<br/>Gestion locale réseau"]
+ proxy2["kube-proxy<br/>Network proxy<br/>iptables-IPVS rules"]
+ end
 
-        subgraph master ["Control Plane"]
-            api["API Server<br/>Control<br/>Gestion Services/Endpoints"]
-            coredns["CoreDNS<br/>DNS Server<br/>Service discovery"]
-        end
+ subgraph master ["Control Plane"]
+ api["API Server<br/>Control<br/>Gestion Services/Endpoints"]
+ coredns["CoreDNS<br/>DNS Server<br/>Service discovery"]
+ end
 
-        cni["CNI Plugin<br/>Network<br/>Calico-Flannel-Weave"]
-    end
+ cni["CNI Plugin<br/>Network<br/>Calico-Flannel-Weave"]
+ end
 
-    pod1 -->|"Communication directe<br/>10.244.2.10-5432"| pod3
-    pod2 -->|"API calls<br/>cache-service-6379"| pod4
-    proxy1 -->|"Sync endpoints"| api
-    proxy2 -->|"Sync endpoints"| api
-    pod1 -->|"DNS queries<br/>api-service.default.svc.cluster.local"| coredns
-    cni -->|"IP allocation"| pod1
-    cni -->|"Network setup"| pod3
+ pod1 -->|"Communication directe<br/>10.244.2.10-5432"| pod3
+ pod2 -->|"API calls<br/>cache-service-6379"| pod4
+ proxy1 -->|"Sync endpoints"| api
+ proxy2 -->|"Sync endpoints"| api
+ pod1 -->|"DNS queries<br/>api-service.default.svc.cluster.local"| coredns
+ cni -->|"IP allocation"| pod1
+ cni -->|"Network setup"| pod3
 ```
 
 ### 5.2 Communication intra-pod et inter-pod
@@ -1678,38 +1682,38 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Pod nginx-with-sidecar"
-        subgraph "Namespace réseau partagé - 10.244.1.10"
-            A[Conteneur Nginx<br/>Port 80<br/>localhost-80]
-            B[Conteneur Log Collector<br/>Port 9090<br/>localhost-9090]
-            C[Conteneur Metrics<br/>Port 8080<br/>localhost-8080]
-        end
+ subgraph "Pod nginx-with-sidecar"
+ subgraph "Namespace réseau partagé - 10.244.1.10"
+ A[Conteneur Nginx<br/>Port 80<br/>localhost-80]
+ B[Conteneur Log Collector<br/>Port 9090<br/>localhost-9090]
+ C[Conteneur Metrics<br/>Port 8080<br/>localhost-8080]
+ end
 
-        subgraph "Interface réseau"
-            D[eth0 - 10.244.1.10]
-            E[lo - 127.0.0.1]
-        end
+ subgraph "Interface réseau"
+ D[eth0 - 10.244.1.10]
+ E[lo - 127.0.0.1]
+ end
 
-        subgraph "Volumes partagés"
-            F[var-logs - Shared volume]
-            G[tmp-sockets - Unix sockets]
-        end
-    end
+ subgraph "Volumes partagés"
+ F[var-logs - Shared volume]
+ G[tmp-sockets - Unix sockets]
+ end
+ end
 
-    A -.->|Écrit logs| F
-    B -.->|Lit logs| F
-    C -.->|Métriques via socket| G
-    A -.->|Stats via socket| G
+ A -.->|Écrit logs| F
+ B -.->|Lit logs| F
+ C -.->|Métriques via socket| G
+ A -.->|Stats via socket| G
 
-    H[Trafic externe] --> D
-    D --> A
+ H[Trafic externe] --> D
+ D --> A
 
-    I[Autres Pods] --> D
+ I[Autres Pods] --> D
 
-    note1[Communication interne via localhost]
-    note2[Communication externe via IP Pod]
-    A -.-> note1
-    D -.-> note2
+ note1[Communication interne via localhost]
+ note2[Communication externe via IP Pod]
+ A -.-> note1
+ D -.-> note2
 ```
 
 **Exemple concret d'application** :
@@ -1719,53 +1723,53 @@ graph TB
 apiVersion: v1
 kind: Pod
 metadata:
-  name: webapp-monitoring
+ name: webapp-monitoring
 spec:
-  containers:
-    # Application principale
-    - name: webapp
-      image: nginx:1.21
-      ports:
-        - containerPort: 80
-          name: http
-      volumeMounts:
-        - name: shared-logs
-          mountPath: /var/log/nginx
-        - name: shared-socket
-          mountPath: /tmp/sockets
+ containers:
+# Application principale
+ - name: webapp
+ image: nginx:1.21
+ ports:
+ - containerPort: 80
+ name: http
+ volumeMounts:
+ - name: shared-logs
+ mountPath: /var/log/nginx
+ - name: shared-socket
+ mountPath: /tmp/sockets
 
-    # Sidecar collecteur de logs
-    - name: log-collector
-      image: fluent/fluent-bit:1.8
-      ports:
-        - containerPort: 24224
-          name: fluentd
-      env:
-        - name: WEBAPP_ENDPOINT
-          value: 'http://localhost:80/status' # ← Communication via localhost!
-      volumeMounts:
-        - name: shared-logs
-          mountPath: /var/log/nginx
-          readOnly: true
+# Sidecar collecteur de logs
+ - name: log-collector
+ image: fluent/fluent-bit:1.8
+ ports:
+ - containerPort: 24224
+ name: fluentd
+ env:
+ - name: WEBAPP_ENDPOINT
+ value: 'http://localhost:80/status' # ← Communication via localhost!
+ volumeMounts:
+ - name: shared-logs
+ mountPath: /var/log/nginx
+ readOnly: true
 
-    # Sidecar métriques
-    - name: metrics-exporter
-      image: nginx/nginx-prometheus-exporter:0.9.0
-      ports:
-        - containerPort: 9113
-          name: metrics
-      env:
-        - name: SCRAPE_URI
-          value: 'http://localhost:80/nginx_status' # ← localhost encore!
-      volumeMounts:
-        - name: shared-socket
-          mountPath: /tmp/sockets
+# Sidecar métriques
+ - name: metrics-exporter
+ image: nginx/nginx-prometheus-exporter:0.9.0
+ ports:
+ - containerPort: 9113
+ name: metrics
+ env:
+ - name: SCRAPE_URI
+ value: 'http://localhost:80/nginx_status' # ← localhost encore!
+ volumeMounts:
+ - name: shared-socket
+ mountPath: /tmp/sockets
 
-  volumes:
-    - name: shared-logs
-      emptyDir: {}
-    - name: shared-socket
-      emptyDir: {}
+ volumes:
+ - name: shared-logs
+ emptyDir: {}
+ - name: shared-socket
+ emptyDir: {}
 ```
 
 **Tests de communication intra-pod** :
@@ -1775,8 +1779,8 @@ spec:
 kubectl exec -it webapp-monitoring -c webapp -- bash
 
 # Tester communication entre conteneurs
-curl http://localhost:24224/   # Vers fluent-bit
-curl http://localhost:9113/metrics  # Vers metrics exporter
+curl http://localhost:24224/ # Vers fluent-bit
+curl http://localhost:9113/metrics # Vers metrics exporter
 
 # Vérifier les processus qui écoutent
 netstat -tlnp
@@ -1791,26 +1795,26 @@ netstat -tlnp
 
 ```mermaid
 sequenceDiagram
-    participant P1 as Pod Frontend<br/>10.244.1.10
-    participant CNI as CNI Network
-    participant P2 as Pod API<br/>10.244.2.15
-    participant P3 as Pod DB<br/>10.244.1.25
+ participant P1 as Pod Frontend<br/>10.244.1.10
+ participant CNI as CNI Network
+ participant P2 as Pod API<br/>10.244.2.15
+ participant P3 as Pod DB<br/>10.244.1.25
 
-    Note over P1,P3: Communication directe inter-pod
+ Note over P1,P3: Communication directe inter-pod
 
-    P1->>CNI: Requête vers 10.244.2.15-8080
-    CNI->>P2: Route vers Pod API
-    P2->>CNI: Réponse données
-    CNI->>P1: Retour réponse
+ P1->>CNI: Requête vers 10.244.2.15-8080
+ CNI->>P2: Route vers Pod API
+ P2->>CNI: Réponse données
+ CNI->>P1: Retour réponse
 
-    Note over P1,P3: Même node ou nodes différents
+ Note over P1,P3: Même node ou nodes différents
 
-    P1->>CNI: Requête vers 10.244.1.25-5432
-    CNI->>P3: Route vers Pod DB (même node)
-    P3->>CNI: Réponse DB
-    CNI->>P1: Retour réponse
+ P1->>CNI: Requête vers 10.244.1.25-5432
+ CNI->>P3: Route vers Pod DB (même node)
+ P3->>CNI: Réponse DB
+ CNI->>P1: Retour réponse
 
-    Note over P1,P3: Pas de NAT, IPs directes !
+ Note over P1,P3: Pas de NAT, IPs directes !
 ```
 
 **Démonstration pratique** :
@@ -1822,9 +1826,9 @@ kubectl run pod-server --image=nginx:1.21
 
 # Obtenir les IPs
 kubectl get pods -o wide
-# NAME         READY   STATUS    RESTARTS   AGE   IP            NODE
-# pod-client   1/1     Running   0          1m    10.244.1.10   minikube
-# pod-server   1/1     Running   0          1m    10.244.1.11   minikube
+# NAME READY STATUS RESTARTS AGE IP NODE
+# pod-client 1/1 Running 0 1m 10.244.1.10 minikube
+# pod-server 1/1 Running 0 1m 10.244.1.11 minikube
 
 # Test communication directe via IP
 kubectl exec pod-client -- wget -qO- http://10.244.1.11:80
@@ -1846,30 +1850,30 @@ kubectl exec pod-client -- wget -qO- http://10.244.1.11:80
 
 ```mermaid
 graph TB
-    subgraph "CNI Plugins - Choix de l'architecture"
-        A[Calico<br/>BGP + IPIP/VXLAN<br/>Network Policies]
-        B[Flannel<br/>VXLAN Overlay<br/>Simple, performant]
-        C[Weave<br/>Mesh Network<br/>Encryption native]
-        D[Cilium<br/>eBPF based<br/>Observabilité avancée]
-        E[AWS VPC CNI<br/>Native AWS<br/>IPs VPC directes]
-    end
+ subgraph "CNI Plugins - Choix de l'architecture"
+ A[Calico<br/>BGP + IPIP/VXLAN<br/>Network Policies]
+ B[Flannel<br/>VXLAN Overlay<br/>Simple, performant]
+ C[Weave<br/>Mesh Network<br/>Encryption native]
+ D[Cilium<br/>eBPF based<br/>Observabilité avancée]
+ E[AWS VPC CNI<br/>Native AWS<br/>IPs VPC directes]
+ end
 
-    subgraph "Critères de choix"
-        F[Performance<br/>Latence réseau]
-        G[Sécurité<br/>Network Policies]
-        H[Simplicité<br/>Configuration]
-        I[Observabilité<br/>Debugging]
-        J[Cloud Integration<br/>Load balancers]
-    end
+ subgraph "Critères de choix"
+ F[Performance<br/>Latence réseau]
+ G[Sécurité<br/>Network Policies]
+ H[Simplicité<br/>Configuration]
+ I[Observabilité<br/>Debugging]
+ J[Cloud Integration<br/>Load balancers]
+ end
 
-    A --> G
-    A --> I
-    B --> F
-    B --> H
-    C --> G
-    D --> I
-    D --> G
-    E --> J
+ A --> G
+ A --> I
+ B --> F
+ B --> H
+ C --> G
+ D --> I
+ D --> G
+ E --> J
 ```
 
 **Installation et configuration CNI** :
@@ -1895,26 +1899,26 @@ kubectl exec -it <pod-name> -- ip addr show eth0
 
 ```mermaid
 graph TB
-    subgraph "SANS Services - Chaos réseau"
-        A[Frontend Pod] --> B[API Pod 1<br/>IP - 10.244.1.10]
-        A --> C[API Pod 2<br/>IP - 10.244.1.11]
-        A --> D[API Pod 3<br/>IP - 10.244.1.12]
+ subgraph "SANS Services - Chaos réseau"
+ A[Frontend Pod] --> B[API Pod 1<br/>IP - 10.244.1.10]
+ A --> C[API Pod 2<br/>IP - 10.244.1.11]
+ A --> D[API Pod 3<br/>IP - 10.244.1.12]
 
-        E[Pod 2 crash] --> F[IP 10.244.1.11<br/>plus disponible]
-        G[Nouveau Pod 4] --> H[Nouvelle IP - 10.244.1.15]
+ E[Pod 2 crash] --> F[IP 10.244.1.11<br/>plus disponible]
+ G[Nouveau Pod 4] --> H[Nouvelle IP - 10.244.1.15]
 
-        I[Frontend doit<br/>connaître toutes les IPs] --> J[Gestion manuelle<br/>complexe]
-        K[Pas de load balancing] --> L[Répartition manuelle<br/>du trafic]
-    end
+ I[Frontend doit<br/>connaître toutes les IPs] --> J[Gestion manuelle<br/>complexe]
+ K[Pas de load balancing] --> L[Répartition manuelle<br/>du trafic]
+ end
 
-    subgraph "AVEC Services - Stabilité"
-        M[Frontend Pod] --> N[Service API<br/>ClusterIP - 10.96.1.20]
-        N --> O[Endpoints automatiques]
-        O --> P[Pod 1, Pod 3, Pod 4]
+ subgraph "AVEC Services - Stabilité"
+ M[Frontend Pod] --> N[Service API<br/>ClusterIP - 10.96.1.20]
+ N --> O[Endpoints automatiques]
+ O --> P[Pod 1, Pod 3, Pod 4]
 
-        Q[Load balancing<br/>automatique] --> R[Round-robin<br/>par défaut]
-        S[Service discovery<br/>DNS] --> T[api-service.default.svc.cluster.local]
-    end
+ Q[Load balancing<br/>automatique] --> R[Round-robin<br/>par défaut]
+ S[Service discovery<br/>DNS] --> T[api-service.default.svc.cluster.local]
+ end
 ```
 
 **Avantages des Services** :
@@ -1931,73 +1935,73 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Objet Service"
-        A[Service - api-service<br/>ClusterIP - 10.96.1.20<br/>Port - 80]
-        B[Selector<br/>app - api<br/>version - v1]
-    end
+ subgraph "Objet Service"
+ A[Service - api-service<br/>ClusterIP - 10.96.1.20<br/>Port - 80]
+ B[Selector<br/>app - api<br/>version - v1]
+ end
 
-    subgraph "Objet Endpoints automatique"
-        C[Endpoints - api-service<br/>Mis à jour automatiquement]
-        D[Subset 1<br/>10.244.1.10-8080<br/>10.244.1.15-8080]
-        E[Subset 2<br/>10.244.2.12-8080<br/>Node différent]
-    end
+ subgraph "Objet Endpoints automatique"
+ C[Endpoints - api-service<br/>Mis à jour automatiquement]
+ D[Subset 1<br/>10.244.1.10-8080<br/>10.244.1.15-8080]
+ E[Subset 2<br/>10.244.2.12-8080<br/>Node différent]
+ end
 
-    subgraph "Pods correspondants"
-        F[Pod API 1<br/>10.244.1.10-8080<br/>Labels: app=api, version=v1]
-        G[Pod API 2<br/>10.244.1.15-8080<br/>Labels: app=api, version=v1]
-        H[Pod API 3<br/>10.244.2.12-8080<br/>Labels: app=api, version=v1]
-    end
+ subgraph "Pods correspondants"
+ F[Pod API 1<br/>10.244.1.10-8080<br/>Labels: app=api, version=v1]
+ G[Pod API 2<br/>10.244.1.15-8080<br/>Labels: app=api, version=v1]
+ H[Pod API 3<br/>10.244.2.12-8080<br/>Labels: app=api, version=v1]
+ end
 
-    subgraph "kube-proxy (sur chaque node)"
-        I[iptables rules<br/>10.96.1.20:80 → Pods]
-        J[Load balancing<br/>Round-robin]
-    end
+ subgraph "kube-proxy (sur chaque node)"
+ I[iptables rules<br/>10.96.1.20:80 → Pods]
+ J[Load balancing<br/>Round-robin]
+ end
 
-    A --> B
-    B -.->|Surveille labels| F
-    B -.->|Surveille labels| G
-    B -.->|Surveille labels| H
+ A --> B
+ B -.->|Surveille labels| F
+ B -.->|Surveille labels| G
+ B -.->|Surveille labels| H
 
-    C --> D
-    C --> E
-    D --> F
-    D --> G
-    E --> H
+ C --> D
+ C --> E
+ D --> F
+ D --> G
+ E --> H
 
-    A --> I
-    I --> J
-    J --> F
-    J --> G
-    J --> H
+ A --> I
+ I --> J
+ J --> F
+ J --> G
+ J --> H
 ```
 
 **Mise à jour automatique des Endpoints** :
 
 ```mermaid
 sequenceDiagram
-    participant K as kubectl
-    participant API as API Server
-    participant EP as Endpoints Controller
-    participant KP as kube-proxy
-    participant P as Pods
+ participant K as kubectl
+ participant API as API Server
+ participant EP as Endpoints Controller
+ participant KP as kube-proxy
+ participant P as Pods
 
-    Note over K,P: Cycle de vie automatique des Endpoints
+ Note over K,P: Cycle de vie automatique des Endpoints
 
-    K->>API: kubectl scale deployment api --replicas=5
-    API->>P: Création de nouveaux Pods
-    P->>API: Pods Ready avec labels
-    API->>EP: Event: Pods ajoutés
-    EP->>API: Mise à jour Endpoints
-    API->>KP: Sync nouvel état Endpoints
-    KP->>KP: Reconfigure iptables rules
+ K->>API: kubectl scale deployment api --replicas=5
+ API->>P: Création de nouveaux Pods
+ P->>API: Pods Ready avec labels
+ API->>EP: Event: Pods ajoutés
+ EP->>API: Mise à jour Endpoints
+ API->>KP: Sync nouvel état Endpoints
+ KP->>KP: Reconfigure iptables rules
 
-    Note over EP,KP: Process continu automatique
+ Note over EP,KP: Process continu automatique
 
-    P->>API: Pod crash (ReadinessProbe fail)
-    API->>EP: Event: Pod unhealthy
-    EP->>API: Retire Pod des Endpoints
-    API->>KP: Sync Endpoints mis à jour
-    KP->>KP: Supprime routes vers Pod défaillant
+ P->>API: Pod crash (ReadinessProbe fail)
+ API->>EP: Event: Pod unhealthy
+ EP->>API: Retire Pod des Endpoints
+ API->>KP: Sync Endpoints mis à jour
+ KP->>KP: Supprime routes vers Pod défaillant
 ```
 
 #### 5.3.3 Types de Services détaillés
@@ -2009,25 +2013,25 @@ sequenceDiagram
 apiVersion: v1
 kind: Service
 metadata:
-  name: api-internal-service
-  labels:
-    app: api
-    tier: backend
+ name: api-internal-service
+ labels:
+ app: api
+ tier: backend
 spec:
-  type: ClusterIP # Défaut - peut être omis
-  selector:
-    app: api
-    version: v1
-  ports:
-    - name: http-api
-      port: 80 # Port du Service
-      targetPort: 8080 # Port du conteneur
-      protocol: TCP
-    - name: grpc-api
-      port: 9090
-      targetPort: 9090
-      protocol: TCP
-  sessionAffinity: None # None (défaut) ou ClientIP
+ type: ClusterIP # Défaut - peut être omis
+ selector:
+ app: api
+ version: v1
+ ports:
+ - name: http-api
+ port: 80 # Port du Service
+ targetPort: 8080 # Port du conteneur
+ protocol: TCP
+ - name: grpc-api
+ port: 9090
+ targetPort: 9090
+ protocol: TCP
+ sessionAffinity: None # None (défaut) ou ClientIP
 ```
 
 **Caractéristiques ClusterIP** :
@@ -2048,54 +2052,54 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: webapp
-    tier: frontend
+  app: webapp
+  tier: frontend
   ports:
     - name: http
-      port: 80 # Port du Service (ClusterIP)
-      targetPort: 8080 # Port du conteneur
-      nodePort: 30080 # Port exposé sur chaque node (30000-32767)
-      protocol: TCP
+  port: 80 # Port du Service (ClusterIP)
+  targetPort: 8080 # Port du conteneur
+  nodePort: 30080 # Port exposé sur chaque node (30000-32767)
+  protocol: TCP
 ```
 
 **Mécanisme NodePort** :
 
 ```mermaid
 graph LR
-    subgraph "Utilisateur externe"
-        A[Client Web<br/>Browser]
-    end
+ subgraph "Utilisateur externe"
+ A[Client Web<br/>Browser]
+ end
 
-    subgraph "Cluster Kubernetes"
-        subgraph "Node 1 - IP - 192.168.1.10"
-            B[kube-proxy<br/>Port 30080]
-            C[Pod webapp-1<br/>10.244.1.10-8080]
-        end
+ subgraph "Cluster Kubernetes"
+ subgraph "Node 1 - IP - 192.168.1.10"
+ B[kube-proxy<br/>Port 30080]
+ C[Pod webapp-1<br/>10.244.1.10-8080]
+ end
 
-        subgraph "Node 2 - IP - 192.168.1.11"
-            D[kube-proxy<br/>Port 30080]
-            E[Pod webapp-2<br/>10.244.2.15-8080]
-        end
+ subgraph "Node 2 - IP - 192.168.1.11"
+ D[kube-proxy<br/>Port 30080]
+ E[Pod webapp-2<br/>10.244.2.15-8080]
+ end
 
-        subgraph "Node 3 - IP - 192.168.1.12"
-            F[kube-proxy<br/>Port 30080]
-            G[Pod webapp-3<br/>10.244.1.20-8080]
-        end
+ subgraph "Node 3 - IP - 192.168.1.12"
+ F[kube-proxy<br/>Port 30080]
+ G[Pod webapp-3<br/>10.244.1.20-8080]
+ end
 
-        H[Service ClusterIP<br/>10.96.1.30:80]
-    end
+ H[Service ClusterIP<br/>10.96.1.30:80]
+ end
 
-    A -->|192.168.1.10:30080| B
-    A -->|192.168.1.11:30080| D
-    A -->|192.168.1.12:30080| F
+ A -->|192.168.1.10:30080| B
+ A -->|192.168.1.11:30080| D
+ A -->|192.168.1.12:30080| F
 
-    B --> H
-    D --> H
-    F --> H
+ B --> H
+ D --> H
+ F --> H
 
-    H --> C
-    H --> E
-    H --> G
+ H --> C
+ H --> E
+ H --> G
 ```
 
 **3. LoadBalancer - Exposition cloud native**
@@ -2105,68 +2109,68 @@ graph LR
 apiVersion: v1
 kind: Service
 metadata:
-  name: webapp-loadbalancer
-  annotations:
-    # Annotations spécifiques au cloud provider
-    service.beta.kubernetes.io/aws-load-balancer-type: 'nlb'
-    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+ name: webapp-loadbalancer
+ annotations:
+# Annotations spécifiques au cloud provider
+ service.beta.kubernetes.io/aws-load-balancer-type: 'nlb'
+ service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
 spec:
-  type: LoadBalancer
-  selector:
-    app: webapp
-    tier: frontend
-  ports:
-    - name: http
-      port: 80
-      targetPort: 8080
-      protocol: TCP
-    - name: https
-      port: 443
-      targetPort: 8443
-      protocol: TCP
-  loadBalancerSourceRanges: # Restriction IP sources
-    - 10.0.0.0/8
-    - 172.16.0.0/12
+ type: LoadBalancer
+ selector:
+ app: webapp
+ tier: frontend
+ ports:
+ - name: http
+ port: 80
+ targetPort: 8080
+ protocol: TCP
+ - name: https
+ port: 443
+ targetPort: 8443
+ protocol: TCP
+ loadBalancerSourceRanges: # Restriction IP sources
+ - 10.0.0.0/8
+ - 172.16.0.0/12
 ```
 
 **Mécanisme LoadBalancer** :
 
 ```mermaid
 graph TB
-    subgraph "Internet"
-        A[Utilisateurs<br/>Trafic HTTPS]
-    end
+ subgraph "Internet"
+ A[Utilisateurs<br/>Trafic HTTPS]
+ end
 
-    subgraph "Cloud Provider (AWS/Azure/GCP)"
-        B[Cloud LoadBalancer<br/>IP Public: 203.0.113.10<br/>Gestion SSL/TLS]
-    end
+ subgraph "Cloud Provider (AWS/Azure/GCP)"
+ B[Cloud LoadBalancer<br/>IP Public: 203.0.113.10<br/>Gestion SSL/TLS]
+ end
 
-    subgraph "Cluster Kubernetes"
-        C[Service LoadBalancer<br/>ClusterIP - 10.96.1.40]
+ subgraph "Cluster Kubernetes"
+ C[Service LoadBalancer<br/>ClusterIP - 10.96.1.40]
 
-        subgraph "Worker Nodes"
-            D[NodePort - 30443<br/>Node 1]
-            E[NodePort: 30443<br/>Node 2]
-            F[NodePort: 30443<br/>Node 3]
-        end
+ subgraph "Worker Nodes"
+ D[NodePort - 30443<br/>Node 1]
+ E[NodePort: 30443<br/>Node 2]
+ F[NodePort: 30443<br/>Node 3]
+ end
 
-        subgraph "Pods"
-            G[webapp-pod-1<br/>10.244.1.5-8443]
-            H[webapp-pod-2<br/>10.244.2.8-8443]
-            I[webapp-pod-3<br/>10.244.1.12-8443]
-        end
-    end
+ subgraph "Pods"
+ G[webapp-pod-1<br/>10.244.1.5-8443]
+ H[webapp-pod-2<br/>10.244.2.8-8443]
+ I[webapp-pod-3<br/>10.244.1.12-8443]
+ end
+ end
 
-    A --> B
-    B --> D
-    B --> E
-    B --> F
-    D --> C
-    E --> C
-    F --> C
-    C --> G
-    C --> H
-    C --> I
+ A --> B
+ B --> D
+ B --> E
+ B --> F
+ D --> C
+ E --> C
+ F --> C
+ C --> G
+ C --> H
+ C --> I
 ```
 
 **4. ExternalName - Redirection DNS**
@@ -2182,27 +2186,27 @@ spec:
   externalName: api.external-company.com
   ports:
     - name: https
-      port: 443
-      protocol: TCP
+  port: 443
+  protocol: TCP
 ```
 
 **Use case ExternalName** :
 
 ```mermaid
 sequenceDiagram
-    participant P as Pod Application
-    participant DNS as CoreDNS
-    participant EXT as Service Externe<br/>api.external-company.com
+ participant P as Pod Application
+ participant DNS as CoreDNS
+ participant EXT as Service Externe<br/>api.external-company.com
 
-    Note over P,EXT: Migration progressive vers service externe
+ Note over P,EXT: Migration progressive vers service externe
 
-    P->>DNS: Résolution DNS: external-api-service.default.svc.cluster.local
-    DNS->>DNS: CNAME → api.external-company.com
-    DNS->>P: Réponse: 203.0.113.50
-    P->>EXT: Requête HTTP: api.external-company.com:443
-    EXT->>P: Réponse API
+ P->>DNS: Résolution DNS: external-api-service.default.svc.cluster.local
+ DNS->>DNS: CNAME → api.external-company.com
+ DNS->>P: Réponse: 203.0.113.50
+ P->>EXT: Requête HTTP: api.external-company.com:443
+ EXT->>P: Réponse API
 
-    Note over P,EXT: Code application inchangé !<br/>Service discovery transparent
+ Note over P,EXT: Code application inchangé !<br/>Service discovery transparent
 ```
 
 ### 5.4 Service Discovery et DNS
@@ -2213,28 +2217,28 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph cluster["Cluster Kubernetes"]
-        subgraph kube_system["Namespace kube-system"]
-            coredns["CoreDNS<br/>DNS Server<br/>Résolution service discovery<br/>Configuration automatique<br/>Cache DNS"]
-            coredns_configmap["CoreDNS ConfigMap<br/>Configuration<br/>Corefile<br/>Zones DNS<br/>Plugins"]
-        end
+ subgraph cluster["Cluster Kubernetes"]
+ subgraph kube_system["Namespace kube-system"]
+ coredns["CoreDNS<br/>DNS Server<br/>Résolution service discovery<br/>Configuration automatique<br/>Cache DNS"]
+ coredns_configmap["CoreDNS ConfigMap<br/>Configuration<br/>Corefile<br/>Zones DNS<br/>Plugins"]
+ end
 
-        subgraph default_ns["Namespace default"]
-            app_pod["Application Pod<br/>Client<br/>DNS queries<br/>Service calls"]
-            api_service["API Service<br/>ClusterIP<br/>api-service.default.svc.cluster.local"]
-            db_service["DB Service<br/>ClusterIP<br/>database.default.svc.cluster.local"]
-        end
+ subgraph default_ns["Namespace default"]
+ app_pod["Application Pod<br/>Client<br/>DNS queries<br/>Service calls"]
+ api_service["API Service<br/>ClusterIP<br/>api-service.default.svc.cluster.local"]
+ db_service["DB Service<br/>ClusterIP<br/>database.default.svc.cluster.local"]
+ end
 
-        subgraph production_ns["Namespace production"]
-            prod_api["Prod API Service<br/>ClusterIP<br/>api-service.production.svc.cluster.local"]
-            prod_db["Prod DB Service<br/>ClusterIP<br/>database.production.svc.cluster.local"]
-        end
-    end
+ subgraph production_ns["Namespace production"]
+ prod_api["Prod API Service<br/>ClusterIP<br/>api-service.production.svc.cluster.local"]
+ prod_db["Prod DB Service<br/>ClusterIP<br/>database.production.svc.cluster.local"]
+ end
+ end
 
-    app_pod -->|"DNS Query: api-service.default.svc.cluster.local"| coredns
-    coredns -->|"Load config"| coredns_configmap
-    coredns -->|"Resolve to ClusterIP"| api_service
-    app_pod -->|"Cross-namespace: api-service.production.svc.cluster.local"| prod_api
+ app_pod -->|"DNS Query: api-service.default.svc.cluster.local"| coredns
+ coredns -->|"Load config"| coredns_configmap
+ coredns -->|"Resolve to ClusterIP"| api_service
+ app_pod -->|"Cross-namespace: api-service.production.svc.cluster.local"| prod_api
 ```
 
 #### 5.4.2 Formats DNS dans Kubernetes
@@ -2243,41 +2247,41 @@ graph TB
 
 ```
 [service-name].[namespace].[svc].[cluster-domain]
-     ↓             ↓        ↓         ↓
-  api-service  . default . svc . cluster.local
+ ↓ ↓ ↓ ↓
+ api-service . default . svc . cluster.local
 ```
 
 **Résolutions possibles** :
 
 ```mermaid
 graph TB
-    subgraph "Pod dans namespace 'default'"
-        A[Application Pod]
-    end
+ subgraph "Pod dans namespace 'default'"
+ A[Application Pod]
+ end
 
-    subgraph "Résolutions DNS possibles"
-        B[api-service<br/>Court - même namespace]
-        C[api-service.default<br/>Namespace explicite]
-        D[api-service.default.svc<br/>Type de ressource]
-        E[api-service.default.svc.cluster.local<br/>FQDN complet]
-    end
+ subgraph "Résolutions DNS possibles"
+ B[api-service<br/>Court - même namespace]
+ C[api-service.default<br/>Namespace explicite]
+ D[api-service.default.svc<br/>Type de ressource]
+ E[api-service.default.svc.cluster.local<br/>FQDN complet]
+ end
 
-    subgraph "Résolutions cross-namespace"
-        F[api-service.production<br/>Autre namespace]
-        G[database.kube-system<br/>Services système]
-    end
+ subgraph "Résolutions cross-namespace"
+ F[api-service.production<br/>Autre namespace]
+ G[database.kube-system<br/>Services système]
+ end
 
-    A --> B
-    A --> C
-    A --> D
-    A --> E
-    A --> F
-    A --> G
+ A --> B
+ A --> C
+ A --> D
+ A --> E
+ A --> F
+ A --> G
 
-    B -.->|Résout vers| H[10.96.1.20]
-    C -.->|Résout vers| H
-    D -.->|Résout vers| H
-    E -.->|Résout vers| H
+ B -.->|Résout vers| H[10.96.1.20]
+ C -.->|Résout vers| H
+ D -.->|Résout vers| H
+ E -.->|Résout vers| H
 ```
 
 #### 5.4.3 Variables d'environnement automatiques
@@ -2303,32 +2307,32 @@ API_SERVICE_PORT_80_TCP_PROTO=tcp
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-app
+ name: frontend-app
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: frontend
-  template:
-    metadata:
-      labels:
-        app: frontend
-    spec:
-      containers:
-        - name: webapp
-          image: my-frontend:v1.0
-          env:
-            # Option 1: Variables Kubernetes auto-générées
-            - name: API_ENDPOINT
-              value: 'http://$(API_SERVICE_SERVICE_HOST):$(API_SERVICE_SERVICE_PORT)'
+ replicas: 3
+ selector:
+ matchLabels:
+ app: frontend
+ template:
+ metadata:
+ labels:
+ app: frontend
+ spec:
+ containers:
+ - name: webapp
+ image: my-frontend:v1.0
+ env:
+# Option 1: Variables Kubernetes auto-générées
+ - name: API_ENDPOINT
+ value: 'http://$(API_SERVICE_SERVICE_HOST):$(API_SERVICE_SERVICE_PORT)'
 
-            # Option 2: DNS direct (recommandé)
-            - name: API_ENDPOINT_DNS
-              value: 'http://api-service:80'
+# Option 2: DNS direct (recommandé)
+ - name: API_ENDPOINT_DNS
+ value: 'http://api-service:80'
 
-            # Option 3: DNS avec namespace explicite
-            - name: API_ENDPOINT_FULL
-              value: 'http://api-service.production.svc.cluster.local:80'
+# Option 3: DNS avec namespace explicite
+ - name: API_ENDPOINT_FULL
+ value: 'http://api-service.production.svc.cluster.local:80'
 ```
 
 #### 5.4.4 Tests et debugging DNS
@@ -2349,7 +2353,7 @@ dig api-service.default.svc.cluster.local
 
 # 3. Vérifier la configuration DNS du pod
 cat /etc/resolv.conf
-# nameserver 10.96.0.10  <- IP du service CoreDNS
+# nameserver 10.96.0.10 <- IP du service CoreDNS
 # search default.svc.cluster.local svc.cluster.local cluster.local
 # options ndots:5
 
@@ -2387,42 +2391,42 @@ kubectl exec -it <pod-name> -- cat /etc/resolv.conf
 
 ```mermaid
 graph TB
-    subgraph "Node Worker"
-        subgraph "kube-proxy process"
-            A[Sync avec API Server<br/>Services & Endpoints]
-            B[Génération règles<br/>iptables-IPVS]
-            C[Mise à jour continue<br/>Watch API changes]
-        end
+ subgraph "Node Worker"
+ subgraph "kube-proxy process"
+ A[Sync avec API Server<br/>Services & Endpoints]
+ B[Génération règles<br/>iptables-IPVS]
+ C[Mise à jour continue<br/>Watch API changes]
+ end
 
-        subgraph "Iptables chains"
-            D[KUBE-SERVICES<br/>Point d'entrée]
-            E[KUBE-SVC-XXX<br/>Règles par Service]
-            F[KUBE-SEP-XXX<br/>Règles par Endpoint]
-        end
+ subgraph "Iptables chains"
+ D[KUBE-SERVICES<br/>Point d'entrée]
+ E[KUBE-SVC-XXX<br/>Règles par Service]
+ F[KUBE-SEP-XXX<br/>Règles par Endpoint]
+ end
 
-        subgraph "Pods locaux"
-            G[Pod 1<br/>10.244.1.5]
-            H[Pod 2<br/>10.244.1.8]
-        end
+ subgraph "Pods locaux"
+ G[Pod 1<br/>10.244.1.5]
+ H[Pod 2<br/>10.244.1.8]
+ end
 
-        subgraph "Network interface"
-            I[eth0<br/>Interface node]
-            J[kube-ipvs0<br/>Virtual interface]
-        end
-    end
+ subgraph "Network interface"
+ I[eth0<br/>Interface node]
+ J[kube-ipvs0<br/>Virtual interface]
+ end
+ end
 
-    A --> B
-    B --> D
-    D --> E
-    E --> F
-    F --> G
-    F --> H
+ A --> B
+ B --> D
+ D --> E
+ E --> F
+ F --> G
+ F --> H
 
-    I --> D
-    J --> E
+ I --> D
+ J --> E
 
-    K[Trafic entrant] --> I
-    L[API Server] --> A
+ K[Trafic entrant] --> I
+ L[API Server] --> A
 ```
 
 #### 5.5.2 Modes de fonctionnement kube-proxy
@@ -2436,12 +2440,12 @@ sudo iptables -t nat -L KUBE-SVC-XXXX
 
 # Exemple de règle pour un Service ClusterIP
 -A KUBE-SERVICES -d 10.96.1.20/32 -p tcp -m tcp --dport 80 \
-   -j KUBE-SVC-API-SERVICE
+ -j KUBE-SVC-API-SERVICE
 
 -A KUBE-SVC-API-SERVICE -m statistic --mode random --probability 0.33333 \
-   -j KUBE-SEP-POD1
+ -j KUBE-SEP-POD1
 -A KUBE-SVC-API-SERVICE -m statistic --mode random --probability 0.50000 \
-   -j KUBE-SEP-POD2
+ -j KUBE-SEP-POD2
 -A KUBE-SVC-API-SERVICE -j KUBE-SEP-POD3
 ```
 
@@ -2453,10 +2457,10 @@ kubectl edit configmap kube-proxy -n kube-system
 
 # Voir les règles IPVS
 ipvsadm -L -n
-# TCP  10.96.1.20:80 rr
-#   -> 10.244.1.5:8080      Masq    1      0          0
-#   -> 10.244.1.8:8080      Masq    1      0          0
-#   -> 10.244.2.12:8080     Masq    1      0          0
+# TCP 10.96.1.20:80 rr
+# -> 10.244.1.5:8080 Masq 1 0 0
+# -> 10.244.1.8:8080 Masq 1 0 0
+# -> 10.244.2.12:8080 Masq 1 0 0
 ```
 
 **Comparaison iptables vs IPVS** :
@@ -2482,14 +2486,14 @@ metadata:
   name: webapp-sticky
 spec:
   selector:
-    app: webapp
+  app: webapp
   ports:
     - port: 80
-      targetPort: 8080
+  targetPort: 8080
   sessionAffinity: ClientIP # None (défaut) ou ClientIP
   sessionAffinityConfig:
-    clientIP:
-      timeoutSeconds: 3600 # 1 heure de persistance
+  clientIP:
+  timeoutSeconds: 3600 # 1 heure de persistance
 ```
 
 **Cas d'usage session affinity** :
@@ -2511,26 +2515,26 @@ spec:
 
 ```mermaid
 graph TB
-    subgraph "Sans Network Policies - Trafic libre"
-        A[Pod Frontend] --> B[Pod API]
-        A --> C[Pod Database]
-        A --> D[Pod Cache]
-        B --> C
-        B --> D
-        E[Pod Externe] --> A
-        E --> B
-        E --> C
-        F[Internet] --> A
-    end
+ subgraph "Sans Network Policies - Trafic libre"
+ A[Pod Frontend] --> B[Pod API]
+ A --> C[Pod Database]
+ A --> D[Pod Cache]
+ B --> C
+ B --> D
+ E[Pod Externe] --> A
+ E --> B
+ E --> C
+ F[Internet] --> A
+ end
 
-    subgraph "Avec Network Policies - Trafic contrôlé"
-        G[Pod Frontend<br/>Ingress: LoadBalancer<br/>Egress: API only] --> H[Pod API<br/>Ingress: Frontend only<br/>Egress: DB, Cache]
-        H --> I[Pod Database<br/>Ingress: API only<br/>Egress: None]
-        H --> J[Pod Cache<br/>Ingress: API only<br/>Egress: None]
-        K[Internet] --> G
-        L[Pod Externe] -.->|BLOQUÉ| H
-        L -.->|BLOQUÉ| I
-    end
+ subgraph "Avec Network Policies - Trafic contrôlé"
+ G[Pod Frontend<br/>Ingress: LoadBalancer<br/>Egress: API only] --> H[Pod API<br/>Ingress: Frontend only<br/>Egress: DB, Cache]
+ H --> I[Pod Database<br/>Ingress: API only<br/>Egress: None]
+ H --> J[Pod Cache<br/>Ingress: API only<br/>Egress: None]
+ K[Internet] --> G
+ L[Pod Externe] -.->|BLOQUÉ| H
+ L -.->|BLOQUÉ| I
+ end
 ```
 
 #### 5.6.2 Types de Network Policies
@@ -2542,40 +2546,40 @@ graph TB
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: api-ingress-policy
-  namespace: production
+ name: api-ingress-policy
+ namespace: production
 spec:
-  podSelector:
-    matchLabels:
-      app: api
-      tier: backend
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        # Seulement les pods frontend du même namespace
-        - podSelector:
-            matchLabels:
-              app: frontend
-              tier: frontend
-        # ET seulement depuis le namespace production
-        - namespaceSelector:
-            matchLabels:
-              name: production
-      ports:
-        - protocol: TCP
-          port: 8080
-    - from:
-        # Exception : monitoring depuis kube-system
-        - namespaceSelector:
-            matchLabels:
-              name: kube-system
-        - podSelector:
-            matchLabels:
-              app: prometheus
-      ports:
-        - protocol: TCP
-          port: 9090 # Port métriques
+ podSelector:
+ matchLabels:
+ app: api
+ tier: backend
+ policyTypes:
+ - Ingress
+ ingress:
+ - from:
+# Seulement les pods frontend du même namespace
+ - podSelector:
+ matchLabels:
+ app: frontend
+ tier: frontend
+# ET seulement depuis le namespace production
+ - namespaceSelector:
+ matchLabels:
+ name: production
+ ports:
+ - protocol: TCP
+ port: 8080
+ - from:
+# Exception : monitoring depuis kube-system
+ - namespaceSelector:
+ matchLabels:
+ name: kube-system
+ - podSelector:
+ matchLabels:
+ app: prometheus
+ ports:
+ - protocol: TCP
+ port: 9090 # Port métriques
 ```
 
 **2. Egress Policies (trafic sortant)** :
@@ -2585,53 +2589,53 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: api-egress-policy
-  namespace: production
+ name: api-egress-policy
+ namespace: production
 spec:
-  podSelector:
-    matchLabels:
-      app: api
-      tier: backend
-  policyTypes:
-    - Egress
-  egress:
-    # Accès à la base de données
-    - to:
-        - podSelector:
-            matchLabels:
-              app: postgresql
-              tier: database
-      ports:
-        - protocol: TCP
-          port: 5432
+ podSelector:
+ matchLabels:
+ app: api
+ tier: backend
+ policyTypes:
+ - Egress
+ egress:
+# Accès à la base de données
+ - to:
+ - podSelector:
+ matchLabels:
+ app: postgresql
+ tier: database
+ ports:
+ - protocol: TCP
+ port: 5432
 
-    # Accès au cache Redis
-    - to:
-        - podSelector:
-            matchLabels:
-              app: redis
-              tier: cache
-      ports:
-        - protocol: TCP
-          port: 6379
+# Accès au cache Redis
+ - to:
+ - podSelector:
+ matchLabels:
+ app: redis
+ tier: cache
+ ports:
+ - protocol: TCP
+ port: 6379
 
-    # Accès DNS (requis pour service discovery)
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              name: kube-system
-        - podSelector:
-            matchLabels:
-              k8s-app: kube-dns
-      ports:
-        - protocol: UDP
-          port: 53
+# Accès DNS (requis pour service discovery)
+ - to:
+ - namespaceSelector:
+ matchLabels:
+ name: kube-system
+ - podSelector:
+ matchLabels:
+ k8s-app: kube-dns
+ ports:
+ - protocol: UDP
+ port: 53
 
-    # Accès services externes autorisés
-    - to: [] # Toutes les IPs externes
-      ports:
-        - protocol: TCP
-          port: 443 # HTTPS uniquement
+# Accès services externes autorisés
+ - to: [] # Toutes les IPs externes
+ ports:
+ - protocol: TCP
+ port: 443 # HTTPS uniquement
 ```
 
 **3. Policy complète Ingress + Egress** :
@@ -2641,51 +2645,51 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: database-isolation-policy
-  namespace: production
+ name: database-isolation-policy
+ namespace: production
 spec:
-  podSelector:
-    matchLabels:
-      app: postgresql
-      tier: database
-  policyTypes:
-    - Ingress
-    - Egress
+ podSelector:
+ matchLabels:
+ app: postgresql
+ tier: database
+ policyTypes:
+ - Ingress
+ - Egress
 
-  # Ingress : seulement API et backup service
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: api
-      ports:
-        - protocol: TCP
-          port: 5432
+# Ingress : seulement API et backup service
+ ingress:
+ - from:
+ - podSelector:
+ matchLabels:
+ app: api
+ ports:
+ - protocol: TCP
+ port: 5432
 
-    # Backup service depuis namespace ops
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              name: ops
-        - podSelector:
-            matchLabels:
-              app: pg-backup
-      ports:
-        - protocol: TCP
-          port: 5432
+# Backup service depuis namespace ops
+ - from:
+ - namespaceSelector:
+ matchLabels:
+ name: ops
+ - podSelector:
+ matchLabels:
+ app: pg-backup
+ ports:
+ - protocol: TCP
+ port: 5432
 
-  # Egress : très limité
-  egress:
-    # DNS uniquement
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              name: kube-system
-      ports:
-        - protocol: UDP
-          port: 53
+# Egress : très limité
+ egress:
+# DNS uniquement
+ - to:
+ - namespaceSelector:
+ matchLabels:
+ name: kube-system
+ ports:
+ - protocol: UDP
+ port: 53
 
-    # Pas d'accès externe !
+# Pas d'accès externe !
 ```
 
 #### 5.6.3 Patterns de sécurité réseau
@@ -2694,35 +2698,35 @@ spec:
 
 ```mermaid
 graph TB
-    subgraph "Layers de sécurité réseau"
-        A[Internet/External Traffic]
-        B[Ingress Controller<br/>WAF + Rate limiting]
-        C[LoadBalancer Service<br/>IP whitelisting]
-        D[Network Policy Layer<br/>Pod-to-pod restrictions]
-        E[Service Mesh<br/>mTLS + Authorization]
-        F[Pod Security<br/>SecurityContext + AppArmor]
-    end
+ subgraph "Layers de sécurité réseau"
+ A[Internet/External Traffic]
+ B[Ingress Controller<br/>WAF + Rate limiting]
+ C[LoadBalancer Service<br/>IP whitelisting]
+ D[Network Policy Layer<br/>Pod-to-pod restrictions]
+ E[Service Mesh<br/>mTLS + Authorization]
+ F[Pod Security<br/>SecurityContext + AppArmor]
+ end
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
+ A --> B
+ B --> C
+ C --> D
+ D --> E
+ E --> F
 
-    subgraph "Controls par layer"
-        G[DDoS protection<br/>Geo-blocking]
-        H[Application firewall<br/>Input validation]
-        I[Source IP filtering<br/>Port restrictions]
-        J[Namespace isolation<br/>Label-based rules]
-        K[Identity-based auth<br/>Traffic encryption]
-        L[Container sandbox<br/>Syscall filtering]
-    end
+ subgraph "Controls par layer"
+ G[DDoS protection<br/>Geo-blocking]
+ H[Application firewall<br/>Input validation]
+ I[Source IP filtering<br/>Port restrictions]
+ J[Namespace isolation<br/>Label-based rules]
+ K[Identity-based auth<br/>Traffic encryption]
+ L[Container sandbox<br/>Syscall filtering]
+ end
 
-    B -.-> H
-    C -.-> I
-    D -.-> J
-    E -.-> K
-    F -.-> L
+ B -.-> H
+ C -.-> I
+ D -.-> J
+ E -.-> K
+ F -.-> L
 ```
 
 **2. Zero Trust Network** :
@@ -2732,36 +2736,36 @@ graph TB
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny-all
-  namespace: production
+ name: default-deny-all
+ namespace: production
 spec:
-  podSelector: {} # Tous les pods du namespace
-  policyTypes:
-    - Ingress
-    - Egress
-  # Pas de règles = DENY ALL
+ podSelector: {} # Tous les pods du namespace
+ policyTypes:
+ - Ingress
+ - Egress
+# Pas de règles = DENY ALL
 
 ---
 # Allow explicite pour chaque communication nécessaire
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: frontend-to-api-only
-  namespace: production
+ name: frontend-to-api-only
+ namespace: production
 spec:
-  podSelector:
-    matchLabels:
-      app: api
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: frontend
-      ports:
-        - protocol: TCP
-          port: 8080
+ podSelector:
+ matchLabels:
+ app: api
+ policyTypes:
+ - Ingress
+ ingress:
+ - from:
+ - podSelector:
+ matchLabels:
+ app: frontend
+ ports:
+ - protocol: TCP
+ port: 8080
 ```
 
 ### 5.7 Debugging réseau et outils
@@ -2779,11 +2783,11 @@ metadata:
 spec:
   containers:
     - name: netshoot
-      image: nicolaka/netshoot:latest
-      command: ['sleep', '3600']
-      securityContext:
-        capabilities:
-          add: ['NET_ADMIN', 'NET_RAW']
+  image: nicolaka/netshoot:latest
+  command: ['sleep', '3600']
+  securityContext:
+  capabilities:
+  add: ['NET_ADMIN', 'NET_RAW']
   hostNetwork: false # Utilise le réseau du cluster
   restartPolicy: Never
 ```
@@ -2890,24 +2894,24 @@ kubectl get events --field-selector reason=FailedCreatePodSandBox
 
 ```mermaid
 graph TB
-    subgraph "Sans Service Mesh"
-        A[Pod Frontend] -->|HTTP plain| B[Pod API]
-        B -->|Custom mTLS| C[Pod Database]
-        D[Logs manuels<br/>Metrics manuels]
-        E[Security ad-hoc<br/>Retry logic dans app]
-    end
+ subgraph "Sans Service Mesh"
+ A[Pod Frontend] -->|HTTP plain| B[Pod API]
+ B -->|Custom mTLS| C[Pod Database]
+ D[Logs manuels<br/>Metrics manuels]
+ E[Security ad-hoc<br/>Retry logic dans app]
+ end
 
-    subgraph "Avec Service Mesh (ex: Istio)"
-        F[Pod Frontend] --> G[Envoy Sidecar]
-        G -->|mTLS auto| H[Envoy Sidecar]
-        H --> I[Pod API]
-        I --> J[Envoy Sidecar]
-        J -->|mTLS auto| K[Envoy Sidecar]
-        K --> L[Pod Database]
+ subgraph "Avec Service Mesh (ex: Istio)"
+ F[Pod Frontend] --> G[Envoy Sidecar]
+ G -->|mTLS auto| H[Envoy Sidecar]
+ H --> I[Pod API]
+ I --> J[Envoy Sidecar]
+ J -->|mTLS auto| K[Envoy Sidecar]
+ K --> L[Pod Database]
 
-        M[Observabilité automatique<br/>Traces, métriques, logs]
-        N[Policies déclaratives<br/>Retries, circuit breakers]
-    end
+ M[Observabilité automatique<br/>Traces, métriques, logs]
+ N[Policies déclaratives<br/>Retries, circuit breakers]
+ end
 ```
 
 #### 5.8.2 Multi-cluster networking
@@ -2927,25 +2931,25 @@ graph TB
 metadata:
   name: api-users-service # [tier]-[component]-service
   labels:
-    app: users-api # Application
-    component: api # Composant technique
-    tier: backend # Couche architecture
-    version: v1.2.0 # Version
+  app: users-api # Application
+  component: api # Composant technique
+  tier: backend # Couche architecture
+  version: v1.2.0 # Version
 ```
 
 **2. Port conventions** :
 
 ```yaml
 ports:
-  - name: http # Protocole clair
-    port: 80 # Port standard
-    targetPort: 8080 # Port conteneur
-  - name: grpc
-    port: 9090
-    targetPort: grpc # Reference port name
-  - name: metrics
-    port: 9102
-    targetPort: prometheus # Port métriques
+ - name: http # Protocole clair
+ port: 80 # Port standard
+ targetPort: 8080 # Port conteneur
+ - name: grpc
+ port: 9090
+ targetPort: grpc # Reference port name
+ - name: metrics
+ port: 9102
+ targetPort: prometheus # Port métriques
 ```
 
 **3. Security by default** :
@@ -2967,15 +2971,15 @@ spec:
 # Probes pour inclusion dans Service endpoints
 readinessProbe:
   httpGet:
-    path: /ready
-    port: http
+  path: /ready
+  port: http
   initialDelaySeconds: 5
   periodSeconds: 5
 
 livenessProbe:
   httpGet:
-    path: /health
-    port: http
+  path: /health
+  port: http
   initialDelaySeconds: 30
   periodSeconds: 10
 ```
@@ -3025,29 +3029,29 @@ Imaginez un site e-commerce géré par un seul Pod :
 
 ```mermaid
 graph TB
-    subgraph "Problèmes des Pods standalone"
-        A[Pod unique nginx]
-        B[Crash du Pod]
-        C[Pas de redémarrage automatique]
-        D[Service indisponible]
-    end
+ subgraph "Problèmes des Pods standalone"
+ A[Pod unique nginx]
+ B[Crash du Pod]
+ C[Pas de redémarrage automatique]
+ D[Service indisponible]
+ end
 
-    A --> B --> C --> D
+ A --> B --> C --> D
 
-    subgraph "Solution avec Deployment"
-        E[Deployment nginx<br/>3 replicas]
-        F[Pod 1]
-        G[Pod 2]
-        H[Pod 3]
-        I[Pod 1 crash]
-        J[Nouveau Pod créé automatiquement]
-        K[Service maintenu]
-    end
+ subgraph "Solution avec Deployment"
+ E[Deployment nginx<br/>3 replicas]
+ F[Pod 1]
+ G[Pod 2]
+ H[Pod 3]
+ I[Pod 1 crash]
+ J[Nouveau Pod créé automatiquement]
+ K[Service maintenu]
+ end
 
-    E --> F
-    E --> G
-    E --> H
-    F --> I --> J --> K
+ E --> F
+ E --> G
+ E --> H
+ F --> I --> J --> K
 ```
 
 #### Besoins en production
@@ -3076,30 +3080,30 @@ Un **ReplicaSet** assure qu'un nombre spécifié de Pods identiques fonctionnent
 
 ```mermaid
 graph LR
-    subgraph "ReplicaSet Controller"
-        A[Surveille en continu]
-        B[Compare état actuel<br/>vs état désiré]
-        C[Crée/Supprime des Pods<br/>si nécessaire]
-    end
+ subgraph "ReplicaSet Controller"
+ A[Surveille en continu]
+ B[Compare état actuel<br/>vs état désiré]
+ C[Crée/Supprime des Pods<br/>si nécessaire]
+ end
 
-    A --> B --> C --> A
+ A --> B --> C --> A
 
-    subgraph "État désiré"
-        D[replicas: 3]
-    end
+ subgraph "État désiré"
+ D[replicas: 3]
+ end
 
-    subgraph "État actuel"
-        E[Pod 1 Running]
-        F[Pod 2 Running]
-        G[Pod 3 Crashed]
-    end
+ subgraph "État actuel"
+ E[Pod 1 Running]
+ F[Pod 2 Running]
+ G[Pod 3 Crashed]
+ end
 
-    B --> D
-    B --> E
-    B --> F
-    B --> G
+ B --> D
+ B --> E
+ B --> F
+ B --> G
 
-    C --> H[Nouveau Pod 3 créé]
+ C --> H[Nouveau Pod 3 créé]
 ```
 
 #### ReplicaSet manifest de base
@@ -3108,26 +3112,26 @@ graph LR
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
-  name: nginx-replicaset
-  labels:
-    app: nginx
+ name: nginx-replicaset
+ labels:
+ app: nginx
 spec:
-  replicas: 3 # Nombre de Pods désirés
-  selector: # Comment identifier les Pods à gérer
-    matchLabels:
-      app: nginx
-      version: v1
-  template: # Modèle pour créer les Pods
-    metadata:
-      labels:
-        app: nginx
-        version: v1
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.21
-          ports:
-            - containerPort: 80
+ replicas: 3 # Nombre de Pods désirés
+ selector: # Comment identifier les Pods à gérer
+ matchLabels:
+ app: nginx
+ version: v1
+ template: # Modèle pour créer les Pods
+ metadata:
+ labels:
+ app: nginx
+ version: v1
+ spec:
+ containers:
+ - name: nginx
+ image: nginx:1.21
+ ports:
+ - containerPort: 80
 ```
 
 **Éléments clés** :
@@ -3166,41 +3170,41 @@ Les **ReplicaSets** seuls ne suffisent pas pour la production :
 
 ```mermaid
 sequenceDiagram
-    participant U as Utilisateurs
-    participant LB as LoadBalancer
-    participant P1 as Pod v1.20 #1
-    participant P2 as Pod v1.20 #2
-    participant P3 as Pod v1.20 #3
-    participant N1 as Nouveau Pod v1.21 #1
-    participant N2 as Nouveau Pod v1.21 #2
-    participant N3 as Nouveau Pod v1.21 #3
+ participant U as Utilisateurs
+ participant LB as LoadBalancer
+ participant P1 as Pod v1.20 #1
+ participant P2 as Pod v1.20 #2
+ participant P3 as Pod v1.20 #3
+ participant N1 as Nouveau Pod v1.21 #1
+ participant N2 as Nouveau Pod v1.21 #2
+ participant N3 as Nouveau Pod v1.21 #3
 
-    Note over P1,P3: État initial : 3 Pods v1.20
-    U->>LB: Trafic continu
-    LB->>P1: Route vers Pods v1.20
-    LB->>P2: Route vers Pods v1.20
-    LB->>P3: Route vers Pods v1.20
+ Note over P1,P3: État initial : 3 Pods v1.20
+ U->>LB: Trafic continu
+ LB->>P1: Route vers Pods v1.20
+ LB->>P2: Route vers Pods v1.20
+ LB->>P3: Route vers Pods v1.20
 
-    Note over N1: Étape 1 : Créer Pod v1.21
-    N1->>N1: Démarrage v1.21
-    Note over P1: Étape 2 : Supprimer Pod v1.20
-    P1->>P1: Terminaison
-    LB->>N1: Route vers nouveau Pod
-    LB->>P2: Trafic continue
-    LB->>P3: Trafic continue
+ Note over N1: Étape 1 : Créer Pod v1.21
+ N1->>N1: Démarrage v1.21
+ Note over P1: Étape 2 : Supprimer Pod v1.20
+ P1->>P1: Terminaison
+ LB->>N1: Route vers nouveau Pod
+ LB->>P2: Trafic continue
+ LB->>P3: Trafic continue
 
-    Note over N2: Étape 3 : Créer Pod v1.21 #2
-    N2->>N2: Démarrage v1.21
-    P2->>P2: Terminaison
-    LB->>N2: Route vers nouveau Pod
+ Note over N2: Étape 3 : Créer Pod v1.21 #2
+ N2->>N2: Démarrage v1.21
+ P2->>P2: Terminaison
+ LB->>N2: Route vers nouveau Pod
 
-    Note over N3: Étape 4 : Créer Pod v1.21 #3
-    N3->>N3: Démarrage v1.21
-    P3->>P3: Terminaison
-    LB->>N3: Route vers nouveau Pod
+ Note over N3: Étape 4 : Créer Pod v1.21 #3
+ N3->>N3: Démarrage v1.21
+ P3->>P3: Terminaison
+ LB->>N3: Route vers nouveau Pod
 
-    Note over N1,N3: État final : 3 Pods v1.21
-    U->>LB: Trafic jamais interrompu !
+ Note over N1,N3: État final : 3 Pods v1.21
+ U->>LB: Trafic jamais interrompu !
 ```
 
 **Paramètres de contrôle** :
@@ -3226,30 +3230,30 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "Historique des déploiements"
-        D1[Deployment v1<br/>nginx:1.19<br/>STABLE]
-        D2[Deployment v2<br/>nginx:1.20<br/>STABLE]
-        D3[Deployment v3<br/>nginx:1.21<br/>BUG CRITIQUE!]
-    end
+ subgraph "Historique des déploiements"
+ D1[Deployment v1<br/>nginx:1.19<br/>STABLE]
+ D2[Deployment v2<br/>nginx:1.20<br/>STABLE]
+ D3[Deployment v3<br/>nginx:1.21<br/>BUG CRITIQUE!]
+ end
 
-    subgraph "ReplicaSets conservés"
-        RS1[ReplicaSet v1<br/>replicas: 0<br/>nginx:1.19]
-        RS2[ReplicaSet v2<br/>replicas: 0<br/>nginx:1.20]
-        RS3[ReplicaSet v3<br/>replicas: 3<br/>nginx:1.21]
-    end
+ subgraph "ReplicaSets conservés"
+ RS1[ReplicaSet v1<br/>replicas: 0<br/>nginx:1.19]
+ RS2[ReplicaSet v2<br/>replicas: 0<br/>nginx:1.20]
+ RS3[ReplicaSet v3<br/>replicas: 3<br/>nginx:1.21]
+ end
 
-    subgraph "Action de rollback"
-        RB[kubectl rollout undo]
-        RS2_NEW[ReplicaSet v2<br/>replicas: 3<br/>nginx:1.20]
-        RS3_OLD[ReplicaSet v3<br/>replicas: 0<br/>nginx:1.21]
-    end
+ subgraph "Action de rollback"
+ RB[kubectl rollout undo]
+ RS2_NEW[ReplicaSet v2<br/>replicas: 3<br/>nginx:1.20]
+ RS3_OLD[ReplicaSet v3<br/>replicas: 0<br/>nginx:1.21]
+ end
 
-    D1 --> RS1
-    D2 --> RS2
-    D3 --> RS3
+ D1 --> RS1
+ D2 --> RS2
+ D3 --> RS3
 
-    RB --> RS2_NEW
-    RB --> RS3_OLD
+ RB --> RS2_NEW
+ RB --> RS3_OLD
 ```
 
 **Avantages** :
@@ -3298,14 +3302,14 @@ Deployment "web-app"
 ```yaml
 # Stratégie RollingUpdate (recommandée)
 strategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxUnavailable: 25%    # Max 25% des Pods indisponibles
-    maxSurge: 25%          # Max 25% de Pods supplémentaires
+ type: RollingUpdate
+ rollingUpdate:
+ maxUnavailable: 25% # Max 25% des Pods indisponibles
+ maxSurge: 25% # Max 25% de Pods supplémentaires
 
 # Stratégie Recreate (attention : downtime!)
 strategy:
-  type: Recreate
+ type: Recreate
 ```
 
 **Comparaison des stratégies** :
@@ -3322,29 +3326,29 @@ strategy:
 
 ```mermaid
 graph TB
-    subgraph "Deployment nginx-app"
-        A[Deployment<br/>Gère les ReplicaSets<br/>Stratégies de déploiement]
-    end
+ subgraph "Deployment nginx-app"
+ A[Deployment<br/>Gère les ReplicaSets<br/>Stratégies de déploiement]
+ end
 
-    subgraph "ReplicaSets gérés"
-        B[ReplicaSet v1<br/>nginx:1.20<br/>replicas: 0]
-        C[ReplicaSet v2<br/>nginx:1.21<br/>replicas: 3]
-    end
+ subgraph "ReplicaSets gérés"
+ B[ReplicaSet v1<br/>nginx:1.20<br/>replicas: 0]
+ C[ReplicaSet v2<br/>nginx:1.21<br/>replicas: 3]
+ end
 
-    subgraph "Pods actifs"
-        D[Pod v2-abc]
-        E[Pod v2-def]
-        F[Pod v2-ghi]
-    end
+ subgraph "Pods actifs"
+ D[Pod v2-abc]
+ E[Pod v2-def]
+ F[Pod v2-ghi]
+ end
 
-    A --> B
-    A --> C
-    C --> D
-    C --> E
-    C --> F
+ A --> B
+ A --> C
+ C --> D
+ C --> E
+ C --> F
 
-    G[kubectl rollout undo] --> A
-    H[Rollback vers v1] --> B
+ G[kubectl rollout undo] --> A
+ H[Rollback vers v1] --> B
 ```
 
 ### 6.5 Exemple pratique : Cycle de vie d'un déploiement
@@ -3360,36 +3364,36 @@ graph TB
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ecommerce-api
-  labels:
-    app: ecommerce-api
+ name: ecommerce-api
+ labels:
+ app: ecommerce-api
 spec:
-  replicas: 5 # 5 instances pour haute disponibilité
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1 # Max 1 Pod indisponible (80% uptime garanti)
-      maxSurge: 2 # Max 2 Pods supplémentaires (7 Pods max temporairement)
-  selector:
-    matchLabels:
-      app: ecommerce-api
-  template:
-    metadata:
-      labels:
-        app: ecommerce-api
-    spec:
-      containers:
-        - name: api
-          image: mycompany/ecommerce-api:v1.0
-          ports:
-            - containerPort: 8080
-          resources:
-            requests:
-              memory: '256Mi'
-              cpu: '250m'
-            limits:
-              memory: '512Mi'
-              cpu: '500m'
+ replicas: 5 # 5 instances pour haute disponibilité
+ strategy:
+ type: RollingUpdate
+ rollingUpdate:
+ maxUnavailable: 1 # Max 1 Pod indisponible (80% uptime garanti)
+ maxSurge: 2 # Max 2 Pods supplémentaires (7 Pods max temporairement)
+ selector:
+ matchLabels:
+ app: ecommerce-api
+ template:
+ metadata:
+ labels:
+ app: ecommerce-api
+ spec:
+ containers:
+ - name: api
+ image: mycompany/ecommerce-api:v1.0
+ ports:
+ - containerPort: 8080
+ resources:
+ requests:
+ memory: '256Mi'
+ cpu: '250m'
+ limits:
+ memory: '512Mi'
+ cpu: '500m'
 ```
 
 **Étape 2 : Rolling Update vers v1.1**
@@ -3399,28 +3403,28 @@ Lors de la mise à jour vers v1.1 :
 ```
 État initial: 5 Pods v1.0
 ┌─────────────────────────────────────┐
-│ Pod1 │ Pod2 │ Pod3 │ Pod4 │ Pod5 │   │  Status: 5/5 Ready
-│ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.0 │   │
+│ Pod1 │ Pod2 │ Pod3 │ Pod4 │ Pod5 │ │ Status: 5/5 Ready
+│ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.0 │ │
 └─────────────────────────────────────┘
 
 Étape 1: Création 2 nouveaux Pods (maxSurge: 2)
 ┌─────────────────────────────────────────────────┐
-│ Pod1 │ Pod2 │ Pod3 │ Pod4 │ Pod5 │ Pod6 │ Pod7 │   │  Status: 7/7 Ready
-│ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.1 │ v1.1 │   │
+│ Pod1 │ Pod2 │ Pod3 │ Pod4 │ Pod5 │ Pod6 │ Pod7 │ │ Status: 7/7 Ready
+│ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.1 │ v1.1 │ │
 └─────────────────────────────────────────────────┘
 
 Étape 2: Suppression 1 ancien Pod (maxUnavailable: 1)
 ┌─────────────────────────────────────────────────┐
-│      │ Pod2 │ Pod3 │ Pod4 │ Pod5 │ Pod6 │ Pod7 │   │  Status: 6/6 Ready
-│  X   │ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.1 │ v1.1 │   │
+│ │ Pod2 │ Pod3 │ Pod4 │ Pod5 │ Pod6 │ Pod7 │ │ Status: 6/6 Ready
+│ X │ v1.0 │ v1.0 │ v1.0 │ v1.0 │ v1.1 │ v1.1 │ │
 └─────────────────────────────────────────────────┘
 
 ... Processus continue ...
 
 État final: 5 Pods v1.1
 ┌─────────────────────────────────────┐
-│ Pod6 │ Pod7 │ Pod8 │ Pod9 │ Pod10│   │  Status: 5/5 Ready
-│ v1.1 │ v1.1 │ v1.1 │ v1.1 │ v1.1 │   │
+│ Pod6 │ Pod7 │ Pod8 │ Pod9 │ Pod10│ │ Status: 5/5 Ready
+│ v1.1 │ v1.1 │ v1.1 │ v1.1 │ v1.1 │ │
 └─────────────────────────────────────┘
 ```
 
@@ -3468,24 +3472,24 @@ La réponse : **Les selectors et les labels** !
 
 ```mermaid
 graph TB
-    subgraph "Deployment nginx-app"
-        A[selector:<br/>matchLabels:<br/>app: nginx<br/>env: production]
-    end
+ subgraph "Deployment nginx-app"
+ A[selector:<br/>matchLabels:<br/>app: nginx<br/>env: production]
+ end
 
-    subgraph "Pods dans le cluster"
-        B[Pod 1<br/>Labels:<br/>app: nginx<br/>env: production]
-        C[Pod 2<br/>Labels:<br/>app: nginx<br/>env: staging]
-        D[Pod 3<br/>Labels:<br/>app: apache<br/>env: production]
-        E[Pod 4<br/>Labels:<br/>app: nginx<br/>env: production]
-    end
+ subgraph "Pods dans le cluster"
+ B[Pod 1<br/>Labels:<br/>app: nginx<br/>env: production]
+ C[Pod 2<br/>Labels:<br/>app: nginx<br/>env: staging]
+ D[Pod 3<br/>Labels:<br/>app: apache<br/>env: production]
+ E[Pod 4<br/>Labels:<br/>app: nginx<br/>env: production]
+ end
 
-    A -.->|MATCH| B
-    A -.->|NO MATCH| C
-    A -.->|NO MATCH| D
-    A -.->|MATCH| E
+ A -.->|MATCH| B
+ A -.->|NO MATCH| C
+ A -.->|NO MATCH| D
+ A -.->|MATCH| E
 
-    F[ReplicaSet gère uniquement<br/>Pod 1 et Pod 4]
-    A --> F
+ F[ReplicaSet gère uniquement<br/>Pod 1 et Pod 4]
+ A --> F
 ```
 
 #### 6.5.2 matchLabels : Sélection par égalité
@@ -3497,9 +3501,9 @@ graph TB
 ```yaml
 selector:
   matchLabels:
-    app: nginx # Label "app" DOIT être égal à "nginx"
-    version: v1.0 # Label "version" DOIT être égal à "v1.0"
-    env: production # Label "env" DOIT être égal à "production"
+  app: nginx # Label "app" DOIT être égal à "nginx"
+  version: v1.0 # Label "version" DOIT être égal à "v1.0"
+  env: production # Label "env" DOIT être égal à "production"
 ```
 
 **Exemple concret** :
@@ -3508,23 +3512,23 @@ selector:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-frontend
+ name: web-frontend
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: frontend # OBLIGATOIRE : égalité exacte
-      tier: web # OBLIGATOIRE : égalité exacte
-  template:
-    metadata:
-      labels:
-        app: frontend # DOIT correspondre au selector
-        tier: web # DOIT correspondre au selector
-        version: v2.1 # Peut avoir des labels supplémentaires
-    spec:
-      containers:
-        - name: frontend
-          image: nginx:1.21
+ replicas: 3
+ selector:
+ matchLabels:
+ app: frontend # OBLIGATOIRE : égalité exacte
+ tier: web # OBLIGATOIRE : égalité exacte
+ template:
+ metadata:
+ labels:
+ app: frontend # DOIT correspondre au selector
+ tier: web # DOIT correspondre au selector
+ version: v2.1 # Peut avoir des labels supplémentaires
+ spec:
+ containers:
+ - name: frontend
+ image: nginx:1.21
 ```
 
 **Règle importante** : Les labels du template DOIVENT **inclure** tous les labels du selector, mais peuvent en avoir d'autres.
@@ -3553,17 +3557,17 @@ spec:
 
 ```yaml
 selector:
-  matchExpressions:
-    - key: environment # Nom du label
-      operator: In # Opérateur
-      values: ['production', 'staging'] # Liste de valeurs acceptées
-    - key: version
-      operator: NotIn
-      values: ['beta', 'alpha']
-    - key: security-scan
-      operator: Exists # Le label doit exister
-    - key: deprecated
-      operator: DoesNotExist # Le label ne doit PAS exister
+ matchExpressions:
+ - key: environment # Nom du label
+ operator: In # Opérateur
+ values: ['production', 'staging'] # Liste de valeurs acceptées
+ - key: version
+ operator: NotIn
+ values: ['beta', 'alpha']
+ - key: security-scan
+ operator: Exists # Le label doit exister
+ - key: deprecated
+ operator: DoesNotExist # Le label ne doit PAS exister
 ```
 
 **Exemples pratiques** :
@@ -3573,13 +3577,13 @@ selector:
 ```yaml
 # Déploiement qui cible production ET staging
 selector:
-  matchExpressions:
-    - key: app
-      operator: In
-      values: ['web-server']
-    - key: environment
-      operator: In
-      values: ['production', 'staging'] # Production OU staging
+ matchExpressions:
+ - key: app
+ operator: In
+ values: ['web-server']
+ - key: environment
+ operator: In
+ values: ['production', 'staging'] # Production OU staging
 ```
 
 **2. Exclusion de versions instables** :
@@ -3587,13 +3591,13 @@ selector:
 ```yaml
 # Éviter les versions beta et alpha
 selector:
-  matchExpressions:
-    - key: app
-      operator: In
-      values: ['api-backend']
-    - key: version
-      operator: NotIn
-      values: ['beta', 'alpha', 'rc'] # Exclure ces versions
+ matchExpressions:
+ - key: app
+ operator: In
+ values: ['api-backend']
+ - key: version
+ operator: NotIn
+ values: ['beta', 'alpha', 'rc'] # Exclure ces versions
 ```
 
 **3. Sélection avec critères obligatoires** :
@@ -3601,14 +3605,14 @@ selector:
 ```yaml
 # Pods qui DOIVENT avoir passé un scan de sécurité
 selector:
-  matchExpressions:
-    - key: app
-      operator: In
-      values: ['secure-app']
-    - key: security-scan-passed # Ce label DOIT exister
-      operator: Exists
-    - key: vulnerability-found # Ce label ne DOIT PAS exister
-      operator: DoesNotExist
+ matchExpressions:
+ - key: app
+ operator: In
+ values: ['secure-app']
+ - key: security-scan-passed # Ce label DOIT exister
+ operator: Exists
+ - key: vulnerability-found # Ce label ne DOIT PAS exister
+ operator: DoesNotExist
 ```
 
 #### 6.5.4 Combinaison matchLabels et matchExpressions
@@ -3617,16 +3621,16 @@ selector:
 
 ```yaml
 selector:
-  matchLabels: # Condition 1 : égalité exacte
-    app: web-app
-    tier: frontend
-  matchExpressions: # Condition 2 : expressions
-    - key: environment
-      operator: In
-      values: ['production', 'staging']
-    - key: version
-      operator: NotIn
-      values: ['deprecated']
+ matchLabels: # Condition 1 : égalité exacte
+ app: web-app
+ tier: frontend
+ matchExpressions: # Condition 2 : expressions
+ - key: environment
+ operator: In
+ values: ['production', 'staging']
+ - key: version
+ operator: NotIn
+ values: ['deprecated']
 ```
 
 **Traduction** : Sélectionner les Pods qui ont :
@@ -3644,41 +3648,41 @@ selector:
 # Deployment principal (95% du trafic)
 selector:
   matchLabels:
-    app: api-server
-    track: stable
+  app: api-server
+  track: stable
 
 ---
 # Deployment canary (5% du trafic)
 selector:
   matchLabels:
-    app: api-server
-    track: canary
+  app: api-server
+  track: canary
 ```
 
 **2. Déploiement par zones géographiques** :
 
 ```yaml
 selector:
-  matchExpressions:
-    - key: app
-      operator: In
-      values: ['distributed-app']
-    - key: zone
-      operator: In
-      values: ['us-east-1a', 'us-east-1b'] # Zones spécifiques
+ matchExpressions:
+ - key: app
+ operator: In
+ values: ['distributed-app']
+ - key: zone
+ operator: In
+ values: ['us-east-1a', 'us-east-1b'] # Zones spécifiques
 ```
 
 **3. Maintenance et exclusions** :
 
 ```yaml
 selector:
-  matchLabels:
-    app: maintenance-service
-  matchExpressions:
-    - key: maintenance-mode
-      operator: DoesNotExist # Exclure les nodes en maintenance
-    - key: node-ready
-      operator: Exists # Inclure seulement les nodes prêts
+ matchLabels:
+ app: maintenance-service
+ matchExpressions:
+ - key: maintenance-mode
+ operator: DoesNotExist # Exclure les nodes en maintenance
+ - key: node-ready
+ operator: Exists # Inclure seulement les nodes prêts
 ```
 
 #### 6.5.6 Bonnes pratiques pour les selectors
@@ -3699,13 +3703,13 @@ matchLabels:
 ```yaml
 # MAL : Trop spécifique
 matchLabels:
-  app: web
-  version: v1.2.3-build-456-commit-abc123  # Trop précis
+ app: web
+ version: v1.2.3-build-456-commit-abc123 # Trop précis
 
 # BIEN : Approprié
 matchLabels:
-  app: web
-  version: v1.2.3    # Version majeure.mineure.patch suffisante
+ app: web
+ version: v1.2.3 # Version majeure.mineure.patch suffisante
 ```
 
 **3. Labels obligatoires vs optionnels** :
@@ -3714,18 +3718,18 @@ matchLabels:
 # Dans le selector : seulement les labels ESSENTIELS
 selector:
   matchLabels:
-    app: web-app # Obligatoire
-    tier: frontend # Obligatoire
+  app: web-app # Obligatoire
+  tier: frontend # Obligatoire
 
 # Dans le template : labels obligatoires + optionnels
 template:
   metadata:
-    labels:
-      app: web-app # Obligatoire (dans selector)
-      tier: frontend # Obligatoire (dans selector)
-      version: v1.2.3 # Optionnel
-      build-date: 2025-10-31 # Optionnel
-      team: frontend-team # Optionnel
+  labels:
+  app: web-app # Obligatoire (dans selector)
+  tier: frontend # Obligatoire (dans selector)
+  version: v1.2.3 # Optionnel
+  build-date: 2025-10-31 # Optionnel
+  team: frontend-team # Optionnel
 ```
 
 ### 6.6 Création de Deployments : Approches impératives
@@ -3750,16 +3754,16 @@ kubectl create deployment api-app --image=myapi:v1.0 --port=8080
 ```bash
 # Deployment avec ressources
 kubectl create deployment heavy-app \
-  --image=myapp:v2.0 \
-  --replicas=3 \
-  --port=3000
+ --image=myapp:v2.0 \
+ --replicas=3 \
+ --port=3000
 
 # Avec variables d'environnement
 kubectl create deployment config-app \
-  --image=nginx:1.21 \
-  --replicas=2 \
-  --env="ENV=production" \
-  --env="DEBUG=false"
+ --image=nginx:1.21 \
+ --replicas=2 \
+ --env="ENV=production" \
+ --env="DEBUG=false"
 ```
 
 #### Génération de YAML
@@ -3767,15 +3771,15 @@ kubectl create deployment config-app \
 ```bash
 # Générer le YAML sans créer
 kubectl create deployment nginx-app \
-  --image=nginx:1.21 \
-  --replicas=3 \
-  --dry-run=client -o yaml
+ --image=nginx:1.21 \
+ --replicas=3 \
+ --dry-run=client -o yaml
 
 # Sauvegarder dans un fichier
 kubectl create deployment nginx-app \
-  --image=nginx:1.21 \
-  --replicas=3 \
-  --dry-run=client -o yaml > nginx-deployment.yaml
+ --image=nginx:1.21 \
+ --replicas=3 \
+ --dry-run=client -o yaml > nginx-deployment.yaml
 
 # Modifier et appliquer
 kubectl apply -f nginx-deployment.yaml
@@ -3789,91 +3793,91 @@ kubectl apply -f nginx-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
-  namespace: default
-  labels:
-    app: nginx
-    version: v1.0
-    environment: production
-  annotations:
-    deployment.kubernetes.io/revision: '1'
+ name: nginx-deployment
+ namespace: default
+ labels:
+ app: nginx
+ version: v1.0
+ environment: production
+ annotations:
+ deployment.kubernetes.io/revision: '1'
 
 spec:
-  # Configuration des replicas
-  replicas: 5
+# Configuration des replicas
+ replicas: 5
 
-  # Sélecteur pour les Pods
-  selector:
-    matchLabels:
-      app: nginx
-      version: v1.0
+# Sélecteur pour les Pods
+ selector:
+ matchLabels:
+ app: nginx
+ version: v1.0
 
-  # Stratégie de déploiement
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1 # Maximum de Pods indisponibles
-      maxSurge: 1 # Maximum de Pods supplémentaires
+# Stratégie de déploiement
+ strategy:
+ type: RollingUpdate
+ rollingUpdate:
+ maxUnavailable: 1 # Maximum de Pods indisponibles
+ maxSurge: 1 # Maximum de Pods supplémentaires
 
-  # Contrôle de progression
-  progressDeadlineSeconds: 600
-  revisionHistoryLimit: 10
+# Contrôle de progression
+ progressDeadlineSeconds: 600
+ revisionHistoryLimit: 10
 
-  # Template des Pods
-  template:
-    metadata:
-      labels:
-        app: nginx
-        version: v1.0
-      annotations:
-        prometheus.io/scrape: 'true'
-        prometheus.io/port: '9113'
+# Template des Pods
+ template:
+ metadata:
+ labels:
+ app: nginx
+ version: v1.0
+ annotations:
+ prometheus.io/scrape: 'true'
+ prometheus.io/port: '9113'
 
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.21
-          imagePullPolicy: IfNotPresent
+ spec:
+ containers:
+ - name: nginx
+ image: nginx:1.21
+ imagePullPolicy: IfNotPresent
 
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
+ ports:
+ - name: http
+ containerPort: 80
+ protocol: TCP
 
-          env:
-            - name: ENVIRONMENT
-              value: 'production'
-            - name: LOG_LEVEL
-              value: 'info'
+ env:
+ - name: ENVIRONMENT
+ value: 'production'
+ - name: LOG_LEVEL
+ value: 'info'
 
-          resources:
-            requests:
-              memory: '128Mi'
-              cpu: '100m'
-            limits:
-              memory: '256Mi'
-              cpu: '200m'
+ resources:
+ requests:
+ memory: '128Mi'
+ cpu: '100m'
+ limits:
+ memory: '256Mi'
+ cpu: '200m'
 
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+ livenessProbe:
+ httpGet:
+ path: /
+ port: 80
+ initialDelaySeconds: 30
+ periodSeconds: 10
+ timeoutSeconds: 5
+ failureThreshold: 3
 
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+ readinessProbe:
+ httpGet:
+ path: /
+ port: 80
+ initialDelaySeconds: 5
+ periodSeconds: 5
+ timeoutSeconds: 3
+ failureThreshold: 3
 
-      restartPolicy: Always
-      terminationGracePeriodSeconds: 30
+ restartPolicy: Always
+ terminationGracePeriodSeconds: 30
 ```
 
 ### 6.6 Scaling : Gestion dynamique des replicas
@@ -3910,9 +3914,9 @@ kubectl patch deployment nginx-app -p '{"spec":{"replicas":8}}'
 ```bash
 # Autoscaling basé sur le CPU
 kubectl autoscale deployment nginx-app \
-  --cpu-percent=70 \
-  --min=3 \
-  --max=15
+ --cpu-percent=70 \
+ --min=3 \
+ --max=15
 
 # Vérifier l'HPA
 kubectl get hpa
@@ -3927,27 +3931,27 @@ kubectl describe hpa nginx-app
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: nginx-app-hpa
+ name: nginx-app-hpa
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-app
-  minReplicas: 3
-  maxReplicas: 20
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
+ scaleTargetRef:
+ apiVersion: apps/v1
+ kind: Deployment
+ name: nginx-app
+ minReplicas: 3
+ maxReplicas: 20
+ metrics:
+ - type: Resource
+ resource:
+ name: cpu
+ target:
+ type: Utilization
+ averageUtilization: 70
+ - type: Resource
+ resource:
+ name: memory
+ target:
+ type: Utilization
+ averageUtilization: 80
 ```
 
 ### 6.7 Rolling Updates : Mises à jour sans interruption
@@ -3960,8 +3964,8 @@ spec:
 strategy:
   type: RollingUpdate
   rollingUpdate:
-    maxUnavailable: 25% # Ou un nombre absolu comme 2
-    maxSurge: 25% # Ou un nombre absolu comme 2
+  maxUnavailable: 25% # Ou un nombre absolu comme 2
+  maxSurge: 25% # Ou un nombre absolu comme 2
 ```
 
 **Recreate** :
@@ -3981,8 +3985,8 @@ kubectl set image deployment/nginx-app nginx=nginx:1.22
 
 # Mettre à jour avec plusieurs conteneurs
 kubectl set image deployment/app-deployment \
-  nginx=nginx:1.22 \
-  sidecar=sidecar:v2.0
+ nginx=nginx:1.22 \
+ sidecar=sidecar:v2.0
 
 # Forcer un redéploiement (même image)
 kubectl rollout restart deployment/nginx-app
@@ -4005,20 +4009,20 @@ kubectl rollout status deployment/nginx-app --timeout=300s
 
 ```mermaid
 sequenceDiagram
-    participant User as Utilisateur
-    participant Deploy as Deployment
-    participant RS1 as ReplicaSet v1
-    participant RS2 as ReplicaSet v2
-    participant Pods as Pods
+ participant User as Utilisateur
+ participant Deploy as Deployment
+ participant RS1 as ReplicaSet v1
+ participant RS2 as ReplicaSet v2
+ participant Pods as Pods
 
-    User->>Deploy: kubectl set image
-    Deploy->>RS2: Créer nouveau ReplicaSet
-    RS2->>Pods: Créer nouveau Pod v2
-    Note over Pods: Pod v2 démarre
-    Deploy->>RS1: Réduire replicas v1
-    RS1->>Pods: Terminer Pod v1
-    Note over Pods: Répéter jusqu'à completion
-    Deploy->>User: Rolling update terminé
+ User->>Deploy: kubectl set image
+ Deploy->>RS2: Créer nouveau ReplicaSet
+ RS2->>Pods: Créer nouveau Pod v2
+ Note over Pods: Pod v2 démarre
+ Deploy->>RS1: Réduire replicas v1
+ RS1->>Pods: Terminer Pod v1
+ Note over Pods: Répéter jusqu'à completion
+ Deploy->>User: Rolling update terminé
 ```
 
 ### 6.8 Rollback : Retour aux versions précédentes
@@ -4150,44 +4154,44 @@ kubectl delete deployment app-blue
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-stable
+ name: app-stable
 spec:
-  replicas: 9
-  selector:
-    matchLabels:
-      app: myapp
-      version: stable
-  template:
-    metadata:
-      labels:
-        app: myapp
-        version: stable
-    spec:
-      containers:
-        - name: app
-          image: myapp:v1.0
+ replicas: 9
+ selector:
+ matchLabels:
+ app: myapp
+ version: stable
+ template:
+ metadata:
+ labels:
+ app: myapp
+ version: stable
+ spec:
+ containers:
+ - name: app
+ image: myapp:v1.0
 
 ---
 # Deployment canary (10% du trafic)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-canary
+ name: app-canary
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: myapp
-      version: canary
-  template:
-    metadata:
-      labels:
-        app: myapp
-        version: canary
-    spec:
-      containers:
-        - name: app
-          image: myapp:v2.0
+ replicas: 1
+ selector:
+ matchLabels:
+ app: myapp
+ version: canary
+ template:
+ metadata:
+ labels:
+ app: myapp
+ version: canary
+ spec:
+ containers:
+ - name: app
+ image: myapp:v2.0
 ```
 
 ### 6.11 Bonnes pratiques de production
@@ -4196,12 +4200,12 @@ spec:
 
 ```yaml
 resources:
-  requests: # Ressources garanties
-    memory: '256Mi'
-    cpu: '100m'
-  limits: # Limites maximales
-    memory: '512Mi'
-    cpu: '500m'
+ requests: # Ressources garanties
+ memory: '256Mi'
+ cpu: '100m'
+ limits: # Limites maximales
+ memory: '512Mi'
+ cpu: '500m'
 ```
 
 #### Health checks obligatoires
@@ -4209,8 +4213,8 @@ resources:
 ```yaml
 livenessProbe: # Redémarre si échec
   httpGet:
-    path: /health
-    port: 8080
+  path: /health
+  port: 8080
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
@@ -4218,8 +4222,8 @@ livenessProbe: # Redémarre si échec
 
 readinessProbe: # Retire du service si échec
   httpGet:
-    path: /ready
-    port: 8080
+  path: /ready
+  port: 8080
   initialDelaySeconds: 5
   periodSeconds: 5
   timeoutSeconds: 3
@@ -4231,15 +4235,15 @@ readinessProbe: # Retire du service si échec
 ```yaml
 metadata:
   labels:
-    app: myapp # Application
-    version: v1.0 # Version
-    component: frontend # Composant
-    environment: production # Environnement
-    team: platform # Équipe responsable
+  app: myapp # Application
+  version: v1.0 # Version
+  component: frontend # Composant
+  environment: production # Environnement
+  team: platform # Équipe responsable
   annotations:
-    deployment.kubernetes.io/revision: '1'
-    kubernetes.io/change-cause: 'Initial deployment'
-    contact: 'platform-team@company.com'
+  deployment.kubernetes.io/revision: '1'
+  kubernetes.io/change-cause: 'Initial deployment'
+  contact: 'platform-team@company.com'
 ```
 
 #### Stratégie de rolling update optimisée
@@ -4248,8 +4252,8 @@ metadata:
 strategy:
   type: RollingUpdate
   rollingUpdate:
-    maxUnavailable: 1 # Conserve la disponibilité
-    maxSurge: 1 # Contrôle la consommation de ressources
+  maxUnavailable: 1 # Conserve la disponibilité
+  maxSurge: 1 # Contrôle la consommation de ressources
 ```
 
 📝 **LAB 4** - Deployments et ReplicaSets : `labs/enonces/S3_S1_S1_lab4_deployments_replicasets.md`
@@ -4262,12 +4266,14 @@ Maîtrisez les Deployments pour la gestion production d'applications conteneuris
 - **Objectif** : Maîtriser scaling, rolling updates, rollback et monitoring des Deployments
 - **Contexte** : Déploiement et gestion d'une application web critique en production
 - **Instructions** :
-  1. Créer un Deployment avec commandes impératives et déclaratives
-  2. Effectuer du scaling manuel et configurer l'autoscaling
-  3. Réaliser un rolling update vers une nouvelle version
-  4. Tester la résistance aux pannes et l'auto-healing
-  5. Effectuer un rollback et gérer l'historique des révisions
-  6. Implémenter les health checks et bonnes pratiques
+
+1.  Créer un Deployment avec commandes impératives et déclaratives
+2.  Effectuer du scaling manuel et configurer l'autoscaling
+3.  Réaliser un rolling update vers une nouvelle version
+4.  Tester la résistance aux pannes et l'auto-healing
+5.  Effectuer un rollback et gérer l'historique des révisions
+6.  Implémenter les health checks et bonnes pratiques
+
 - **Critères de validation** : Deployments opérationnels, scaling fonctionnel, rolling updates sans downtime, rollback réussi, monitoring configuré
 - **Durée estimée** : 60 minutes
 - **Fichier de travail** : `S3_S1_lab4_deployments_replicasets.yml`
@@ -4276,774 +4282,1863 @@ Maîtrisez les Deployments pour la gestion production d'applications conteneuris
 
 ## 7. Configuration et secrets
 
-### 7.1 Séparation configuration/code
+### 7.1 Problématique de la configuration dans les applications conteneurisées
 
-**Principe DevOps** : La configuration doit être externalisée du code pour :
+#### 7.1.1 Les défis de la configuration moderne
 
-- **Portabilité** : Même image dans différents environnements
-- **Sécurité** : Pas de secrets dans le code source
-- **Flexibilité** : Modification sans rebuild
+**Scénario concret** : Vous développez une application e-commerce avec base de données. Comment gérer les différences entre environnements ?
 
-### 7.2 ConfigMaps
-
-**Définition** : Objets Kubernetes pour stocker des données de configuration non sensibles.
-
-```mermaid
-graph LR
-    subgraph "ConfigMap Usage"
-        A[ConfigMap app-config] --> B[Environment Variables]
-        A --> C[Volume Mount]
-        A --> D[Command Arguments]
-    end
-
-    subgraph "Pod Consumption"
-        B --> E[Pod Container]
-        C --> E
-        D --> E
-    end
-
-    subgraph "Configuration Data"
-        F[app.properties]
-        G[nginx.conf]
-        H[database.url]
-    end
-
-    F --> A
-    G --> A
-    H --> A
+```
+Environnement DEV:  database_url=localhost:5432
+Environnement TEST: database_url=test-db.company.com:5432
+Environnement PROD: database_url=prod-db.company.com:5432
 ```
 
-**Création ConfigMap** :
+**Problèmes sans externalisation** :
+
+- **Images différentes** par environnement = maintenance complexe
+- **Secrets dans le code** = risques de sécurité majeurs
+- **Redéploiement** requis pour chaque changement de config
+- **Violation du principe 12-factor** apps
+
+```mermaid
+graph TB
+    subgraph "MAUVAISE approche - Config dans l'image"
+        A[Code + Config DEV] --> B[Image DEV]
+        C[Code + Config TEST] --> D[Image TEST]
+        E[Code + Config PROD] --> F[Image PROD]
+
+        G[3 images différentes<br/>3 pipelines<br/>3 maintenances]
+    end
+
+    subgraph "BONNE approche - Config externalisée"
+        H[Code seul] --> I[Image unique]
+        J[Config DEV] --> I
+        K[Config TEST] --> I
+        L[Config PROD] --> I
+
+        M[1 image<br/>1 pipeline<br/>Config flexible]
+    end
+```
+
+#### 7.1.2 Le principe 12-factor pour la configuration
+
+**Facteur III - Configuration** : "Stocker la configuration dans l'environnement"
+
+**Règles d'or** :
+
+- Configuration séparée du code
+- Variables d'environnement pour les valeurs simples
+- Fichiers de configuration pour les contenus complexes
+- Secrets isolés et chiffrés
+- Configuration versionnable et auditable
+
+### 7.2 ConfigMaps - Maîtriser la configuration non-sensible
+
+#### 7.2.1 Qu'est-ce qu'un ConfigMap ?
+
+**Définition** : Objet Kubernetes qui stocke des données de configuration sous forme de paires clé-valeur, accessible aux Pods.
+
+**Analogie** : Un ConfigMap est comme un **tableau d'affichage** dans une entreprise où l'administration affiche les informations importantes que tous les employés (Pods) peuvent consulter.
+
+#### 7.2.2 Anatomie d'un ConfigMap
+
+```mermaid
+graph TB
+    subgraph "ConfigMap Structure"
+        A[ConfigMap Object] --> B[metadata]
+        A --> C[data]
+
+        B --> D[name: app-config]
+        B --> E[namespace: default]
+        B --> F[labels: app=webapp]
+
+        C --> G[Simple key-value pairs]
+        C --> H[Multi-line files]
+
+        G --> I[database_host: postgres.svc]
+        G --> J[log_level: INFO]
+        G --> K[max_connections: 100]
+
+        H --> L[nginx.conf: |<br/>  server {<br/>    listen 80;<br/>    ...}]
+        H --> M[app.properties: |<br/>  server.port=8080<br/>  ...]
+    end
+```
+
+#### 7.2.3 Création de ConfigMaps
+
+**Méthode 1 : Via YAML déclaratif (recommandé)**
 
 ```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: app-config
+  name: webapp-config
+  namespace: default
+  labels:
+    app: webapp
+    env: production
 data:
-  database_url: 'postgresql://db.example.com:5432/app'
-  api_endpoint: 'https://api.example.com/v1'
+  # Configuration simple clé-valeur
+  database_host: 'postgres.default.svc.cluster.local'
+  database_port: '5432'
+  redis_host: 'redis.default.svc.cluster.local'
+  redis_port: '6379'
   log_level: 'INFO'
+  max_connections: '100'
+  timeout_seconds: '30'
+
+  # Configuration complexe multi-lignes
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name webapp.company.com;
+        
+        location / {
+            proxy_pass http://backend-service:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_connect_timeout 30s;
+            proxy_read_timeout 30s;
+        }
+        
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+    }
+
   app.properties: |
+    # Configuration Spring Boot
     server.port=8080
-    spring.datasource.url=${database_url}
+    server.servlet.context-path=/api/v1
+
+    # Database configuration
+    spring.datasource.url=jdbc:postgresql://${database_host}:${database_port}/webapp
+    spring.datasource.hikari.maximum-pool-size=${max_connections}
+    spring.datasource.hikari.connection-timeout=${timeout_seconds}000
+
+    # Redis configuration  
+    spring.redis.host=${redis_host}
+    spring.redis.port=${redis_port}
+    spring.redis.timeout=${timeout_seconds}000
+
+    # Logging
     logging.level.root=${log_level}
+    logging.level.com.company.webapp=DEBUG
+
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      - job_name: 'webapp'
+        static_configs:
+          - targets: ['webapp-service:8080']
+        metrics_path: '/actuator/prometheus'
+        scrape_interval: 5s
 ```
 
-### 7.3 Secrets
+**Méthode 2 : Via ligne de commande (pour tests rapides)**
 
-**Définition** : Objets pour données sensibles (mots de passe, tokens, clés).
+```bash
+# Depuis des valeurs littérales
+kubectl create configmap app-config \
+  --from-literal=database_url=postgres://db:5432/app \
+  --from-literal=log_level=DEBUG \
+  --from-literal=max_retries=3
 
-**Avantages** :
+# Depuis des fichiers
+kubectl create configmap nginx-config \
+  --from-file=nginx.conf \
+  --from-file=mime.types
 
-- **Encodage Base64** (pas de chiffrement !)
-- **Accès contrôlé** via RBAC
-- **Audit trail** des accès
-- **Rotation** facilitée
+# Depuis un répertoire complet
+kubectl create configmap app-files \
+  --from-file=./config-directory/
+
+# Générer le YAML sans créer l'objet
+kubectl create configmap app-config \
+  --from-literal=key=value \
+  --dry-run=client -o yaml > configmap.yaml
+```
+
+#### 7.2.4 Utilisation des ConfigMaps dans les Pods
+
+**Pattern 1 : Variables d'environnement (simple)**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-with-env
+spec:
+  containers:
+    - name: webapp
+      image: nginx:1.21
+      env:
+        # Variable simple depuis ConfigMap
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: database_host
+
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: log_level
+
+      # Importer TOUTES les clés comme variables d'environnement
+      envFrom:
+        - configMapRef:
+            name: webapp-config
+            # Toutes les clés deviennent DATABASE_HOST, DATABASE_PORT, etc.
+```
+
+**Pattern 2 : Volumes montés (fichiers de configuration)**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-with-files
+spec:
+  containers:
+    - name: webapp
+      image: nginx:1.21
+      volumeMounts:
+        # Monter nginx.conf depuis ConfigMap
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/conf.d/
+          readOnly: true
+
+        # Monter app.properties depuis ConfigMap
+        - name: app-config-volume
+          mountPath: /app/config/
+          readOnly: true
+
+        # Monter une clé spécifique vers un fichier spécifique
+        - name: specific-config
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+          readOnly: true
+
+  volumes:
+    # Volume pour fichiers de configuration
+    - name: nginx-config-volume
+      configMap:
+        name: webapp-config
+        items:
+          - key: nginx.conf
+            path: default.conf # Nom du fichier dans le container
+
+    - name: app-config-volume
+      configMap:
+        name: webapp-config
+        items:
+          - key: app.properties
+            path: application.properties
+            mode: 0644 # Permissions du fichier
+
+    # Volume pour fichier unique
+    - name: specific-config
+      configMap:
+        name: webapp-config
+        items:
+          - key: prometheus.yml
+            path: prometheus.yml
+```
+
+**Pattern 3 : Combinaison environnement + fichiers (réaliste)**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-complete
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp
+          image: springboot-app:v1.2.0
+          ports:
+            - containerPort: 8080
+
+          # Variables d'environnement depuis ConfigMap
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: database_host
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: log_level
+
+          # Fichiers de configuration montés
+          volumeMounts:
+            - name: app-properties
+              mountPath: /app/config/
+              readOnly: true
+
+          # Health check utilisant la configuration
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+        - name: nginx-proxy
+          image: nginx:1.21
+          ports:
+            - containerPort: 80
+
+          # Configuration nginx depuis ConfigMap
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/
+              readOnly: true
+
+      volumes:
+        - name: app-properties
+          configMap:
+            name: webapp-config
+            items:
+              - key: app.properties
+                path: application.properties
+
+        - name: nginx-config
+          configMap:
+            name: webapp-config
+            items:
+              - key: nginx.conf
+                path: default.conf
+```
+
+#### 7.2.5 Bonnes pratiques ConfigMaps
+
+**Organisation par environnement**
+
+```yaml
+# ConfigMap pour développement
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config-dev
+  labels:
+    app: webapp
+    env: development
+data:
+  database_host: 'localhost'
+  log_level: 'DEBUG'
+  max_connections: '10'
+---
+# ConfigMap pour production
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config-prod
+  labels:
+    app: webapp
+    env: production
+data:
+  database_host: 'prod-postgres.default.svc.cluster.local'
+  log_level: 'WARN'
+  max_connections: '100'
+```
+
+**Validation et structure**
+
+```yaml
+# ConfigMap avec validation
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config-validated
+  annotations:
+    config.kubernetes.io/version: 'v1.2.0'
+    config.kubernetes.io/checksum: 'sha256:abc123...'
+    description: 'Configuration for webapp v1.2.0'
+data:
+  # Configuration structurée en JSON/YAML
+  app-config.json: |
+    {
+      "database": {
+        "host": "postgres.default.svc.cluster.local",
+        "port": 5432,
+        "pool": {
+          "min": 5,
+          "max": 20,
+          "timeout": 30
+        }
+      },
+      "cache": {
+        "redis": {
+          "host": "redis.default.svc.cluster.local",
+          "port": 6379,
+          "ttl": 3600
+        }
+      },
+      "logging": {
+        "level": "INFO",
+        "format": "json",
+        "output": "stdout"
+      }
+    }
+```
+
+### 7.3 Secrets - Maîtriser les données sensibles
+
+#### 7.3.1 Qu'est-ce qu'un Secret ?
+
+**Définition** : Objet Kubernetes pour stocker des données sensibles (mots de passe, tokens, clés) avec un niveau de sécurité renforcé.
+
+**Différences avec ConfigMaps** :
+
+| Aspect               | ConfigMap              | Secret                       |
+| -------------------- | ---------------------- | ---------------------------- |
+| **Données stockées** | Configuration publique | Données sensibles            |
+| **Encodage**         | Texte brut             | Base64 (pas de chiffrement!) |
+| **Visibilité**       | Lisible par tous       | Accès restreint RBAC         |
+| **Audit**            | Logs basiques          | Audit trail détaillé         |
+| **Rotation**         | Manuelle               | Automatisable                |
+| **Montage**          | Lecture seule          | Permissions strictes         |
+
+**Important** : Les Secrets sont encodés en Base64, **PAS chiffrés**. Pour un vrai chiffrement, utilisez des solutions comme HashiCorp Vault ou Sealed Secrets.
+
+#### 7.3.2 Types de Secrets
+
+**Opaque (générique)** - Le plus courant
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: app-secrets
+  name: webapp-secrets
 type: Opaque
 data:
-  username: YWRtaW4= # admin en base64
-  password: cGFzc3dvcmQ= # password en base64
+  # Valeurs encodées en Base64
+  database-username: cG9zdGdyZXM= # postgres
+  database-password: c3VwZXJzZWNyZXQ= # supersecret
+  api-key: YWJjZGVmZ2hpams= # abcdefghijk
+  jwt-secret: bXlzdXBlcnNlY3JldGp3dA== # mysupersecretjwt
+stringData:
+  # Valeurs en texte brut (converties automatiquement)
+  redis-password: 'myredispassword'
+  oauth-client-secret: 'oauth-secret-key-here'
 ```
 
-### 7.5 Application pratique - Configuration
+**docker-registry** - Pour l'authentification aux registres privés
 
-📝 **LAB 5** - ConfigMaps et variables : `labs/enonces/S3_S1_S1_lab5_configmaps_variables.md`
-**Correction** : `labs/corrections/S3_S1_S1_lab5_configmaps_variables_correction.md`
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: docker-registry-secret
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    eyJhdXRocyI6eyJyZWdpc3RyeS5jb21wYW55LmNvbSI6eyJ1c2VybmFtZSI6Im15dXNlciIsInBhc3N3b3JkIjoibXlwYXNzd29yZCIsImVtYWlsIjoibXlAZW1haWwuY29tIiwiYXV0aCI6ImJYbDFjMlZ5T20xNWNHRnpjM2R2Y21RPSJ9fX0=
+```
+
+**tls** - Pour les certificats SSL/TLS
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: webapp-tls
+type: kubernetes.io/tls
+data:
+  tls.crt: |
+    LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t...
+  tls.key: |
+    LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t...
+```
+
+#### 7.3.3 Création de Secrets
+
+**Méthode 1 : Via kubectl (rapide et sécurisé)**
+
+```bash
+# Secret générique depuis ligne de commande
+kubectl create secret generic webapp-db-secret \
+  --from-literal=username=postgres \
+  --from-literal=password=supersecret \
+  --from-literal=host=postgres.company.com
+
+# Secret depuis fichiers
+echo -n 'admin' > username.txt
+echo -n 'supersecret' > password.txt
+kubectl create secret generic file-secret \
+  --from-file=username.txt \
+  --from-file=password.txt
+
+# Secret pour Docker registry
+kubectl create secret docker-registry registry-secret \
+  --docker-server=registry.company.com \
+  --docker-username=myuser \
+  --docker-password=mypassword \
+  --docker-email=my@email.com
+
+# Secret TLS depuis certificats
+kubectl create secret tls webapp-tls-secret \
+  --cert=webapp.crt \
+  --key=webapp.key
+```
+
+**Méthode 2 : Via YAML (pour versioning)**
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: comprehensive-secret
+  namespace: default
+  labels:
+    app: webapp
+    env: production
+type: Opaque
+data:
+  # Database credentials (Base64 encoded)
+  db-username: cG9zdGdyZXM= # postgres
+  db-password: cG9zdGdyZXNfcGFzcw== # postgres_pass
+  db-root-password: cm9vdF9wYXNzd29yZA== # root_password
+
+  # API Keys (Base64 encoded)
+  stripe-api-key: c2tfbGl2ZV9hYmNkZWZn # sk_live_abcdefg
+  sendgrid-api-key: U0cuYWJjZGVmZ2g= # SG.abcdefgh
+
+  # Certificates and keys
+  jwt-private-key: |
+    LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ0KTUlJRXBBSUJBQUtDQVFFQTJ...
+
+stringData:
+  # Text values (automatically converted to Base64)
+  oauth-client-id: 'my-oauth-client-id'
+  oauth-client-secret: 'my-oauth-client-secret-here'
+
+  # Configuration files with secrets
+  app-secrets.json: |
+    {
+      "database": {
+        "password": "postgres_pass",
+        "ssl": {
+          "cert": "/etc/ssl/certs/postgres.crt",
+          "key": "/etc/ssl/private/postgres.key"
+        }
+      },
+      "external_apis": {
+        "stripe": {
+          "secret_key": "sk_live_abcdefg",
+          "webhook_secret": "whsec_abcdefg"
+        },
+        "sendgrid": {
+          "api_key": "SG.abcdefgh"
+        }
+      }
+    }
+```
+
+#### 7.3.4 Utilisation des Secrets dans les Pods
+
+**Pattern 1 : Variables d'environnement**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-with-secrets
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp
+          image: webapp:v1.0.0
+          env:
+            # Variables individuelles depuis Secret
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: comprehensive-secret
+                  key: db-username
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: comprehensive-secret
+                  key: db-password
+
+            - name: STRIPE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: comprehensive-secret
+                  key: stripe-api-key
+
+          # Importer TOUTES les clés du Secret
+          envFrom:
+            - secretRef:
+                name: comprehensive-secret
+                # Toutes les clés deviennent des variables d'environnement
+
+          ports:
+            - containerPort: 8080
+
+          # Sécurité renforcée pour les secrets
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+```
+
+**Pattern 2 : Volumes montés (recommandé pour les gros secrets)**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-with-secret-files
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp
+          image: webapp:v1.0.0
+
+          # Variables d'environnement pour les petits secrets
+          env:
+            - name: DB_HOST
+              value: 'postgres.default.svc.cluster.local'
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: comprehensive-secret
+                  key: db-username
+
+          volumeMounts:
+            # Monter tous les secrets dans un répertoire
+            - name: secret-volume
+              mountPath: /etc/secrets
+              readOnly: true
+
+            # Monter un secret spécifique vers un fichier
+            - name: jwt-private-key
+              mountPath: /etc/ssl/private/jwt.key
+              subPath: jwt-private-key
+              readOnly: true
+
+            # Monter configuration JSON avec secrets
+            - name: app-secrets-config
+              mountPath: /app/config/secrets.json
+              subPath: app-secrets.json
+              readOnly: true
+
+      volumes:
+        # Volume avec tous les secrets
+        - name: secret-volume
+          secret:
+            secretName: comprehensive-secret
+            defaultMode: 0400 # Permissions restrictives (lecture seule pour le propriétaire)
+
+        # Volume pour clé JWT spécifique
+        - name: jwt-private-key
+          secret:
+            secretName: comprehensive-secret
+            items:
+              - key: jwt-private-key
+                path: jwt-private-key
+                mode: 0400
+
+        # Volume pour configuration JSON
+        - name: app-secrets-config
+          secret:
+            secretName: comprehensive-secret
+            items:
+              - key: app-secrets.json
+                path: app-secrets.json
+                mode: 0444
+```
+
+**Pattern 3 : Pull secrets pour images privées**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: private-registry-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: private-app
+  template:
+    metadata:
+      labels:
+        app: private-app
+    spec:
+      # Secret pour authentification au registry privé
+      imagePullSecrets:
+        - name: registry-secret
+
+      containers:
+        - name: app
+          image: registry.company.com/private/webapp:v1.0.0
+          env:
+            - name: APP_ENV
+              value: 'production'
+```
+
+#### 7.3.5 Sécurité et bonnes pratiques des Secrets
+
+**Principe de moindre privilège**
+
+```yaml
+# ServiceAccount avec accès limité aux secrets
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: webapp-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: secret-reader
+rules:
+  - apiGroups: ['']
+    resources: ['secrets']
+    resourceNames: ['webapp-secrets', 'db-secrets'] # Secrets spécifiques seulement
+    verbs: ['get', 'list']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-secrets
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: webapp-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: secret-reader
+  apiGroup: rbac.authorization.k8s.io
+```
+
+**Rotation des secrets**
+
+```bash
+# Script de rotation automatique
+#!/bin/bash
+
+# Générer nouveau mot de passe
+NEW_PASSWORD=$(openssl rand -base64 32)
+
+# Mettre à jour le secret
+kubectl patch secret webapp-secrets -p='{"data":{"db-password":"'$(echo -n $NEW_PASSWORD | base64)'"}}'
+
+# Mettre à jour la base de données
+kubectl exec postgres-pod -- psql -c "ALTER USER postgres PASSWORD '$NEW_PASSWORD';"
+
+# Redémarrer les pods pour prendre en compte le changement
+kubectl rollout restart deployment webapp
+```
+
+**Monitoring et audit**
+
+```yaml
+# Déploiement avec audit des secrets
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audited-webapp
+  annotations:
+    security.company.com/secret-audit: 'enabled'
+    security.company.com/secret-rotation: 'monthly'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+      annotations:
+        secret.kubernetes.io/checksum: 'sha256:abc123...' # Checksum pour détecter les changements
+    spec:
+      containers:
+        - name: webapp
+          image: webapp:v1.0.0
+          env:
+            - name: SECRET_LAST_UPDATED
+              value: '2024-11-04T10:00:00Z'
+          envFrom:
+            - secretRef:
+                name: webapp-secrets
+```
+
+### 7.4 Patterns avancés et cas d'usage réels
+
+#### 7.4.1 Configuration multi-environnements avec Kustomize
+
+```yaml
+# base/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+data:
+  log_level: "INFO"
+  timeout: "30"
+
+# base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+spec:
+  template:
+    spec:
+      containers:
+      - name: webapp
+        envFrom:
+        - configMapRef:
+            name: webapp-config
+---
+# overlays/dev/configmap-patch.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+data:
+  log_level: "DEBUG"
+  database_host: "localhost"
+
+# overlays/prod/configmap-patch.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+data:
+  log_level: "WARN"
+  database_host: "prod-postgres.company.com"
+```
+
+#### 7.4.2 Configuration avec rechargement à chaud
+
+```yaml
+# Deployment avec rechargement automatique
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-hot-reload
+spec:
+  template:
+    metadata:
+      annotations:
+        configmap.reloader.stakater.com/reload: 'webapp-config'
+        secret.reloader.stakater.com/reload: 'webapp-secrets'
+    spec:
+      containers:
+        - name: webapp
+          image: webapp-with-reload:v1.0.0
+          env:
+            - name: CONFIG_RELOAD_INTERVAL
+              value: '30s'
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: webapp-config
+```
+
+#### 7.4.3 Pattern de validation de configuration
+
+```yaml
+# Init container pour validation de config
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-validated
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: config-validator
+          image: config-validator:v1.0.0
+          env:
+            - name: CONFIG_SCHEMA_URL
+              value: 'https://schemas.company.com/webapp-v1.json'
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+              readOnly: true
+          command:
+            - '/bin/sh'
+            - '-c'
+            - |
+              echo "Validating configuration..."
+              if ! validate-config --schema=$CONFIG_SCHEMA_URL --config=/config; then
+                echo "Configuration validation failed!"
+                exit 1
+              fi
+              echo "Configuration is valid!"
+
+      containers:
+        - name: webapp
+          image: webapp:v1.0.0
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+              readOnly: true
+
+      volumes:
+        - name: config-volume
+          configMap:
+            name: webapp-config
+```
+
+### 7.5 Troubleshooting et debugging
+
+#### 7.5.1 Commandes de diagnostic
+
+```bash
+# Lister ConfigMaps et Secrets
+kubectl get configmaps
+kubectl get secrets
+
+# Voir le contenu d'un ConfigMap
+kubectl describe configmap webapp-config
+kubectl get configmap webapp-config -o yaml
+
+# Voir le contenu d'un Secret (attention à la sécurité!)
+kubectl describe secret webapp-secrets
+kubectl get secret webapp-secrets -o jsonpath='{.data.password}' | base64 -d
+
+# Vérifier l'utilisation dans les pods
+kubectl describe pod webapp-pod | grep -A 10 -B 10 "Environment\|Mounts"
+
+# Tester la configuration dans un pod
+kubectl exec webapp-pod -- env | grep DATABASE
+kubectl exec webapp-pod -- cat /app/config/application.properties
+```
+
+#### 7.5.2 Problèmes courants et solutions
+
+**Problème 1 : ConfigMap non trouvé**
+
+```bash
+# Erreur: configmap "webapp-config" not found
+kubectl get configmap webapp-config -n default
+kubectl get configmap -A | grep webapp-config
+
+# Solution: Vérifier namespace ou créer le ConfigMap
+kubectl create configmap webapp-config --from-literal=key=value
+```
+
+**Problème 2 : Secret mal encodé**
+
+```bash
+# Tester l'encodage Base64
+echo "password" | base64
+echo "cGFzc3dvcmQK" | base64 -d
+
+# Vérifier le secret dans le pod
+kubectl exec pod-name -- printenv SECRET_VAR
+```
+
+**Problème 3 : Rechargement de configuration**
+
+```bash
+# Forcer un redémarrage après changement de config
+kubectl rollout restart deployment webapp
+
+# Ou utiliser un annotation pour déclencher un restart
+kubectl patch deployment webapp -p \
+  '{"spec":{"template":{"metadata":{"annotations":{"restarted-at":"'$(date +%s)'"}}}}}'
+```
+
+### 7.6 Application pratique - Labs
+
+📝 **LAB 5** - ConfigMaps maîtrisés : `labs/enonces/S3_S1_lab5_configmaps_avances.md`
+**Correction** : `labs/corrections/S3_S1_lab5_configmaps_avances_correction.md`
 
 **Énoncé du LAB 5** :
 
-Externalisez la configuration d'applications avec ConfigMaps pour respecter les bonnes pratiques DevOps.
+Maîtrisez la configuration externe avec ConfigMaps pour des applications production-ready.
 
-- **Objectif** : Maîtriser la gestion de configuration externe
-- **Contexte** : Configuration multi-environnements (dev, staging, prod)
+- **Objectif** : Implémenter une gestion complète de configuration multi-environnements
+- **Contexte** : Application web avec base de données, cache Redis, et configuration multi-fichiers
 - **Instructions** :
-  1. Créer ConfigMaps pour configuration application web
-  2. Injecter configuration via variables d'environnement
-  3. Monter configuration sous forme de fichiers
-  4. Modifier configuration et observer rechargement
-- **Critères de validation** : Configuration externalisée, variables injectées, fichiers montés correctement
-- **Durée estimée** : 25 minutes
-- **Fichier de travail** : `S3_S1_lab5_configmaps_variables.yml`
 
-📝 **LAB 6** - Secrets et sécurité : `labs/enonces/S3_S1_S1_lab6_secrets_securite.md`
-**Correction** : `labs/corrections/S3_S1_S1_lab6_secrets_securite_correction.md`
+1.  Créer ConfigMaps pour différents environnements (dev, staging, prod)
+2.  Utiliser variables d'environnement ET volumes montés simultanément
+3.  Implémenter rechargement de configuration automatique
+4.  Valider la configuration avec init containers
+5.  Tester modification et mise à jour sans interruption de service
+
+- **Critères de validation** : Configuration multi-env, variables et fichiers fonctionnels, validation automatique, rechargement sans downtime
+- **Durée estimée** : 45 minutes
+- **Fichier de travail** : `S3_S1_lab5_configmaps_avances.yml`
+
+📝 **LAB 6** - Secrets et sécurité production : `labs/enonces/S3_S1_lab6_secrets_production.md`
+**Correction** : `labs/corrections/S3_S1_lab6_secrets_production_correction.md`
 
 **Énoncé du LAB 6** :
 
-Gérez les données sensibles avec les Secrets Kubernetes pour sécuriser vos déploiements.
+Implémentez une gestion sécurisée des secrets avec rotation et audit pour un environnement de production.
 
-- **Objectif** : Maîtriser la gestion sécurisée des credentials
-- **Contexte** : Connexions bases de données et APIs externes sécurisées
+- **Objectif** : Maîtriser la sécurité des secrets avec bonnes pratiques DevSecOps
+- **Contexte** : Application e-commerce avec bases de données, APIs externes, et certificats TLS
 - **Instructions** :
-  1. Créer Secrets pour credentials base de données
-  2. Injecter secrets dans Pods via variables d'environnement
-  3. Monter secrets comme volumes dans conteneurs
-  4. Tester rotation des secrets
-- **Critères de validation** : Secrets créés, accès sécurisé, rotation fonctionnelle
-- **Durée estimée** : 30 minutes
-- **Fichier de travail** : `S3_S1_lab6_secrets_securite.yml`
+
+1.  Créer Secrets pour credentials multiples (DB, APIs, certificats)
+2.  Configurer RBAC pour accès restreint aux secrets
+3.  Implémenter rotation automatique des mots de passe
+4.  Utiliser pull secrets pour registries privés
+5.  Monitorer et auditer l'accès aux secrets
+6.  Tester scenarios de compromission et récupération
+
+- **Critères de validation** : Secrets sécurisés, RBAC configuré, rotation fonctionnelle, audit en place, recovery testée
+- **Durée estimée** : 50 minutes
+- **Fichier de travail** : `S3_S1_lab6_secrets_production.yml`
 
 ---
 
 ## 8. Volumes et persistance
 
-### 8.1 Problématique des données
+### 8.1 Introduction à la persistance des données
 
-**Contrainte** : Les conteneurs sont éphémères, leurs données sont perdues à l'arrêt.
+#### 8.1.1 Problématique de l'éphémère dans les conteneurs
 
-**Solution** : Les **Volumes** fournissent un stockage persistant aux Pods.
+Les conteneurs sont par conception **éphémères** : leur système de fichiers existe uniquement pendant leur durée de vie. Cette caractéristique pose des défis majeurs pour les applications qui nécessitent la persistance des données :
 
-### 8.2 Types de Volumes
+- **Perte de données** : Redémarrage, crash ou suppression d'un Pod = perte totale des données
+- **Partage impossible** : Données isolées dans chaque conteneur
+- **Scalabilité limitée** : Impossible de partager l'état entre plusieurs instances
 
-#### emptyDir
+#### 8.1.2 Solution Kubernetes : Les Volumes
 
-- **Usage** : Stockage temporaire partagé entre conteneurs d'un Pod
-- **Durée de vie** : Liée au Pod
-- **Cas d'usage** : Cache, fichiers temporaires
+Kubernetes résout cette problématique grâce au concept de **Volumes**, qui permet de :
 
-#### hostPath
-
-- **Usage** : Montage d'un répertoire du node hôte
-- **Durée de vie** : Indépendante du Pod
-- **Cas d'usage** : Logs système, accès ressources node
-
-#### persistentVolumeClaim (PVC)
-
-- **Usage** : Demande de stockage persistant
-- **Durée de vie** : Indépendante du Pod et node
-- **Cas d'usage** : Bases de données, stockage applicatif
+- **Persister les données** au-delà du cycle de vie d'un conteneur
+- **Partager des données** entre conteneurs d'un même Pod
+- **Découpler le stockage** de la logique applicative
+- **Supporter différents backends** de stockage (local, cloud, réseau)
 
 ```mermaid
 graph TB
-    subgraph "Storage Architecture"
-        A[PersistentVolume<br/>50Gi NFS] --> B[PersistentVolumeClaim<br/>10Gi ReadWriteOnce]
-        B --> C[Pod Database]
-
-        D[StorageClass<br/>ssd-storage] --> A
-        E[Physical Storage<br/>NFS/iSCSI/Cloud] --> A
+    subgraph "Sans Volume"
+        A[Pod] --> B[Container]
+        B --> C[Système de fichiers éphémère]
+        D[Redémarrage] --> E[Perte de données]
     end
 
-    subgraph "Volume Types"
-        F[emptyDir<br/>Temporary]
-        G[hostPath<br/>Node Local]
-        H[configMap<br/>Configuration]
-        I[secret<br/>Credentials]
-    end
-
-    F --> C
-    G --> C
-    H --> C
-    I --> C
-```
-
-### 8.3 Persistent Volumes (PV) et Claims (PVC)
-
-**PersistentVolume** : Ressource de stockage dans le cluster
-**PersistentVolumeClaim** : Demande de stockage par un utilisateur
-
-**Cycle de vie** :
-
-1. **Provisioning** : Création du PV (statique ou dynamique)
-2. **Binding** : Association PV/PVC compatible
-3. **Using** : Montage dans Pod via PVC
-4. **Reclaiming** : Politique après suppression PVC (Retain/Delete/Recycle)
-
-### 8.4 Application pratique - Volumes
-
-📝 **LAB 7** - Volumes et persistance : `labs/enonces/S3_S1_S1_lab7_volumes_persistance.md`
-**Correction** : `labs/corrections/S3_S1_S1_lab7_volumes_persistance_correction.md`
-
-**Énoncé du LAB 7** :
-
-Configurez des volumes persistants pour assurer la persistance des données applications.
-
-- **Objectif** : Maîtriser les volumes et la persistance de données
-- **Contexte** : Déploiement base de données avec sauvegarde des données
-- **Instructions** :
-  1. Créer PersistentVolume et PersistentVolumeClaim
-  2. Déployer base de données MySQL avec volume persistant
-  3. Insérer des données et redémarrer le Pod
-  4. Vérifier la persistance des données
-- **Critères de validation** : Données persistantes après redémarrage, volumes montés correctement
-- **Durée estimée** : 35 minutes
-- **Fichier de travail** : `S3_S1_lab7_volumes_persistance.yml`
-
----
-
-## 9. Ingress et exposition
-
-### 9.1 Comprendre le Reverse Proxy dans Kubernetes
-
-#### 9.1.1 Qu'est-ce qu'un Reverse Proxy ?
-
-**Définition** : Un reverse proxy est un serveur qui se place **devant** vos applications et redirige les requêtes clients vers les serveurs backend appropriés.
-
-**Différence avec un Forward Proxy** :
-
-```mermaid
-graph LR
-    subgraph "Forward Proxy (Proxy classique)"
-        A1[Client] --> B1[Forward Proxy] --> C1[Internet/Serveurs]
-    end
-
-    subgraph "Reverse Proxy"
-        A2[Clients Internet] --> B2[Reverse Proxy] --> C2[Serveurs Backend]
+    subgraph "Avec Volume"
+        F[Pod] --> G[Container]
+        G --> H[Volume persistant]
+        I[Redémarrage] --> J[Données préservées]
+        H --> K[Backend de stockage]
     end
 ```
 
-#### 9.1.2 Rôle du Reverse Proxy dans Kubernetes
+### 8.2 Types de Volumes Kubernetes
 
-**Fonctions principales** :
+#### 8.2.1 emptyDir - Volume temporaire
 
-1. **Point d'entrée unique** : Une seule IP/domaine pour accéder à plusieurs services
-2. **Routage intelligent** : Redirection basée sur l'URL, headers, domaine
-3. **Terminaison SSL/TLS** : Gestion des certificats centralisée
-4. **Load Balancing** : Distribution des requêtes entre plusieurs Pods
-5. **Sécurité** : Filtrage, authentification, rate limiting
+**Définition** : Volume temporaire créé avec le Pod et détruit avec lui.
 
-#### 9.1.3 Exemples concrets dans Kubernetes
+**Caractéristiques techniques** :
 
-**Scenario typique d'une application web** :
+- **Création** : Initialisé vide lors de l'assignation du Pod au node
+- **Partage** : Accessible en lecture/écriture par tous les conteneurs du Pod
+- **Persistance** : Survit aux redémarrages de conteneurs, mais pas à la suppression du Pod
+- **Stockage** : Utilise l'espace disque du node (tmpfs optionnel)
+
+**Cas d'usage appropriés** :
+
+- Espace de travail temporaire pour calculs intensifs
+- Cache applicatif partagé entre conteneurs
+- Communication inter-conteneurs via fichiers
+- Stockage temporaire de logs en cours de traitement
+
+**Configuration de base** :
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-example
+spec:
+  containers:
+    - name: writer
+      image: busybox
+      command:
+        ['sh', '-c', 'echo "Hello World" > /shared/data.txt && sleep 3600']
+      volumeMounts:
+        - name: shared-storage
+          mountPath: /shared
+    - name: reader
+      image: busybox
+      command:
+        ['sh', '-c', 'while true; do cat /shared/data.txt; sleep 5; done']
+      volumeMounts:
+        - name: shared-storage
+          mountPath: /shared
+  volumes:
+    - name: shared-storage
+      emptyDir: {}
+```
+
+**Configuration avancée avec tmpfs** :
+
+```yaml
+volumes:
+  - name: cache-volume
+    emptyDir:
+      medium: Memory # Utilise la RAM au lieu du disque
+      sizeLimit: 1Gi # Limite la taille à 1GB
+```
+
+#### 8.2.2 hostPath - Accès au système de fichiers du node
+
+**Définition** : Volume qui monte un répertoire ou fichier du système de fichiers du node hôte.
+
+**Caractéristiques techniques** :
+
+- **Accès direct** : Lecture/écriture sur le système de fichiers du node
+- **Persistance** : Données persistent même après suppression du Pod
+- **Localisation** : Lié au node spécifique, pas portable
+- **Sécurité** : Risques élevés, accès privilégié requis
+
+**Types hostPath** :
+
+| Type                | Description            | Validation |
+| ------------------- | ---------------------- | ---------- |
+| `""`                | Pas de vérification    | Aucune     |
+| `DirectoryOrCreate` | Créé si inexistant     | Répertoire |
+| `Directory`         | Doit exister           | Répertoire |
+| `FileOrCreate`      | Créé si inexistant     | Fichier    |
+| `File`              | Doit exister           | Fichier    |
+| `Socket`            | Socket Unix            | Socket     |
+| `CharDevice`        | Périphérique caractère | Device     |
+| `BlockDevice`       | Périphérique bloc      | Device     |
+
+**Exemple configuration sécurisée** :
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod
+spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  containers:
+    - name: app
+      image: nginx
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: host-storage
+          mountPath: /app/data
+  volumes:
+    - name: host-storage
+      hostPath:
+        path: /opt/app-data
+        type: DirectoryOrCreate
+```
+
+**Cas d'usage légitimes** :
+
+- Accès aux logs système (`/var/log`)
+- Montage de socket Docker (`/var/run/docker.sock`)
+- Configuration système spécifique au node
+- Développement et debugging locaux
+
+**⚠️ Considérations de sécurité** :
+
+- Éviter en production sauf cas spécifiques
+- Utiliser des SecurityContexts restrictifs
+- Limiter les permissions au minimum nécessaire
+- Préférer des alternatives plus sécurisées
+
+#### 8.2.3 PersistentVolume (PV) - Abstraction du stockage
+
+**Définition** : Ressource de stockage dans le cluster, provisionnée par un administrateur ou dynamiquement.
+
+**Architecture PV** :
 
 ```mermaid
 graph TB
-    subgraph "Utilisateurs"
-        U1[Navigateur<br/>shop.example.com]
-        U2[App Mobile<br/>api.shop.example.com]
-        U3[Admin<br/>admin.shop.example.com]
+    subgraph "Abstraction du stockage"
+        A[PersistentVolume] --> B[Storage Backend]
+        B --> C[NFS]
+        B --> D[iSCSI]
+        B --> E[Cloud Storage]
+        B --> F[Local Disk]
     end
 
-    subgraph "Reverse Proxy (Ingress)"
-        RP[Ingress Controller<br/>NGINX/Traefik<br/>Point d'entrée unique<br/>Port 80/443]
+    subgraph "Cycle de vie"
+        G[Available] --> H[Bound]
+        H --> I[Released]
+        I --> J[Recycle/Delete]
     end
-
-    subgraph "Services Kubernetes"
-        S1[Service Frontend<br/>shop.example.com → Port 3000]
-        S2[Service API<br/>api.shop.example.com → Port 8080]
-        S3[Service Admin<br/>admin.shop.example.com → Port 9000]
-    end
-
-    subgraph "Pods"
-        P1[Pod Frontend-1<br/>React App]
-        P2[Pod Frontend-2<br/>React App]
-        P3[Pod API-1<br/>Node.js]
-        P4[Pod API-2<br/>Node.js]
-        P5[Pod Admin<br/>Django]
-    end
-
-    U1 --> RP
-    U2 --> RP
-    U3 --> RP
-
-    RP -->|"shop.example.com/*"| S1
-    RP -->|"api.shop.example.com/*"| S2
-    RP -->|"admin.shop.example.com/*"| S3
-
-    S1 --> P1
-    S1 --> P2
-    S2 --> P3
-    S2 --> P4
-    S3 --> P5
 ```
 
-**Configuration de routage typique** :
+**Caractéristiques techniques** :
 
-| Requête entrante                 | Destination      | Fonction              |
-| -------------------------------- | ---------------- | --------------------- |
-| `shop.example.com/`              | Service Frontend | Interface utilisateur |
-| `shop.example.com/products`      | Service Frontend | Pages produits        |
-| `api.shop.example.com/v1/users`  | Service API      | API REST              |
-| `api.shop.example.com/v1/orders` | Service API      | API commandes         |
-| `admin.shop.example.com/`        | Service Admin    | Interface admin       |
+- **Indépendance** : Cycle de vie indépendant des Pods
+- **Abstraction** : Interface unifiée vers différents backends
+- **Gestion centralisée** : Provisioning par l'administrateur cluster
+- **Modes d'accès** : ReadWriteOnce, ReadOnlyMany, ReadWriteMany
 
-#### 9.1.4 Avantages du Reverse Proxy
+**Exemple PV avec stockage local** :
 
-**1. Simplicité d'exposition** :
-
-```bash
-# Sans reverse proxy - Ports multiples
-http://cluster.local:30001  # Frontend
-http://cluster.local:30002  # API
-http://cluster.local:30003  # Admin
-
-# Avec reverse proxy - Point unique
-https://shop.example.com     # Frontend
-https://api.shop.example.com # API
-https://admin.shop.example.com # Admin
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+  labels:
+    type: local
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  local:
+    path: /mnt/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - worker-node-1
 ```
 
-**2. Sécurité centralisée** :
+**Politiques de récupération** :
 
-- Certificats SSL gérés à un seul endroit
-- Authentification commune
-- Protection DDoS et rate limiting
-- Headers de sécurité automatiques
+- **Retain** : Données préservées après suppression du PVC
+- **Delete** : PV et données supprimées automatiquement
+- **Recycle** : Données effacées, PV disponible pour réutilisation
 
-**3. Performances** :
+#### 8.2.4 PersistentVolumeClaim (PVC) - Demande de stockage
 
-- Cache des réponses statiques
-- Compression automatique
-- Connection pooling
-- Health checks
+**Définition** : Demande de stockage émise par un utilisateur, liée automatiquement à un PV compatible.
 
-#### 9.1.5 Implémentations populaires dans Kubernetes
-
-**Controllers Ingress courants** :
-
-1. **NGINX Ingress Controller**
-
-   - Plus populaire
-   - Performances élevées
-   - Configuration flexible
-
-2. **Traefik**
-
-   - Auto-discovery des services
-   - Interface UI intégrée
-   - Support natif de Docker/Kubernetes
-
-3. **Istio Gateway**
-
-   - Service mesh complet
-   - Sécurité avancée
-   - Observabilité poussée
-
-4. **HAProxy**
-   - Très performant
-   - Load balancing avancé
-   - Configuration complexe
-
-**Exemple de flux de requête complet** :
+**Mécanisme de liaison** :
 
 ```mermaid
 sequenceDiagram
     participant U as Utilisateur
-    participant DNS as DNS
-    participant LB as Load Balancer<br/>(Cloud)
-    participant IC as Ingress Controller<br/>(Reverse Proxy)
-    participant S as Service
-    participant P as Pod
+    participant PVC as PersistentVolumeClaim
+    participant K8s as Kubernetes API
+    participant PV as PersistentVolume
+    participant S as Storage Backend
 
-    U->>DNS: shop.example.com ?
-    DNS->>U: IP Load Balancer
-    U->>LB: HTTPS Request
-    LB->>IC: Forwarded Request
-
-    Note over IC: Analyse l'Host header<br/>Applique les règles de routage<br/>Termine SSL/TLS
-
-    IC->>S: HTTP Request (interne)
-    S->>P: Load balance vers Pod
-    P->>S: Response
-    S->>IC: Response
-    IC->>LB: HTTPS Response
-    LB->>U: Final Response
+    U->>PVC: Crée PVC (demande 5Gi)
+    PVC->>K8s: Recherche PV compatible
+    K8s->>PV: Trouve PV (capacité ≥ 5Gi)
+    PV->>PVC: Liaison établie (Bound)
+    U->>Pod: Déploie Pod avec PVC
+    Pod->>S: Accès au stockage via PV
 ```
 
-### 9.2 Limitations des Services (Suite de la section originale)
-
-**Problématiques** :
-
-- **NodePort** : Ports aléatoires, pas de SSL/TLS natif
-- **LoadBalancer** : Coûteux, une IP par service
-- **Pas de routage avancé** : Host-based, path-based routing
-
-**Solution** : **Ingress** fournit un point d'entrée unique avec routage intelligent.
-
-### 9.2 Architecture Ingress
-
-```mermaid
-graph TB
-    subgraph "External Traffic"
-        A[Internet] --> B[Load Balancer<br/>External IP]
-    end
-
-    subgraph "Ingress Layer"
-        B --> C[Ingress Controller<br/>nginx/traefik/istio]
-        C --> D[Ingress Rules<br/>Routing Logic]
-    end
-
-    subgraph "Services Layer"
-        D --> E[Service web<br/>ClusterIP]
-        D --> F[Service api<br/>ClusterIP]
-        D --> G[Service admin<br/>ClusterIP]
-    end
-
-    subgraph "Pods Layer"
-        E --> H[Pod web-1]
-        E --> I[Pod web-2]
-        F --> J[Pod api-1]
-        F --> K[Pod api-2]
-        G --> L[Pod admin-1]
-    end
-
-    M[Rules:<br/>example.com/web → Service web<br/>example.com/api → Service api<br/>admin.example.com → Service admin] --> D
-```
-
-### 9.3 Configuration Ingress
+**Exemple PVC** :
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: app-ingress
-  annotations:
-    kubernetes.io/ingress.class: 'nginx'
-    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+  name: app-storage-claim
 spec:
-  tls:
-    - hosts:
-        - app.example.com
-      secretName: app-tls
-  rules:
-    - host: app.example.com
-      http:
-        paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: api-service
-                port:
-                  number: 80
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: web-service
-                port:
-                  number: 80
+  storageClassName: fast-ssd
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  selector:
+    matchLabels:
+      environment: production
+      backup: enabled
 ```
 
-### 9.4 Cas d'usage avancés du Reverse Proxy
+**Modes d'accès** :
 
-#### 9.4.1 Routage par microservices
+| Mode          | Abréviation | Description                          | Cas d'usage      |
+| ------------- | ----------- | ------------------------------------ | ---------------- |
+| ReadWriteOnce | RWO         | Lecture/écriture par un seul node    | Base de données  |
+| ReadOnlyMany  | ROX         | Lecture seule par plusieurs nodes    | Assets statiques |
+| ReadWriteMany | RWX         | Lecture/écriture par plusieurs nodes | Stockage partagé |
 
-**Architecture microservices typique** :
+### 8.3 Utilisation des volumes dans les Pods
 
-```mermaid
-graph TB
-    subgraph "Clients"
-        C1[Web Browser]
-        C2[Mobile App]
-        C3[Admin Panel]
-    end
-
-    subgraph "Reverse Proxy Layer"
-        RP[Ingress Controller<br/>NGINX<br/>SSL Termination<br/>Load Balancing]
-    end
-
-    subgraph "Microservices"
-        MS1[User Service<br/>/api/v1/users/*]
-        MS2[Product Service<br/>/api/v1/products/*]
-        MS3[Order Service<br/>/api/v1/orders/*]
-        MS4[Frontend Service<br/>/*]
-        MS5[Admin Service<br/>/admin/*]
-    end
-
-    C1 --> RP
-    C2 --> RP
-    C3 --> RP
-
-    RP -->|"/api/v1/users"| MS1
-    RP -->|"/api/v1/products"| MS2
-    RP -->|"/api/v1/orders"| MS3
-    RP -->|"/"| MS4
-    RP -->|"/admin"| MS5
-```
-
-**Configuration Ingress pour microservices** :
+#### 8.3.1 Configuration des volumeMounts
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: v1
+kind: Pod
 metadata:
-  name: microservices-ingress
-  annotations:
-    kubernetes.io/ingress.class: 'nginx'
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
-    nginx.ingress.kubernetes.io/rate-limit: '100'
+  name: volume-demo
 spec:
-  tls:
-    - hosts:
-        - api.myshop.com
-      secretName: api-tls
-  rules:
-    - host: api.myshop.com
-      http:
-        paths:
-          # API Users - Microservice 1
-          - path: /api/v1/users(/|$)(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: user-service
-                port:
-                  number: 8080
-
-          # API Products - Microservice 2
-          - path: /api/v1/products(/|$)(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: product-service
-                port:
-                  number: 8080
-
-          # API Orders - Microservice 3
-          - path: /api/v1/orders(/|$)(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: order-service
-                port:
-                  number: 8080
-
-          # Frontend par défaut
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend-service
-                port:
-                  number: 3000
+  containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+        - name: data-volume
+          mountPath: /var/www/html
+          subPath: website # Monte uniquement le sous-répertoire 'website'
+        - name: logs-volume
+          mountPath: /var/log/nginx
+  volumes:
+    - name: config-volume
+      configMap:
+        name: nginx-config
+    - name: data-volume
+      persistentVolumeClaim:
+        claimName: website-content
+    - name: logs-volume
+      emptyDir: {}
 ```
 
-#### 9.4.2 Reverse Proxy avec authentification
-
-**Scenario** : API protégée avec authentification centralisée
+#### 8.3.2 Gestion des permissions
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: v1
+kind: Pod
 metadata:
-  name: secure-api-ingress
-  annotations:
-    kubernetes.io/ingress.class: 'nginx'
-    # Authentification OAuth via external service
-    nginx.ingress.kubernetes.io/auth-url: 'http://auth-service.default.svc.cluster.local/oauth/validate'
-    nginx.ingress.kubernetes.io/auth-signin: 'https://auth.mycompany.com/oauth/authorize'
-    # Headers pour le service backend
-    nginx.ingress.kubernetes.io/auth-response-headers: 'X-User-Id,X-User-Email,X-User-Roles'
-    # Rate limiting par utilisateur authentifié
-    nginx.ingress.kubernetes.io/rate-limit-rpm: '60'
+  name: secure-volume-pod
 spec:
-  tls:
-    - hosts:
-        - secure-api.mycompany.com
-      secretName: secure-api-tls
-  rules:
-    - host: secure-api.mycompany.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: protected-api-service
-                port:
-                  number: 8080
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 2000 # Groupe propriétaire des volumes
+  containers:
+    - name: app
+      image: nginx
+      securityContext:
+        runAsNonRoot: true
+        readOnlyRootFilesystem: true
+      volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+  volumes:
+    - name: data-volume
+      persistentVolumeClaim:
+        claimName: app-data
 ```
 
-#### 9.4.3 Reverse Proxy avec cache et performances
+### 8.4 StorageClass - Provisioning dynamique
 
-**Configuration avec mise en cache** :
+#### 8.4.1 Concept et avantages
+
+**StorageClass** permet le provisioning dynamique de PersistentVolumes :
+
+- **Automatisation** : Création automatique de PV à la demande
+- **Standardisation** : Templates de configuration réutilisables
+- **Flexibilité** : Différents types de stockage selon les besoins
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
 metadata:
-  name: performance-ingress
-  annotations:
-    kubernetes.io/ingress.class: 'nginx'
-    # Configuration cache
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-      }
-
-      location /api/v1/products {
-        proxy_cache products_cache;
-        proxy_cache_valid 200 302 10m;
-        proxy_cache_valid 404 1m;
-        add_header X-Cache-Status $upstream_cache_status;
-      }
-
-    # Compression
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      gzip on;
-      gzip_vary on;
-      gzip_min_length 1024;
-      gzip_types text/plain application/json application/javascript text/css;
-
-    # SSL optimizations
-    nginx.ingress.kubernetes.io/ssl-protocols: 'TLSv1.2 TLSv1.3'
-    nginx.ingress.kubernetes.io/ssl-ciphers: 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256'
-spec:
-  # ... règles de routage
+  name: fast-ssd
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp3
+  iops: '3000'
+  throughput: '125'
+  encrypted: 'true'
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
 ```
 
-#### 9.4.4 Multi-tenant avec reverse proxy
+#### 8.4.2 Provisioners courants
 
-**Architecture multi-tenant** :
+| Provisioner              | Description            | Paramètres clés        |
+| ------------------------ | ---------------------- | ---------------------- |
+| kubernetes.io/aws-ebs    | Amazon EBS             | type, iops, encrypted  |
+| kubernetes.io/azure-disk | Azure Disk             | skuName, cachingmode   |
+| kubernetes.io/gce-pd     | Google Persistent Disk | type, replication-type |
+| kubernetes.io/local-path | Stockage local         | hostPath               |
 
-```mermaid
-graph TB
-    subgraph "Tenants"
-        T1[Tenant A<br/>company-a.saas.com]
-        T2[Tenant B<br/>company-b.saas.com]
-        T3[Tenant C<br/>company-c.saas.com]
-    end
+### 8.5 Patterns et bonnes pratiques
 
-    subgraph "Reverse Proxy"
-        RP[Ingress Controller<br/>Tenant Isolation<br/>SSL per Domain]
-    end
-
-    subgraph "Services par Tenant"
-        S1[Service Company-A<br/>Namespace: tenant-a]
-        S2[Service Company-B<br/>Namespace: tenant-b]
-        S3[Service Company-C<br/>Namespace: tenant-c]
-    end
-
-    T1 --> RP
-    T2 --> RP
-    T3 --> RP
-
-    RP -->|"company-a.saas.com"| S1
-    RP -->|"company-b.saas.com"| S2
-    RP -->|"company-c.saas.com"| S3
-```
-
-**Configuration multi-tenant** :
+#### 8.5.1 Séparation des préoccupations
 
 ```yaml
-# Ingress pour Tenant A
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+# Séparation claire : config, données, logs
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: tenant-a-ingress
-  namespace: tenant-a
-  annotations:
-    kubernetes.io/ingress.class: 'nginx'
-    # Isolation par headers
-    nginx.ingress.kubernetes.io/server-snippet: |
-      add_header X-Tenant-ID "company-a" always;
-      add_header X-Frame-Options "SAMEORIGIN" always;
+  name: webapp
 spec:
-  tls:
-    - hosts:
-        - company-a.saas.com
-      secretName: tenant-a-tls
-  rules:
-    - host: company-a.saas.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: webapp-service
-                port:
-                  number: 80
+  template:
+    spec:
+      containers:
+        - name: app
+          image: webapp:v1.0
+          volumeMounts:
+            - name: app-config # Configuration (ConfigMap)
+              mountPath: /app/config
+              readOnly: true
+            - name: app-data # Données applicatives (PVC)
+              mountPath: /app/data
+            - name: app-logs # Logs temporaires (emptyDir)
+              mountPath: /app/logs
+      volumes:
+        - name: app-config
+          configMap:
+            name: webapp-config
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: webapp-data
+        - name: app-logs
+          emptyDir: {}
 ```
 
-#### 9.4.5 Monitoring du Reverse Proxy
-
-**Métriques importantes à surveiller** :
+#### 8.5.2 Stratégies de backup et récupération
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+# PVC avec annotations pour backup automatique
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: monitored-ingress
+  name: database-storage
   annotations:
-    kubernetes.io/ingress.class: 'nginx'
-    # Activation des métriques Prometheus
-    nginx.ingress.kubernetes.io/enable-metrics: 'true'
-    # Logs structurés
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      access_log /var/log/nginx/access.log json_combined;
-
-      # Headers pour debugging
-      add_header X-Request-ID $request_id always;
-      add_header X-Response-Time $request_time always;
+    backup.kubernetes.io/enabled: 'true'
+    backup.kubernetes.io/schedule: '0 2 * * *'
+    backup.kubernetes.io/retention: '30d'
 spec:
-  # ... configuration
+  storageClassName: backup-enabled-ssd
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
 ```
 
-**Dashboard Grafana typique pour reverse proxy** :
+### 8.6 Troubleshooting des volumes
 
-- **Throughput** : Requêtes/seconde par service
-- **Latency** : Temps de réponse P50, P95, P99
-- **Error rates** : 4xx, 5xx par endpoint
-- **Cache hit ratio** : Efficacité du cache
-- **SSL handshake time** : Performance SSL/TLS
-- **Backend health** : Status des services upstream
-
-#### 9.4.6 Troubleshooting du Reverse Proxy
-
-**Commandes de debug utiles** :
+#### 8.6.1 Diagnostics courants
 
 ```bash
-# Vérifier les logs de l'Ingress Controller
-kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
+# Vérifier l'état des PV et PVC
+kubectl get pv,pvc
 
-# Voir la configuration NGINX générée
-kubectl exec -n ingress-nginx deployment/ingress-nginx-controller -- cat /etc/nginx/nginx.conf
+# Détails d'un PVC bloqué
+kubectl describe pvc my-claim
 
-# Tester la résolution DNS interne
-kubectl exec -it test-pod -- nslookup myservice.default.svc.cluster.local
+# Événements liés au stockage
+kubectl get events --field-selector involvedObject.kind=PersistentVolumeClaim
 
-# Vérifier les endpoints des services
-kubectl get endpoints
+# Vérifier les StorageClasses
+kubectl get storageclass
 
-# Tester depuis l'intérieur du cluster
-kubectl run test-pod --image=curlimages/curl -it --rm -- /bin/sh
-curl -v http://myservice.default.svc.cluster.local/health
+# Tester l'accès depuis un Pod
+kubectl exec -it pod-name -- ls -la /mount/path
 ```
 
-**Problèmes courants et solutions** :
+#### 8.6.2 Problèmes fréquents et solutions
 
-| Problème           | Symptôme             | Solution                                       |
-| ------------------ | -------------------- | ---------------------------------------------- |
-| 502 Bad Gateway    | Service inaccessible | Vérifier les endpoints et la santé des Pods    |
-| 404 Not Found      | Routage incorrect    | Contrôler les règles Ingress et pathType       |
-| Certificate errors | SSL invalide         | Vérifier cert-manager et les secrets TLS       |
-| Slow response      | Latence élevée       | Analyser les backend et optimiser les timeouts |
+| Problème          | Symptôme                         | Solution                                      |
+| ----------------- | -------------------------------- | --------------------------------------------- |
+| PVC Pending       | `kubectl get pvc` montre Pending | Vérifier StorageClass, ressources disponibles |
+| Permission denied | Erreur d'accès aux fichiers      | Configurer securityContext, fsGroup           |
+| Volume plein      | Application ne peut plus écrire  | Étendre le volume ou nettoyer                 |
+| Mount failed      | Pod en erreur de montage         | Vérifier path hostPath, permissions node      |
 
-### 9.5 Application pratique - Ingress
+### 8.7 Labs pratiques
 
-📝 **LAB 8** - Ingress et exposition : `labs/enonces/S3_S1_S1_lab8_ingress_exposition.md`
-**Correction** : `labs/corrections/S3_S1_S1_lab8_ingress_exposition_correction.md`
+📝 **LAB 7** - Volumes et persistance : `labs/enonces/S3_S1_lab7_volumes_persistance.md`
+**Correction** : `labs/corrections/S3_S1_lab7_volumes_persistance_correction.md`
 
-**Énoncé du LAB 8** :
+**Objectif** : Maîtriser les différents types de volumes et leur utilisation pratique.
 
-Configurez Ingress pour exposer intelligemment vos applications vers l'extérieur.
+**Scénario** : Application web avec base de données nécessitant persistance des données et partage de fichiers.
 
-- **Objectif** : Maîtriser l'exposition externe via Ingress
-- **Contexte** : Exposition production d'applications web avec SSL/TLS
-- **Instructions** :
-  1. Déployer Ingress Controller (nginx)
-  2. Créer plusieurs services backend (web, api)
-  3. Configurer Ingress avec routage host-based et path-based
-  4. Tester l'accès externe et le routage
-- **Critères de validation** : Ingress actif, routage fonctionnel, SSL configuré
-- **Durée estimée** : 40 minutes
-- **Fichier de travail** : `S3_S1_lab8_ingress_exposition.yml`
+**Exercices** :
+
+1. Configurer emptyDir pour cache temporaire
+2. Utiliser hostPath pour logs système (développement)
+3. Créer PV/PVC pour base de données
+4. Implémenter provisioning dynamique avec StorageClass
+5. Diagnostiquer et résoudre problèmes de volumes
+
+**Livrables** :
+
+- Manifestes fonctionnels pour chaque type de volume
+- Documentation des choix techniques
+- Scripts de troubleshooting
 
 ---
 
-## 10. Monitoring et debugging
+### 8.1 Problématique des données - Mise en situation
 
-### 10.1 Observabilité Kubernetes
+**Scénario réel** : Votre application e-commerce stocke les commandes dans une base de données. Un redémarrage du pod = **TOUTES** les commandes perdues !
+
+**Analogie du frigo** :
+
+- **Container sans volume** = Glacière portable (fond quand on l'éteint)
+- **Container avec volume** = Frigo branché (garde le froid même si on le redémarre)
+
+**Contrainte technique** : Les conteneurs sont éphémères, leurs données sont perdues à l'arrêt.
+
+**Solution Kubernetes** : Les **Volumes** fournissent un stockage persistant aux Pods.
+
+### 8.2 Types de Volumes - Guide complet
+
+#### emptyDir - Le volume temporaire
+
+**Métaphore** : Une clé USB partagée entre plusieurs personnes, mais qui se formate quand l'ordinateur s'éteint.
+
+**Définition officielle Kubernetes** :
+
+Pour un Pod qui définit un volume emptyDir, le volume est créé quand le Pod est assigné à un node. Comme son nom l'indique, le volume emptyDir est initialement vide. Tous les conteneurs du Pod peuvent lire et écrire les mêmes fichiers dans le volume emptyDir, bien que ce volume puisse être monté dans des chemins identiques ou différents dans chaque conteneur. Quand un Pod est retiré d'un node pour n'importe quelle raison, les données dans emptyDir sont supprimées définitivement.
+
+**Note importante** : Un crash de conteneur ne retire pas un Pod du node. Les données dans un volume emptyDir sont préservées lors des crashes de conteneurs.
+
+**Cas d'usage officiels pour emptyDir** :
+
+- **Espace de travail temporaire** : comme pour un tri de fusion basé sur disque
+- **Point de contrôle** : sauvegarder un calcul long pour récupération après crash
+- **Fichiers partagés** : fichiers qu'un conteneur content-manager récupère pendant qu'un conteneur webserver sert les données
+
+```yaml
+# Exemple : Cache partagé entre containers
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container-cache
+spec:
+  containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+        - mountPath: /cache
+          name: shared-cache
+    - name: redis
+      image: redis
+      volumeMounts:
+        - mountPath: /data
+          name: shared-cache
+  volumes:
+    - name: shared-cache
+      emptyDir: {}
+```
+
+**Exemples d'implémentation** :
+
+- **Cache applicatif temporaire** : Sessions utilisateur, cache Redis temporaire
+- **Fichiers de traitement batch** : Traitement ETL, conversion de fichiers
+- **Espace de travail partagé** : Communication entre conteneurs sidecar
+- **Stockage temporaire** : Logs en cours de traitement, fichiers de configuration générés
+
+**⚠️ Attention** : Ne jamais utiliser emptyDir pour des données critiques - elles sont perdues à l'arrêt du Pod !
+
+#### hostPath - L'accès direct au serveur
+
+**Métaphore** : Accéder au disque dur de l'ordinateur hôte depuis votre application.
+
+```yaml
+# Exemple : Logs système
+apiVersion: v1
+kind: Pod
+metadata:
+  name: log-collector
+spec:
+  containers:
+    - name: fluentd
+  image: fluentd
+  volumeMounts:
+    - mountPath: /var/log
+  name: host-logs
+  volumes:
+    - name: host-logs
+  hostPath:
+  path: /var/log
+  type: Directory
+```
+
+** Attention Sécurité** :
+
+- Développement/test
+- Production (risques sécurité)
+
+#### PersistentVolumeClaim (PVC) - Le stockage pro
+
+**Métaphore** : Réserver un espace de stockage dans un datacenter professionnel.
+
+```yaml
+# Demande de stockage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+  requests:
+  storage: 10Gi
+  storageClassName: fast-ssd
+```
+
+### 8.3 Architecture Storage - Vision globale
+
+```mermaid
+graph TB
+ subgraph " Infrastructure Physique"
+ PS[Physical Storage<br/> SAN/NAS/Cloud]
+ end
+
+ subgraph " Kubernetes Abstraction"
+ SC[StorageClass<br/> ssd-fast]
+ PV[PersistentVolume<br/> 50Gi NFS]
+ PVC[PersistentVolumeClaim<br/> Demande 10Gi]
+ end
+
+ subgraph " Application"
+ POD[Pod MySQL<br/> Database]
+ end
+
+ PS --> PV
+ SC --> PV
+ PV --> PVC
+ PVC --> POD
+
+ classDef physical fill:#FFE4B5
+ classDef k8s fill:#E6F3FF
+ classDef app fill:#E8F5E8
+
+ class PS physical
+ class SC,PV,PVC k8s
+ class POD app
+```
+
+### 8.4 Cycle de vie Storage - Étapes détaillées
+
+** Workflow complet** :
+
+1. ** Provisioning** : Admin crée PV ou StorageClass auto-provisionne
+2. ** Binding** : K8s associe PV/PVC compatibles automatiquement
+3. ** Using** : Pod monte le volume via PVC
+4. ** Reclaiming** : Politique après suppression PVC
+
+```mermaid
+sequenceDiagram
+ participant Admin
+ participant StorageClass
+ participant PVC
+ participant PV
+ participant Pod
+
+ Admin->>StorageClass: 1. Définit classe stockage
+
+ Note over PVC: 2. App demande stockage
+ PVC->>StorageClass: Demande 10Gi SSD
+ StorageClass->>PV: Auto-provision volume
+
+ Note over PV,PVC: 3. Binding automatique
+ PV-->>PVC: Association compatible
+
+ Note over Pod: 4. Utilisation
+ Pod->>PVC: Monte volume
+ PVC->>PV: Accès données
+
+ Note over PVC: 5. Suppression
+ PVC->>PV: Policy: Retain/Delete
+```
+
+### 8.5 Adaptabilité pédagogique
+
+#### **Niveau Débutant** - Approche guidée
+
+**Objectif** : Comprendre POURQUOI les volumes existent
+
+** Activité recommandée** :
+
+1. Créer un pod sans volume
+2. Écrire un fichier dedans
+3. Redémarrer → constater la perte
+4. Refaire AVEC volume → constater la persistance
+
+** Focus** : Différence entre éphémère vs persistant
+
+#### **Niveau Intermédiaire** - Pratique encadrée
+
+**Objectif** : Maîtriser PV/PVC et cas d'usage
+
+** Activité recommandée** :
+
+- Déployer base de données avec PVC
+- Tester différents `accessModes`
+- Simuler crash et récupération
+
+** Focus** : Configuration et troubleshooting
+
+#### **Niveau Avancé** - Autonomie complète
+
+**Objectif** : Optimiser et sécuriser le stockage
+
+** Activité recommandée** :
+
+- Implémenter StorageClass personnalisée
+- Configurer backup/restore automatique
+- Optimiser performances I/O
+
+** Focus** : Architecture et production-ready
+
+### 8.6 Application pratique - Volumes
+
+📝 **LAB 7** - Volumes et persistance : `labs/enonces/S3_S1_S1_lab7_volumes_persistance.md`
+**Correction** : `labs/corrections/S3_S1_S1_lab7_volumes_persistance_correction.md`
+
+** Énoncé du LAB 7** :
+
+**Contexte métier** : Vous déployez une base de données pour l'application e-commerce. Les données doivent survivre aux redémarrages et mises à jour.
+
+**Mission** : Configurez des volumes persistants pour assurer la persistance des données.
+
+- **Objectif pédagogique** : Maîtriser les volumes et la persistance de données
+- **Objectif technique** : PV, PVC, StorageClass, accessModes
+- **Prérequis** : Concepts Pod et Deployment maîtrisés
+
+** Instructions progressives** :
+
+**Étape 1** - Créer l'infrastructure stockage (15 min)
+
+1. Définir StorageClass pour stockage rapide
+2. Créer PersistentVolume 20Gi
+3. Créer PersistentVolumeClaim 10Gi
+
+**Étape 2** - Déployer base de données (10 min) 4. Déployer MySQL avec PVC monté 5. Vérifier binding PV/PVC
+
+**Étape 3** - Tests de persistance (10 min) 6. Insérer données test via kubectl exec 7. Supprimer Pod MySQL 8. Vérifier données après redémarrage
+
+** Critères de validation** :
+
+- PV/PVC en status "Bound"
+- Données persistantes après redémarrage Pod
+- Volumes montés correctement dans `/var/lib/mysql`
+
+** Durée estimée** : 35 minutes
+
+** Fichiers fournis** :
+
+- Template : `S3_S1_lab7_volumes_persistance.yml`
+- Scripts test : `test-persistence.sh`
+
+** Points d'attention formateur** :
+
+- Vérifier que le StorageClass existe sur le cluster
+- Prévoir 5min supplémentaires pour questions sur accessModes
+- Surveiller les erreurs de permissions (fsGroup)
+
+** Variantes par niveau** :
+
+<!-- Variantes par niveau supprimées : contenu harmonisé pour éviter les distinctions explicites -->
+
+### 8.7 Troubleshooting Storage - Guide pratique
+
+** Problèmes fréquents et solutions** :
+
+#### Problème : PVC reste en "Pending"
+
+```bash
+# Diagnostic
+kubectl describe pvc my-pvc
+kubectl get storageclass
+
+# Solutions courantes
+# 1. Pas de StorageClass → Créer ou spécifier
+# 2. Ressources insuffisantes → Réduire demande
+# 3. AccessMode incompatible → Ajuster PV/PVC
+```
+
+#### Problème : Permission denied dans container
+
+```yaml
+# Solution : fsGroup dans securityContext
+spec:
+ securityContext:
+ fsGroup: 2000 # Groupe propriétaire du volume
+ containers:
+ - name: app
+ securityContext:
+ runAsUser: 1000
+```
+
+#### Problème : Performances I/O lentes
+
+```yaml
+# Solutions d'optimisation
+storageClassName: fast-ssd # Classe SSD
+mountOptions: # Options de montage
+  - rsize=1048576
+  - wsize=1048576
+  - hard
+```
+
+---
+
+## 9. Monitoring et debugging
+
+### 9.1 Observabilité Kubernetes
 
 **Dimensions** :
 
@@ -5086,23 +6181,23 @@ kubectl top pods
 
 ```mermaid
 graph LR
-    subgraph "Metrics Collection"
-        A[Kubernetes API] --> B[Prometheus Server]
-        C[Node Exporter] --> B
-        D[kube-state-metrics] --> B
-        E[Application Metrics] --> B
-    end
+ subgraph "Metrics Collection"
+ A[Kubernetes API] --> B[Prometheus Server]
+ C[Node Exporter] --> B
+ D[kube-state-metrics] --> B
+ E[Application Metrics] --> B
+ end
 
-    subgraph "Storage & Query"
-        B --> F[TSDB Storage]
-        F --> G[PromQL Queries]
-    end
+ subgraph "Storage & Query"
+ B --> F[TSDB Storage]
+ F --> G[PromQL Queries]
+ end
 
-    subgraph "Visualization & Alerts"
-        G --> H[Grafana Dashboards]
-        G --> I[Alertmanager]
-        I --> J[Notifications<br/>Slack/Email/PagerDuty]
-    end
+ subgraph "Visualization & Alerts"
+ G --> H[Grafana Dashboards]
+ G --> I[Alertmanager]
+ I --> J[Notifications<br/>Slack/Email/PagerDuty]
+ end
 ```
 
 ### 10.4 Application pratique - Monitoring
@@ -5117,10 +6212,12 @@ Mettez en place monitoring et debugging pour assurer l'observabilité de vos dé
 - **Objectif** : Maîtriser l'observabilité et le debugging Kubernetes
 - **Contexte** : Monitoring production et résolution d'incidents
 - **Instructions** :
-  1. Déployer stack Prometheus/Grafana
-  2. Configurer métriques Kubernetes et applications
-  3. Créer dashboards pour monitoring cluster et workloads
-  4. Simuler incidents et utiliser outils debugging
+
+1.  Déployer stack Prometheus/Grafana
+2.  Configurer métriques Kubernetes et applications
+3.  Créer dashboards pour monitoring cluster et workloads
+4.  Simuler incidents et utiliser outils debugging
+
 - **Critères de validation** : Métriques collectées, dashboards fonctionnels, debugging efficace
 - **Durée estimée** : 45 minutes
 - **Fichier de travail** : `S3_S1_lab9_monitoring_debugging.yml`
@@ -5139,17 +6236,19 @@ Déployez une application web complète multi-tiers intégrant tous les concepts
 - **Objectif** : Intégrer tous les concepts dans un projet complet
 - **Contexte** : Déploiement production d'application e-commerce DevOps
 - **Instructions** :
-  1. Déployer stack complète (frontend, backend, base de données)
-  2. Configurer networking, persistance, et sécurité
-  3. Implémenter monitoring, logging, et alerting
-  4. Tester haute disponibilité et disaster recovery
+
+1.  Déployer stack complète (frontend, backend, base de données)
+2.  Configurer networking, persistance, et sécurité
+3.  Implémenter monitoring, logging, et alerting
+4.  Tester haute disponibilité et disaster recovery
+
 - **Critères de validation** : Application complète fonctionnelle, haute disponibilité, monitoring actif
 - **Durée estimée** : 60 minutes
 - **Fichier de travail** : `S3_S1_lab10_challenge_application_complete.yml`
 
 ---
 
-## 11. Récapitulatif et prochaines étapes
+## 10. Récapitulatif et prochaines étapes
 
 ### 11.1 Concepts maîtrisés
 
@@ -5205,7 +6304,7 @@ Déployez une application web complète multi-tiers intégrant tous les concepts
 
 ---
 
-## 12. Ressources complémentaires
+## 11. Ressources complémentaires
 
 ### 12.1 Documentation officielle
 

@@ -126,10 +126,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/error', () => {
-  process.exit(1);
-});
-
 // Endpoint racine
 app.get('/', (req, res) => {
   res.json({
@@ -149,6 +145,10 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/error', () => {
+  process.exit(1);
+});
+
 // Gestionnaire d'erreur global
 app.use((err, req, res, next) => {
   console.error('Erreur non gérée:', err);
@@ -166,15 +166,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   GET  http://localhost:${PORT}/technologies`);
   console.log(`   DELETE http://localhost:${PORT}/technologies`);
   console.log(`   GET  http://localhost:${PORT}/health`);
-});
-
-// Gestion de l'arrêt gracieux
-process.on('SIGTERM', () => {
-  console.log('Arrêt du serveur...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('Arrêt du serveur...');
-  process.exit(0);
 });

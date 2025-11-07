@@ -1,0 +1,219 @@
+version: "3.8"
+
+services:
+  # Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: blood-donation-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: dondesang
+      MYSQL_USER: blooduser
+      MYSQL_PASSWORD: bloodpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - blood-donation-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-prootpassword",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Service Utilisateurs
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=dondesang
+      - DB_USER=blooduser
+      - DB_PASSWORD=bloodpass
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3100,http://localhost:3200
+    ports:
+      - "3001:3001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - blood-donation-network
+    restart: unless-stopped
+
+  # Service Campagnes
+  campaign-service:
+    build:
+      context: ./campaign-service
+      dockerfile: Dockerfile
+    container_name: campaign-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=dondesang
+      - DB_USER=blooduser
+      - DB_PASSWORD=bloodpass
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3100,http://localhost:3200
+    ports:
+      - "3002:3002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - blood-donation-network
+    restart: unless-stopped
+
+  # Service Rendez-vous
+  appointment-service:
+    build:
+      context: ./appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=dondesang
+      - DB_USER=blooduser
+      - DB_PASSWORD=bloodpass
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3100,http://localhost:3200
+      - USER_SERVICE_URL=http://user-service:3001
+      - CAMPAIGN_SERVICE_URL=http://campaign-service:3002
+    ports:
+      - "3003:3003"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - blood-donation-network
+    restart: unless-stopped
+
+  # Service Analytics
+  analytics-service:
+    build:
+      context: ./analytics-service
+      dockerfile: Dockerfile
+    container_name: analytics-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=dondesang
+      - DB_USER=blooduser
+      - DB_PASSWORD=bloodpass
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3100,http://localhost:3200
+    ports:
+      - "3004:3004"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - blood-donation-network
+    restart: unless-stopped
+
+  # Service Admin
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=dondesang
+      - DB_USER=blooduser
+      - DB_PASSWORD=bloodpass
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - ADMIN_JWT_SECRET=your-admin-super-secret-jwt-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3200
+      - USER_SERVICE_URL=http://user-service:3001
+      - CAMPAIGN_SERVICE_URL=http://campaign-service:3002
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:3003
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3004
+    ports:
+      - "3005:3005"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - blood-donation-network
+    restart: unless-stopped
+
+  # Frontend Donneur
+  donor-frontend:
+    build:
+      context: ./donor-frontend
+      dockerfile: Dockerfile
+    container_name: donor-frontend
+    environment:
+      - REACT_APP_USER_SERVICE_URL=http://localhost:3001
+      - REACT_APP_CAMPAIGN_SERVICE_URL=http://localhost:3002
+      - REACT_APP_APPOINTMENT_SERVICE_URL=http://localhost:3003
+    ports:
+      - "3100:3100"
+    depends_on:
+      - user-service
+      - campaign-service
+      - appointment-service
+    networks:
+      - blood-donation-network
+    restart: unless-stopped
+
+  # Dashboard Admin
+  admin-dashboard:
+    build:
+      context: ./admin-dashboard
+      dockerfile: Dockerfile
+    container_name: admin-dashboard
+    environment:
+      - REACT_APP_ADMIN_SERVICE_URL=http://localhost:3005
+      - REACT_APP_USER_SERVICE_URL=http://localhost:3001
+      - REACT_APP_CAMPAIGN_SERVICE_URL=http://localhost:3002
+      - REACT_APP_APPOINTMENT_SERVICE_URL=http://localhost:3003
+      - REACT_APP_ANALYTICS_SERVICE_URL=http://localhost:3004
+    ports:
+      - "3200:3200"
+    depends_on:
+      - admin-service
+      - analytics-service
+    networks:
+      - blood-donation-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  blood-donation-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

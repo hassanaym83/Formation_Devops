@@ -1,0 +1,87 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blood-donation-ingress
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    resource-type: ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    # Frontend Donneur
+    - host: blood-donation.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: donor-frontend-service
+                port:
+                  number: 3100
+    
+    # Frontend Admin
+    - host: admin.blood-donation.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: admin-dashboard-service
+                port:
+                  number: 3200
+    
+    # Backend APIs 
+    - host: api.blood-donation.local
+      http:
+        paths:
+          # Service Utilisateur
+          - path: /user
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 3001
+          
+          # Service Campagne
+          - path: /campaign
+            pathType: Prefix
+            backend:
+              service:
+                name: campaign-service
+                port:
+                  number: 3002
+          
+          # Service Rendez-vous
+          - path: /appointment
+            pathType: Prefix
+            backend:
+              service:
+                name: appointment-service
+                port:
+                  number: 3003
+          
+          # Service Analytics
+          - path: /analytics
+            pathType: Prefix
+            backend:
+              service:
+                name: analytics-service
+                port:
+                  number: 3004
+          
+          # Service Admin
+          - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: admin-service
+                port:
+                  number: 3005

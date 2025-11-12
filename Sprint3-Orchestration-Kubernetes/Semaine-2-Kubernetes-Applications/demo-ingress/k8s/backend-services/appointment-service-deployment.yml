@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointment-service-deployment
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: appointment-service
+    component: api
+    tier: backend
+    resource-type: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointment-service
+      component: api
+  template:
+    metadata:
+      labels:
+        project: blood-donation
+        app: appointment-service
+        component: api
+        tier: backend
+        resource-type: pod
+    spec:
+      containers:
+        - name: appointment-service-container
+          image: hassanaym/bdon-appointment-service:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3003
+          envFrom:
+            - configMapRef:
+                name: appointment-service-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          
+

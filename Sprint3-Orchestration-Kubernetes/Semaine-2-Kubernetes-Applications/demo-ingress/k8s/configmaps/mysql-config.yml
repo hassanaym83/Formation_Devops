@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: blood-donation
+  labels:
+    # Niveau projet
+    project: blood-donation
+    # Niveau service
+    app: mysql
+    # Niveau composant
+    component: database
+    # Architecture
+    tier: backend
+    # Type de ressource
+    resource-type: configmap
+data:
+  MYSQL_DATABASE: "dondesang"
+  MYSQL_PORT: "3306"
+  MYSQL_HOST: "mysql-service"
+  MYSQL_USER: "blooduser"

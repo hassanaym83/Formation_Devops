@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service-deployment
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: admin-service
+    component: api
+    tier: backend
+    resource-type: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-service
+      component: api
+  template:
+    metadata:
+      labels:
+        project: blood-donation
+        app: admin-service
+        component: api
+        tier: backend
+        resource-type: pod
+    spec:
+      containers:
+        - name: admin-service-container
+          image: hassanaym/bdon-admin-service:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3005
+          envFrom:
+            - configMapRef:
+                name: admin-service-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          
+

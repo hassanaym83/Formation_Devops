@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: donor-frontend-deployment
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: donor-frontend
+    component: web
+    tier: frontend
+    resource-type: deployment 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: donor-frontend
+      component: web
+  template:
+    metadata:
+      labels:
+        project: blood-donation
+        app: donor-frontend
+        component: web
+        tier: frontend 
+    spec:
+      containers:
+        - name: donor-frontend-container
+          image: hassanaym/bdon-donor-frontend:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - name: http 
+              containerPort: 3100
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"

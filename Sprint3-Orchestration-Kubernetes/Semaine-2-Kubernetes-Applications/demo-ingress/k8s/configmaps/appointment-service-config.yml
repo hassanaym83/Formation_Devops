@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: appointment-service-config
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: appointment-service
+    component: api
+    tier: backend
+    resource-type: configmap
+data:
+  NODE_ENV: 'production'
+  PORT: '3003'
+  DB_HOST: 'mysql-service'
+  DB_NAME: 'dondesang'
+  DB_PORT: '3306'
+  DB_USER: 'blooduser'
+  CORS_ORIGIN: 'http://donor-frontend-service:3100,http://admin-dashboard-service:3200'
+  USER_SERVICE_URL: 'http://user-service:3001'
+  CAMPAIGN_SERVICE_URL: 'http://campaign-service:3002'

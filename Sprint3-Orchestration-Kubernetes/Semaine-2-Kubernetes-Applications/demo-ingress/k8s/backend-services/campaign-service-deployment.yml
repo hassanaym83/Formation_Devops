@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campaign-service-deployment
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: campaign-service
+    component: api
+    tier: backend
+    resource-type: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: campaign-service
+      component: api
+  template:
+    metadata:
+      labels:
+        project: blood-donation
+        app: campaign-service
+        component: api
+        tier: backend
+        resource-type: pod
+    spec:
+      containers:
+        - name: campaign-service-container
+          image: hassanaym/bdon-campaign-service:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3002
+          envFrom:
+            - configMapRef:
+                name: campaign-service-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          
+

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-dashboard-deployment
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: admin-dashboard
+    component: web
+    tier: frontend
+    resource-type: deployment 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-dashboard
+      component: web
+  template:
+    metadata:
+      labels:
+        project: blood-donation
+        app: admin-dashboard
+        component: web
+        tier: frontend 
+    spec:
+      containers:
+        - name: admin-dashboard-container
+          image: hassanaym/bdon-admin-dashboard:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - name: http 
+              containerPort: 3200
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"

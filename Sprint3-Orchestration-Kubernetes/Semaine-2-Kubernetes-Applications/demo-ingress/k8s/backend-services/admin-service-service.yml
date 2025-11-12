@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: admin-service
+    component: api
+    tier: backend
+    resource-type: service
+spec:
+  type: ClusterIP
+  selector:
+    app: admin-service
+    component: api
+    tier: backend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3005
+      targetPort: 3005
+  

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blood-donation
+  labels:
+    app: blood-donation-system
+    environment: development
+    version: v1.0.0
+  annotations:
+    description: 'namespace pour application de dons de songs'
+    created-by: 'Hassan ESSADIK'
+    contact: 'hassan@gmail.com'

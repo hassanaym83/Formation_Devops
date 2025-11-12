@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compaign-service-config
+  namespace: blood-donation
+  labels:
+    project: blood-donation
+    app: compaign-service
+    component: api
+    tier: backend
+    resource-type: configmap
+data:
+  NODE_ENV: "production"
+  PORT: "3002"
+  DB_HOST: "mysql-service"
+  DB_PORT: "3306"
+  DB_NAME: "dondesang"
+  DB_USER: "blooduser"
+  CORS_ORIGIN: "http://donor-frontend-service:3100,http://admin-dashboard-service:3200"
